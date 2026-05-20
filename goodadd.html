@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maggot in a Big City</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: #111; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white; user-select: none;
+        }
+        canvas { display: block; width: 100%; height: 100%; }
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; padding: 20px; box-sizing: border-box;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .panel {
+            background: rgba(0, 0, 0, 0.7); border-radius: 10px; padding: 15px;
+            backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);
+            pointer-events: auto;
+        }
+        #top-bar { display: flex; justify-content: space-between; align-items: flex-start; }
+        #inventory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .fruit-item { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .fruit-icon { width: 20px; height: 20px; border-radius: 50%; display: inline-block; }
+        .legendary { box-shadow: 0 0 8px 2px currentColor; }
+        #controls { text-align: right; }
+        .btn {
+            background: #444; color: white; border: none; padding: 8px 12px;
+            border-radius: 5px; cursor: pointer; margin-bottom: 5px; font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #666; }
+        .btn.active { background: #4CAF50; }
+        #message-box {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; font-size: 24px; text-shadow: 2px 2px 4px #000;
+            opacity: 0; transition: opacity 0.5s; pointer-events: none;
+            background: rgba(0,0,0,0.8); padding: 20px 40px; border-radius: 20px; border: 2px solid gold;
+        }
+        #title-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 15, 20, 0.95); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; pointer-events: auto; z-index: 10;
+        }
+        h1 { font-size: 4em; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; color: #a8e6cf; text-shadow: 0 0 20px #118c65; text-align: center;}
+        .instructions { max-width: 600px; text-align: center; line-height: 1.6; margin-bottom: 30px; color: #ddd; }
+        .key { display: inline-block; background: #333; padding: 2px 8px; border-radius: 4px; border-bottom: 2px solid #111; font-family: monospace; }
+        
+        /* Specific fruit colors for UI */
+        .c-apple { background: #ff4d4d; } .c-plum { background: #b366ff; }
+        .c-cactus { background: #ff66b3; } .c-banana { background: #ffd633; }
+        .c-dryad { background: #00ff00; } .c-eskimo { background: #00ffff; }
+        .c-dry { background: #ff9900; } .c-mudsap { background: #8c531b; border: 1px solid #ffd633; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui-layer">
+        <div id="top-bar">
+            <div class="panel" id="inventory-panel">
+                <div style="margin-bottom: 10px; font-size: 0.9em; color: #aaa;">BIOME FRUITS (Need 5 each + 1 Legendary)</div>
+                <div id="inventory">
+                    <div class="fruit-item"><div class="fruit-icon c-apple"></div><span id="inv-apple">0/5</span></div>
+                    <div class="fruit-item"><div class="fruit-icon c-plum"></div><span id="inv-plum">0/5</span></div>
+                    <div class="fruit-item"><div class="fruit-icon c-cactus"></div><span id="inv-cactus">0/5</span></div>
+                    <div class="fruit-item"><div class="fruit-icon c-banana"></div><span id="inv-banana">0/5</span></div>
+                    
+                    <div class="fruit-item"><div class="fruit-icon c-dryad legendary"></div><span id="inv-dryad">0/1</span></div>
+                    <div class="fruit-item"><div class="fruit-icon c-eskimo legendary"></div><span id="inv-eskimo">0/1</span></div>
+                    <div class="fruit-item"><div class="fruit-icon c-dry legendary"></div><span id="inv-dry">0/1</span></div>
+                    <div class="fruit-item"><div class="fruit-icon c-mudsap legendary"></div><span id="inv-mudsap">0/1</span></div>
+                </div>
+            </div>
+            <div id="controls" class="panel">
+                <button id="btn-camera" class="btn">Camera: Normal</button><br>
+                <div style="font-size: 0.8em; color: #aaa; margin-top: 5px;">Use <span class="key">WASD</span> or <span class="key">Arrows</span></div>
+            </div>
+        </div>
+        <div id="message-box"></div>
+    </div>
+
+    <div id="title-screen">
+        <h1>Maggot in a<br>Big City</h1>
+        <div class="instructions">
+            <p>You are a majestic maggot in the overgrown ruins of a procedural city.</p>
+            <p>Explore 4 biomes (Forest, Ice, Desert, Jungle) and delve into deep caves to find legendary fruits.</p>
+            <p>Your sticky body can crawl up walls and ceilings. Collect all fruits to achieve metamorphosis!</p>
+            <p>Controls: <span class="key">Arrow Keys</span> or <span class="key">W A S D</span> to crawl.</p>
+        </div>
+        <button class="btn" id="start-btn" style="font-size: 1.5em; padding: 15px 30px; background: #a8e6cf; color: #111;">Start Evolution</button>
+    </div>
+
+<script>
+/** * Minimal Simplex Noise implementation for procedural generation 
+ */
+const SimplexNoise = function() {
+    var F2 = 0.5 * (Math.sqrt(3.0) - 1.0); var G2 = (3.0 - Math.sqrt(3.0)) / 6.0;
+    var p = new Uint8Array(256);
+    for (var i=0; i<256; i++) p[i] = Math.floor(Math.random()*256);
+    var perm = new Uint8Array(512); var permMod12 = new Uint8Array(512);
+    for (var i=0; i<512; i++) { perm[i] = p[i & 255]; permMod12[i] = (perm[i] % 12); }
+    return {
+        noise2D: function(xin, yin) {
+            var n0, n1, n2;
+            var s = (xin+yin)*F2; var i = Math.floor(xin+s); var j = Math.floor(yin+s);
+            var t = (i+j)*G2; var X0 = i-t; var Y0 = j-t;
+            var x0 = xin-X0; var y0 = yin-Y0;
+            var i1, j1;
+            if(x0>y0) {i1=1; j1=0;} else {i1=0; j1=1;}
+            var x1 = x0 - i1 + G2; var y1 = y0 - j1 + G2;
+            var x2 = x0 - 1.0 + 2.0 * G2; var y2 = y0 - 1.0 + 2.0 * G2;
+            var ii = i & 255; var jj = j & 255;
+            var gi0 = permMod12[ii+perm[jj]]; var gi1 = permMod12[ii+i1+perm[jj+j1]]; var gi2 = permMod12[ii+1+perm[jj+1]];
+            var t0 = 0.5 - x0*x0-y0*y0; if(t0<0) n0 = 0.0; else { t0 *= t0; n0 = t0 * t0 * (grad3[gi0][0]*x0 + grad3[gi0][1]*y0); }
+            var t1 = 0.5 - x1*x1-y1*y1; if(t1<0) n1 = 0.0; else { t1 *= t1; n1 = t1 * t1 * (grad3[gi1][0]*x1 + grad3[gi1][1]*y1); }
+            var t2 = 0.5 - x2*x2-y2*y2; if(t2<0) n2 = 0.0; else { t2 *= t2; n2 = t2 * t2 * (grad3[gi2][0]*x2 + grad3[gi2][1]*y2); }
+            return 70.0 * (n0 + n1 + n2);
+        }
+    };
+};
+const grad3 = [[1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],[1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],[0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]];
+const noise = SimplexNoise();
+
+// --- Game Constants & Configuration ---
+const TS = 32; // Tile Size
+const MAP_W = 512; // Width in tiles (wrapping)
+const MAP_H = 128; // Height in tiles
+const SURFACE_LEVEL = 40;
+const MAP_W_PX = MAP_W * TS;
+const MAP_H_PX = MAP_H * TS;
+
+// Biome Definitions
+const BIOMES = {
+    FOREST: { id: 0, name: 'Forest', color: '#2d4c1e', altColor: '#4a331c', fruit: 'apple', leg: 'dryad', bg: '#87CEEB' },
+    ICE:    { id: 1, name: 'Ice',    color: '#e0f7fa', altColor: '#80deea', fruit: 'plum', leg: 'eskimo', bg: '#b3e5fc' },
+    DESERT: { id: 2, name: 'Desert', color: '#f4a460', altColor: '#d2b48c', fruit: 'cactus', leg: 'dry', bg: '#ffe0b2' },
+    JUNGLE: { id: 3, name: 'Jungle', color: '#1b3a0f', altColor: '#3e2723', fruit: 'banana', leg: 'mudsap', bg: '#aed581' }
+};
+
+// Material IDs (for map array)
+const MAT = { AIR: 0, DIRT: 1, GRASS: 2, STONE: 3, ICE: 4, SNOW: 5, SAND: 6, SANDSTONE: 7, MUD: 8, JUNGLE_GRASS: 9, WOOD: 10, LEAVES: 11, GRAVEL: 12, HARD_ICE: 13, DARK_SAND: 14, CLAY: 15, CRYSTAL: 16, DEEP_STONE: 17, FROST_DIRT: 18 };
+
+const SOFT_MATS = new Set([MAT.DIRT, MAT.GRASS, MAT.SNOW, MAT.SAND, MAT.MUD, MAT.JUNGLE_GRASS, MAT.LEAVES, MAT.CLAY, MAT.FROST_DIRT]);
+
+// Materials setup for rendering
+const MAT_DEFS = {
+    [MAT.DIRT]: { c1: '#5c4033', c2: '#3e2723', c3: '#795548' },
+    [MAT.GRASS]: { c1: '#4CAF50', c2: '#388E3C', c3: '#2E7D32', topColor: '#81C784' },
+    [MAT.STONE]: { c1: '#757575', c2: '#424242', c3: '#9E9E9E' },
+    [MAT.ICE]: { c1: '#81d4fa', c2: '#4fc3f7', c3: '#b3e5fc', translucent: true },
+    [MAT.SNOW]: { c1: '#ffffff', c2: '#eeeeee', c3: '#e0e0e0', topColor: '#f5f5f5' },
+    [MAT.SAND]: { c1: '#ffd54f', c2: '#ffca28', c3: '#ffecb3' },
+    [MAT.SANDSTONE]: { c1: '#ffb300', c2: '#ff8f00', c3: '#ffa000' },
+    [MAT.MUD]: { c1: '#4e342e', c2: '#3e2723', c3: '#5d4037' },
+    [MAT.JUNGLE_GRASS]: { c1: '#2e7d32', c2: '#1b5e20', c3: '#388e3c', topColor: '#4caf50' },
+    [MAT.WOOD]: { c1: '#5D4037', c2: '#3E2723', c3: '#4E342E' },
+    [MAT.LEAVES]: { c1: '#2E7D32', c2: '#1B5E20', c3: '#388E3C' },
+    [MAT.GRAVEL]: { c1: '#9E9E9E', c2: '#757575', c3: '#616161' },
+    [MAT.HARD_ICE]: { c1: '#4DD0E1', c2: '#26C6DA', c3: '#00BCD4' },
+    [MAT.DARK_SAND]: { c1: '#FFB300', c2: '#FF8F00', c3: '#FFCA28' },
+    [MAT.CLAY]: { c1: '#b06a5b', c2: '#8a4b3e', c3: '#c98071' },
+    [MAT.CRYSTAL]: { c1: '#e0f7fa', c2: '#80deea', c3: '#ffffff', topColor: '#b2ebf2' },
+    [MAT.DEEP_STONE]: { c1: '#424242', c2: '#212121', c3: '#616161' },
+    [MAT.FROST_DIRT]: { c1: '#5D6D7E', c2: '#34495E', c3: '#85929E', topColor: '#D6EAF8' }
+};
+
+// --- Global State ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let map = new Uint8Array(MAP_W * MAP_H);
+let fruits = [];
+let particles = [];
+let camera = { x: 0, y: 0, rotation: 0, mode: 'normal' }; // modes: normal, flip
+let gameState = 'title'; // title, play, bulging, fly
+let tilesetCanvas = null; // Autotiled texture atlas
+
+const player = {
+    x: 0, y: 0, vx: 0, vy: 0, radius: 10,
+    segments: [], numSegments: 8, segmentDist: 12,
+    angle: 0, visualAngle: 0,
+    stickNormal: {x: 0, y: -1},
+    speed: 0, maxSpeed: 4, accel: 0.5, friction: 0.8,
+    inventory: { apple: 0, plum: 0, cactus: 0, banana: 0, dryad: 0, eskimo: 0, dry: 0, mudsap: 0 },
+    bulgeTime: 0, frame: 0,
+    flyVelocity: {x:0, y:0},
+    jumpTimer: 0, burrowTimer: 0
+};
+
+const keys = {};
+window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keyup', e => keys[e.code] = false);
+
+// --- Utility Functions ---
+function wrapX(x) { return (x % MAP_W_PX + MAP_W_PX) % MAP_W_PX; }
+function wrapTileX(tx) { return (tx % MAP_W + MAP_W) % MAP_W; }
+function getMapIdx(tx, ty) { return ty * MAP_W + wrapTileX(tx); }
+function getTile(tx, ty) {
+    if (ty < 0 || ty >= MAP_H) return MAT.AIR;
+    return map[getMapIdx(Math.floor(tx), Math.floor(ty))];
+}
+function isSolid(x, y) {
+    return getTile(x / TS, y / TS) !== MAT.AIR;
+}
+function lerp(a, b, t) { return a + (b - a) * t; }
+function angleLerp(a0, a1, t) {
+    let da = (a1 - a0) % (Math.PI * 2);
+    let dist = 2 * da % (Math.PI * 2) - da;
+    return a0 + dist * t;
+}
+
+// --- Procedural Generation ---
+function generateWorld() {
+    map.fill(MAT.AIR);
+    fruits = [];
+    let seedOffset = Math.random() * 1000;
+
+    for (let tx = 0; tx < MAP_W; tx++) {
+        // Determine Biome based on X
+        let biomeIdx = Math.floor((tx / MAP_W) * 4);
+        let biome = Object.values(BIOMES)[biomeIdx];
+        
+        // Surface height (low frequency noise)
+        let n = noise.noise2D((tx + seedOffset) * 0.02, 0);
+        let surfaceY = Math.floor(SURFACE_LEVEL + n * 15);
+        
+        // Bottom crust for floating island effect
+        let bottomY = Math.floor(MAP_H - 15 - noise.noise2D((tx + seedOffset) * 0.03, 100) * 10);
+
+        for (let ty = 0; ty < MAP_H; ty++) {
+            let idx = getMapIdx(tx, ty);
+            let isUnderground = ty > surfaceY + 10;
+            
+            if (ty >= surfaceY && ty <= bottomY) {
+                // Better cave generation (tunnels + rooms)
+                let tunnelNoise = Math.abs(noise.noise2D((tx + seedOffset) * 0.04, (ty + seedOffset) * 0.04));
+                let roomNoise = noise.noise2D((tx + seedOffset) * 0.06, (ty + seedOffset) * 0.06);
+                
+                let isCave = isUnderground && (tunnelNoise < 0.06 || roomNoise > 0.4); 
+                
+                if (!isCave) {
+                    // Assign materials based on biome and depth
+                    if (ty === surfaceY) {
+                        if (biome.id === 0) map[idx] = MAT.GRASS;
+                        else if (biome.id === 1) map[idx] = MAT.SNOW;
+                        else if (biome.id === 2) map[idx] = MAT.SAND;
+                        else if (biome.id === 3) map[idx] = MAT.JUNGLE_GRASS;
+                    } else if (ty === bottomY) {
+                        // Hard bottom crust
+                        map[idx] = (biome.id === 1) ? MAT.HARD_ICE : MAT.DEEP_STONE;
+                    } else {
+                        // Mix in stone and new materials if deeper
+                        let stoneNoise = noise.noise2D((tx + seedOffset) * 0.15, (ty + seedOffset) * 0.15);
+                        let altNoise = noise.noise2D((tx + seedOffset) * 0.2, (ty + seedOffset) * 0.2);
+                        let isStone = isUnderground && stoneNoise > 0.2;
+                        let isDeep = ty > MAP_H - 40;
+
+                        if (isStone) {
+                            if (isDeep) {
+                                map[idx] = (altNoise > 0.7) ? MAT.CRYSTAL : MAT.DEEP_STONE;
+                            } else {
+                                map[idx] = (altNoise > 0.6 && biome.id === 1) ? MAT.GRAVEL : MAT.STONE;
+                            }
+                        } else {
+                            if (biome.id === 0) map[idx] = (altNoise > 0.5 && isUnderground) ? MAT.CLAY : MAT.DIRT;
+                            else if (biome.id === 1) map[idx] = (altNoise > 0.3) ? MAT.HARD_ICE : MAT.FROST_DIRT;
+                            else if (biome.id === 2) map[idx] = (ty > surfaceY + 5) ? MAT.SANDSTONE : ((altNoise > 0.4) ? MAT.DARK_SAND : MAT.SAND);
+                            else if (biome.id === 3) map[idx] = (altNoise > 0.6) ? MAT.CLAY : MAT.MUD;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Pass 1.5: Place Trees and Decor
+    for (let tx = 0; tx < MAP_W; tx++) {
+        let biomeIdx = Math.floor((tx / MAP_W) * 4);
+        let biome = Object.values(BIOMES)[biomeIdx];
+        
+        let surfaceY = 0;
+        for (let ty = 0; ty < MAP_H; ty++) {
+            if(getTile(tx, ty) !== MAT.AIR) { surfaceY = ty; break; }
+        }
+        
+        if (surfaceY > 0 && Math.random() < 0.15) {
+            let space = true;
+            for(let i=-2; i<=2; i++) {
+                if(getTile(tx+i, surfaceY-1) !== MAT.AIR) space = false;
+            }
+            if (space) {
+                let height = 4 + Math.floor(Math.random()*4);
+                if (biome.id === 0 || biome.id === 3) {
+                    for(let h=1; h<=height; h++) map[getMapIdx(tx, surfaceY-h)] = MAT.WOOD;
+                    for(let lx=-2; lx<=2; lx++) {
+                        for(let ly=-2; ly<=2; ly++) {
+                            if(Math.abs(lx)+Math.abs(ly) < 4) {
+                                let lIdx = getMapIdx(tx+lx, surfaceY-height+ly);
+                                if(map[lIdx] === MAT.AIR) map[lIdx] = MAT.LEAVES;
+                            }
+                        }
+                    }
+                } else if (biome.id === 1 && Math.random() < 0.5) {
+                     for(let h=1; h<=height; h++) map[getMapIdx(tx, surfaceY-h)] = MAT.WOOD;
+                     for(let h=0; h<=height; h++) {
+                         let width = Math.max(0, 3 - Math.floor(h/1.5));
+                         for(let lx=-width; lx<=width; lx++) {
+                             let lIdx = getMapIdx(tx+lx, surfaceY-h);
+                             if(map[lIdx] === MAT.AIR) map[lIdx] = MAT.LEAVES;
+                         }
+                     }
+                } else if (biome.id === 2 && Math.random() < 0.3) {
+                     for(let h=1; h<=3; h++) map[getMapIdx(tx, surfaceY-h)] = MAT.JUNGLE_GRASS;
+                     map[getMapIdx(tx-1, surfaceY-2)] = MAT.JUNGLE_GRASS;
+                     map[getMapIdx(tx+1, surfaceY-1)] = MAT.JUNGLE_GRASS;
+                }
+            }
+        }
+    }
+
+    // Pass 2: Place fruits
+    for (let i = 0; i < 4; i++) {
+        let bStart = i * (MAP_W / 4);
+        let bEnd = (i + 1) * (MAP_W / 4);
+        let biome = Object.values(BIOMES)[i];
+        
+        // Place normal fruits (surface)
+        let placedNormals = 0;
+        while (placedNormals < 15) { // Place extra so it's easier to find 5
+            let tx = Math.floor(bStart + Math.random() * (bEnd - bStart));
+            for (let ty = 0; ty < MAP_H; ty++) {
+                if (getTile(tx, ty) !== MAT.AIR && getTile(tx, ty-1) === MAT.AIR) {
+                    if (Math.random() < 0.3) {
+                        fruits.push({ type: biome.fruit, x: tx * TS + TS/2, y: (ty-1) * TS + TS/2, collected: false, float: Math.random() * Math.PI*2 });
+                        placedNormals++;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Place legendary fruit (deep cave)
+        let placedLegendary = false;
+        let attempts = 0;
+        while (!placedLegendary && attempts < 1000) {
+            attempts++;
+            let tx = Math.floor(bStart + Math.random() * (bEnd - bStart));
+            let ty = Math.floor(SURFACE_LEVEL + 30 + Math.random() * (MAP_H - SURFACE_LEVEL - 40));
+            
+            // Find a cave floor
+            if (getTile(tx, ty) === MAT.AIR && getTile(tx, ty+1) !== MAT.AIR) {
+                fruits.push({ type: biome.leg, x: tx * TS + TS/2, y: ty * TS + TS/2, collected: false, legendary: true, float: 0 });
+                placedLegendary = true;
+            }
+        }
+    }
+
+    // Set player start
+    player.x = (MAP_W_PX / 8); // Start in forest
+    for (let ty = 0; ty < MAP_H; ty++) {
+        if (getTile(player.x/TS, ty) !== MAT.AIR) {
+            player.y = ty * TS - player.radius - 5;
+            break;
+        }
+    }
+    
+    // Init segments
+    player.segments = [];
+    for(let i=0; i<player.numSegments; i++) {
+        player.segments.push({x: player.x, y: player.y});
+    }
+
+    generateTileset();
+}
+
+// --- Autotile Texture Generation ---
+function generateTileset() {
+    let numMats = Object.keys(MAT_DEFS).length;
+    tilesetCanvas = document.createElement('canvas');
+    tilesetCanvas.width = 16 * TS; // 16 variations per material
+    tilesetCanvas.height = (numMats + 1) * TS; // +1 for 1-based indexing
+    let tCtx = tilesetCanvas.getContext('2d');
+
+    for (let matId in MAT_DEFS) {
+        let def = MAT_DEFS[matId];
+        let yBase = parseInt(matId) * TS;
+
+        // Base noise pattern for this material
+        let tempCanvas = document.createElement('canvas');
+        tempCanvas.width = TS; tempCanvas.height = TS;
+        let t2Ctx = tempCanvas.getContext('2d');
+        t2Ctx.fillStyle = def.c1; t2Ctx.fillRect(0,0,TS,TS);
+        for(let i=0; i<150; i++) {
+            t2Ctx.fillStyle = Math.random() > 0.5 ? def.c2 : (def.c3 || 'rgba(0,0,0,0.1)');
+            let sz = Math.random() * 3 + 1;
+            t2Ctx.fillRect(Math.random()*TS, Math.random()*TS, sz, sz);
+        }
+        let basePattern = tCtx.createPattern(tempCanvas, 'repeat');
+
+        // Generate 16 bitmask variations (N=1, E=2, S=4, W=8)
+        // Bit represents presence of SAME or SOLID neighbor.
+        // For simplicity, we draw the full block, then carve out/round corners if a neighbor is AIR.
+        for (let mask = 0; mask < 16; mask++) {
+            let xBase = mask * TS;
+            tCtx.save();
+            tCtx.translate(xBase, yBase);
+            
+            // Draw base
+            tCtx.fillStyle = basePattern;
+            tCtx.fillRect(0, 0, TS, TS);
+
+            // Carve/Smooth edges if neighbors are empty (bit is 0)
+            tCtx.globalCompositeOperation = 'destination-out';
+            tCtx.fillStyle = 'black';
+            let r = 14; // Larger, smoother border radius
+
+            let n = (mask & 1) !== 0;
+            let e = (mask & 2) !== 0;
+            let s = (mask & 4) !== 0;
+            let w = (mask & 8) !== 0;
+
+            // Smoother bezier edge rounding
+            tCtx.beginPath();
+            if (!n && !w) { tCtx.moveTo(0,r); tCtx.bezierCurveTo(0,0, 0,0, r,0); tCtx.lineTo(0,0); tCtx.fill(); }
+            if (!n && !e) { tCtx.moveTo(TS-r,0); tCtx.bezierCurveTo(TS,0, TS,0, TS,r); tCtx.lineTo(TS,0); tCtx.fill(); }
+            if (!s && !w) { tCtx.moveTo(0,TS-r); tCtx.bezierCurveTo(0,TS, 0,TS, r,TS); tCtx.lineTo(0,TS); tCtx.fill(); }
+            if (!s && !e) { tCtx.moveTo(TS-r,TS); tCtx.bezierCurveTo(TS,TS, TS,TS, TS,TS-r); tCtx.lineTo(TS,TS); tCtx.fill(); }
+            
+            tCtx.globalCompositeOperation = 'source-over';
+            
+            // Optional top coloring (like grass on dirt)
+            if (!n && def.topColor) {
+                tCtx.fillStyle = def.topColor;
+                tCtx.beginPath();
+                tCtx.moveTo(0, 5); tCtx.lineTo(TS, 5); tCtx.lineTo(TS, 0); tCtx.lineTo(0, 0);
+                tCtx.fill();
+                // little grass blades
+                if(matId == MAT.GRASS || matId == MAT.JUNGLE_GRASS || matId == MAT.CRYSTAL) {
+                     for(let i=0; i<6; i++) {
+                         tCtx.fillRect(Math.random()*TS, -3, 2, 5);
+                     }
+                }
+            }
+            
+            // Richer Inner shadow for smooth shading/depth
+            if(!n) { 
+                let grad = tCtx.createLinearGradient(0,0, 0,8);
+                grad.addColorStop(0, 'rgba(0,0,0,0.4)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
+                tCtx.fillStyle = grad; tCtx.fillRect(0,0,TS,8); 
+                tCtx.fillStyle = 'rgba(255,255,255,0.15)'; tCtx.fillRect(0,0,TS,2); // Specular highlight
+            }
+            if(!s) { 
+                let grad = tCtx.createLinearGradient(0,TS, 0,TS-8);
+                grad.addColorStop(0, 'rgba(0,0,0,0.6)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
+                tCtx.fillStyle = grad; tCtx.fillRect(0,TS-8,TS,8); 
+            }
+            if(!w) { 
+                let grad = tCtx.createLinearGradient(0,0, 8,0);
+                grad.addColorStop(0, 'rgba(0,0,0,0.5)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
+                tCtx.fillStyle = grad; tCtx.fillRect(0,0,8,TS); 
+            }
+            if(!e) { 
+                let grad = tCtx.createLinearGradient(TS,0, TS-8,0);
+                grad.addColorStop(0, 'rgba(0,0,0,0.5)'); grad.addColorStop(1, 'rgba(0,0,0,0)');
+                tCtx.fillStyle = grad; tCtx.fillRect(TS-8,0,8,TS); 
+            }
+
+            // Inner corner dark spots (Ambient Occlusion approximation)
+            if(n && w) { tCtx.fillStyle = 'rgba(0,0,0,0.3)'; tCtx.beginPath(); tCtx.arc(0,0, 8, 0, Math.PI/2); tCtx.fill(); }
+            if(n && e) { tCtx.fillStyle = 'rgba(0,0,0,0.3)'; tCtx.beginPath(); tCtx.arc(TS,0, 8, Math.PI/2, Math.PI); tCtx.fill(); }
+            if(s && w) { tCtx.fillStyle = 'rgba(0,0,0,0.3)'; tCtx.beginPath(); tCtx.arc(0,TS, 8, -Math.PI/2, 0); tCtx.fill(); }
+            if(s && e) { tCtx.fillStyle = 'rgba(0,0,0,0.3)'; tCtx.beginPath(); tCtx.arc(TS,TS, 8, Math.PI, -Math.PI/2); tCtx.fill(); }
+
+            tCtx.restore();
+        }
+    }
+}
+
+// Get bitmask based on neighbors (1=solid, 0=air)
+function getTileMask(tx, ty) {
+    let mask = 0;
+    if (getTile(tx, ty-1) !== MAT.AIR) mask |= 1; // N
+    if (getTile(tx+1, ty) !== MAT.AIR) mask |= 2; // E
+    if (getTile(tx, ty+1) !== MAT.AIR) mask |= 4; // S
+    if (getTile(tx-1, ty) !== MAT.AIR) mask |= 8; // W
+    return mask;
+}
+
+// --- Maggot Physics & Logic ---
+function getGradientNormal(cx, cy, radius) {
+    let nx = 0, ny = 0;
+    let samples = 12;
+    let hits = 0;
+    for(let i=0; i<samples; i++) {
+        let a = (i/samples) * Math.PI * 2;
+        let px = cx + Math.cos(a) * radius;
+        let py = cy + Math.sin(a) * radius;
+        if(isSolid(px, py)) {
+            nx -= Math.cos(a); // Point away from solid
+            ny -= Math.sin(a);
+            hits++;
+        }
+    }
+    if (hits === 0) return {x: 0, y: -1}; // default up (falling)
+    if (hits === samples) return {x: 0, y: -1}; // engulfed, force upward
+    let len = Math.hypot(nx, ny);
+    if (len === 0) return {x: 0, y: -1}; 
+    return {x: nx/len, y: ny/len};
+}
+
+function updatePlayer() {
+    player.frame++;
+    
+    if (gameState === 'bulging') {
+        player.bulgeTime += 0.02;
+        if (player.bulgeTime > Math.PI * 2) {
+            gameState = 'fly';
+            showMessage("METAMORPHOSIS COMPLETE!");
+        }
+        return;
+    }
+
+    if (gameState === 'fly') {
+        // Fly controls (free movement)
+        let moveX = (keys['ArrowRight'] || keys['KeyD']) ? 1 : (keys['ArrowLeft'] || keys['KeyA']) ? -1 : 0;
+        let moveY = (keys['ArrowDown'] || keys['KeyS']) ? 1 : (keys['ArrowUp'] || keys['KeyW']) ? -1 : 0;
+        
+        player.flyVelocity.x += moveX * 0.5;
+        player.flyVelocity.y += moveY * 0.5;
+        
+        // Slight gravity if not pressing up and not touching surface
+        if (!moveY && !isSolid(player.x, player.y + player.radius + 5)) {
+            player.flyVelocity.y += 0.1;
+        }
+
+        player.flyVelocity.x *= 0.9;
+        player.flyVelocity.y *= 0.9;
+
+        player.x = wrapX(player.x + player.flyVelocity.x);
+        player.y += player.flyVelocity.y;
+        
+        // Simple collision
+        if (isSolid(player.x, player.y)) {
+            player.y -= player.flyVelocity.y;
+            player.flyVelocity.y = 0;
+        }
+
+        // visual angle points towards velocity if moving fast enough
+        if(Math.hypot(player.flyVelocity.x, player.flyVelocity.y) > 1) {
+             player.visualAngle = angleLerp(player.visualAngle, Math.atan2(player.flyVelocity.y, player.flyVelocity.x), 0.1);
+        }
+        
+        updateSegments();
+        checkFruits();
+        return;
+    }
+
+    // --- Maggot Physics (Crawler) ---
+    let input = (keys['ArrowRight'] || keys['KeyD']) ? 1 : (keys['ArrowLeft'] || keys['KeyA']) ? -1 : 0;
+    
+    // Decrement timers
+    if (player.jumpTimer > 0) player.jumpTimer--;
+    if (player.burrowTimer > 0) player.burrowTimer--;
+
+    // 1. Find local surface normal
+    let normal = getGradientNormal(player.x, player.y, player.radius + 6);
+    
+    // Smoothly rotate internal stick normal
+    player.stickNormal.x = lerp(player.stickNormal.x, normal.x, 0.3);
+    player.stickNormal.y = lerp(player.stickNormal.y, normal.y, 0.3);
+    
+    // Normalize again
+    let snLen = Math.hypot(player.stickNormal.x, player.stickNormal.y);
+    if(snLen > 0) {
+        player.stickNormal.x /= snLen; player.stickNormal.y /= snLen;
+    } else {
+        player.stickNormal.y = -1; // Fallback
+    }
+
+    // 2. Tangent movement forces (Fixed A/D reversal)
+    let tangent = {x: -player.stickNormal.y, y: player.stickNormal.x}; 
+    
+    if (input !== 0) {
+        player.speed = lerp(player.speed, player.maxSpeed, 0.1);
+    } else {
+        player.speed = lerp(player.speed, 0, 0.2);
+    }
+
+    player.vx = tangent.x * input * player.speed;
+    player.vy = tangent.y * input * player.speed;
+
+    // Jump Mechanics
+    let isGrounded = isSolid(player.x - player.stickNormal.x * (player.radius + 2), player.y - player.stickNormal.y * (player.radius + 2));
+    if ((keys['ArrowUp'] || keys['KeyW']) && player.jumpTimer <= 0 && isGrounded) {
+        // Apply impulse outward from the surface
+        player.vx += player.stickNormal.x * 12;
+        player.vy += player.stickNormal.y * 12;
+        player.jumpTimer = 90; // Long recharge (1.5 seconds)
+        createParticles(player.x, player.y, '#fff');
+    }
+
+    // Burrowing Mechanics
+    if ((keys['ArrowDown'] || keys['KeyS']) && player.burrowTimer <= 0 && isGrounded) {
+        // Check block inward
+        let digX = player.x - player.stickNormal.x * (player.radius + TS/2);
+        let digY = player.y - player.stickNormal.y * (player.radius + TS/2);
+        let tx = Math.floor(digX / TS);
+        let ty = Math.floor(digY / TS);
+        let tile = getTile(tx, ty);
+        
+        if (SOFT_MATS.has(tile)) {
+            map[getMapIdx(tx, ty)] = MAT.AIR;
+            createParticles(tx * TS + TS/2, ty * TS + TS/2, MAT_DEFS[tile].c1);
+            player.burrowTimer = 15; // Delay between mining blocks
+        }
+    }
+
+    // Apply stickiness (gravity towards wall) if not jumping away strongly
+    if (player.jumpTimer < 80) { // Tiny window to escape gravity on jump
+        player.vx -= player.stickNormal.x * 3;
+        player.vy -= player.stickNormal.y * 3;
+    }
+
+    // 3. Move
+    player.x = wrapX(player.x + player.vx);
+    player.y += player.vy;
+
+    // 4. Resolve Collisions - push out iteratively to allow smooth crawling
+    for(let k=0; k<3; k++) {
+        if(isSolid(player.x, player.y)) {
+             let pushN = getGradientNormal(player.x, player.y, 10);
+             player.x = wrapX(player.x + pushN.x * 2);
+             player.y += pushN.y * 2;
+        } else {
+             break;
+        }
+    }
+    
+    // Remove strict Y bounds to allow floating island underside wrapping behavior natively
+    // If you somehow fall completely away from the island, wrap vertical
+    if(player.y > MAP_H_PX + 500) player.y = -100;
+    if(player.y < -500) player.y = MAP_H_PX + 100;
+
+    // 5. Visuals and Segments
+    let targetAngle = Math.atan2(tangent.y * (input||1), tangent.x * (input||1));
+    player.visualAngle = angleLerp(player.visualAngle, targetAngle, 0.2);
+
+    updateSegments();
+    checkFruits();
+}
+
+function updateSegments() {
+    // Follow the leader IK
+    let prev = {x: player.x, y: player.y};
+    for (let i = 0; i < player.segments.length; i++) {
+        let seg = player.segments[i];
+        
+        // Handle horizontal wrap distance calculation
+        let dx = prev.x - seg.x;
+        // Shortest path around wrapped world
+        if (dx > MAP_W_PX / 2) dx -= MAP_W_PX;
+        if (dx < -MAP_W_PX / 2) dx += MAP_W_PX;
+        
+        let dy = prev.y - seg.y;
+        let dist = Math.hypot(dx, dy);
+        
+        // Maggot scrunching effect based on movement
+        let currentTargetDist = player.segmentDist;
+        if (gameState === 'play' && Math.hypot(player.vx, player.vy) < 0.5) {
+            currentTargetDist = player.segmentDist * 0.7; // scrunch up when still
+        }
+
+        if (dist > currentTargetDist) {
+            seg.x = wrapX(seg.x + (dx / dist) * (dist - currentTargetDist));
+            seg.y += (dy / dist) * (dist - currentTargetDist);
+        }
+        
+        // Push out of terrain iteratively for segments too
+        for(let k=0; k<3; k++) {
+            if(isSolid(seg.x, seg.y)) {
+                 let n = getGradientNormal(seg.x, seg.y, 8);
+                 seg.x = wrapX(seg.x + n.x * 2);
+                 seg.y += n.y * 2;
+            } else {
+                 break;
+            }
+        }
+
+        prev = seg;
+    }
+}
+
+function checkFruits() {
+    for (let i = fruits.length - 1; i >= 0; i--) {
+        let f = fruits[i];
+        if (f.collected) continue;
+        
+        let dx = player.x - f.x;
+        if (dx > MAP_W_PX / 2) dx -= MAP_W_PX;
+        if (dx < -MAP_W_PX / 2) dx += MAP_W_PX;
+        
+        let dist = Math.hypot(dx, player.y - f.y);
+        
+        if (dist < player.radius + 15) {
+            f.collected = true;
+            createParticles(f.x, f.y, f.legendary ? '#fff' : '#aa0');
+            
+            if (player.inventory[f.type] !== undefined) {
+                 // Cap normal fruits at 5, legendary at 1
+                 if(f.legendary && player.inventory[f.type] < 1) {
+                     player.inventory[f.type]++;
+                     updateUI();
+                 } else if (!f.legendary && player.inventory[f.type] < 5) {
+                     player.inventory[f.type]++;
+                     updateUI();
+                 }
+            }
+            checkWinCondition();
+        }
+    }
+}
+
+function checkWinCondition() {
+    let win = true;
+    for (let key in player.inventory) {
+        let isLeg = (key === 'dryad' || key === 'eskimo' || key === 'dry' || key === 'mudsap');
+        let target = isLeg ? 1 : 5;
+        if (player.inventory[key] < target) win = false;
+    }
+    if (win && gameState === 'play') {
+        gameState = 'bulging';
+        showMessage("ALL FRUITS GATHERED! METAMORPHOSIS BEGINS!");
+    }
+}
+
+// --- Particles ---
+function createParticles(x, y, color) {
+    for(let i=0; i<10; i++) {
+        particles.push({
+            x: x, y: y,
+            vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4,
+            life: 1.0, color: color
+        });
+    }
+}
+function updateParticles() {
+    for(let i=particles.length-1; i>=0; i--) {
+        let p = particles[i];
+        p.x = wrapX(p.x + p.vx); p.y += p.vy;
+        p.life -= 0.02;
+        if(p.life <= 0) particles.splice(i, 1);
+    }
+}
+
+// --- Rendering ---
+function drawWorld() {
+    let startTx = Math.floor((camera.x - canvas.width/2) / TS) - 1;
+    let endTx = Math.ceil((camera.x + canvas.width/2) / TS) + 1;
+    let startTy = Math.floor((camera.y - canvas.height/2) / TS) - 1;
+    let endTy = Math.ceil((camera.y + canvas.height/2) / TS) + 1;
+
+    // Determine current biome for background color blending
+    let currentTx = wrapTileX(Math.floor(camera.x / TS));
+    let biomeIdx = Math.floor((currentTx / MAP_W) * 4);
+    let biome = Object.values(BIOMES)[biomeIdx];
+
+    // Draw Parallax Backgrounds based on Biome
+    let pxOffset1 = (camera.x * 0.1) % MAP_W_PX;
+    let pxOffset2 = (camera.x * 0.3) % MAP_W_PX;
+    let pxOffset3 = (camera.x * 0.6) % MAP_W_PX;
+
+    function drawParallax(offset, color, heightMult, amp, freqMult) {
+        for(let i=-1; i<=1; i++) {
+            let startX = i * MAP_W_PX - offset;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(startX, SURFACE_LEVEL * TS + 300);
+            for(let tx = 0; tx <= MAP_W_PX; tx += 40) {
+                 let globalX = i * MAP_W_PX + tx; 
+                 let angle = (globalX / MAP_W_PX) * Math.PI * 2 * freqMult;
+                 let n = noise.noise2D(Math.cos(angle), Math.sin(angle));
+                 ctx.lineTo(startX + tx, SURFACE_LEVEL * TS - heightMult - (n * amp));
+            }
+            ctx.lineTo(startX + MAP_W_PX, SURFACE_LEVEL * TS + 300);
+            ctx.fill();
+        }
+    }
+
+    if (biome.id === 0) { // Forest
+        drawParallax(pxOffset1, '#4A7C59', 150, 80, 4); // Mountains
+        drawParallax(pxOffset2, '#3B5E43', 100, 50, 8); // Distant trees
+        drawParallax(pxOffset3, '#2E4C36', 50, 40, 12);  // Near trees
+    } else if (biome.id === 1) { // Ice
+        drawParallax(pxOffset1, '#CFD8DC', 200, 150, 3); // Tall snowy peaks
+        drawParallax(pxOffset2, '#B0BEC5', 120, 80, 6);
+        drawParallax(pxOffset3, '#90A4AE', 60, 40, 10);
+    } else if (biome.id === 2) { // Desert
+        drawParallax(pxOffset1, '#E6C280', 100, 40, 2);  // Dunes
+        drawParallax(pxOffset2, '#D4A373', 60, 30, 4);
+        drawParallax(pxOffset3, '#CC8E5E', 20, 20, 8);
+    } else if (biome.id === 3) { // Jungle
+        drawParallax(pxOffset1, '#2D4A22', 180, 70, 5);  // Mountains
+        drawParallax(pxOffset2, '#203A15', 120, 60, 10);  // Thick canopy
+        drawParallax(pxOffset3, '#152A0C', 70, 50, 15);   // Near canopy
+    }
+
+    // Draw Distant City Ruins mixed in
+    for(let i=-1; i<=1; i++) {
+        let baseCityX = -pxOffset2 + (i * MAP_W_PX);
+        ctx.fillStyle = 'rgba(20, 25, 30, 0.5)';
+        ctx.beginPath();
+        ctx.moveTo(baseCityX, SURFACE_LEVEL * TS);
+        for(let b=0; b<MAP_W_PX/80; b++) {
+            let h = 60 + Math.abs(Math.sin(b * 7.1)) * 140;
+            ctx.lineTo(baseCityX + b * 80, SURFACE_LEVEL * TS - h);
+            ctx.lineTo(baseCityX + b * 80 + 40, SURFACE_LEVEL * TS - h);
+        }
+        ctx.lineTo(baseCityX + MAP_W_PX, SURFACE_LEVEL * TS);
+        ctx.fill();
+    }
+
+    // Draw underground cave background
+    let camTy = camera.y / TS;
+    if (camTy > SURFACE_LEVEL - 5) {
+        let depthBlend = Math.min(1, Math.max(0, (camTy - SURFACE_LEVEL + 5) / 15));
+        ctx.fillStyle = `rgba(15, 12, 10, ${depthBlend * 0.9})`; // Dark stone cave
+        ctx.fillRect(camera.x - canvas.width/2, camera.y - canvas.height/2, canvas.width, canvas.height);
+    }
+
+    // Draw tiles
+    for (let ty = Math.max(0, startTy); ty < Math.min(MAP_H, endTy); ty++) {
+        for (let tx = startTx; tx <= endTx; tx++) {
+            let matId = getTile(tx, ty);
+            if (matId !== MAT.AIR) {
+                let mask = getTileMask(tx, ty);
+                let drawX = tx * TS; // logical X
+                let drawY = ty * TS;
+                
+                // Handle horizontal wrapping rendering
+                let dx = drawX - camera.x;
+                if (dx > MAP_W_PX / 2) drawX -= MAP_W_PX;
+                if (dx < -MAP_W_PX / 2) drawX += MAP_W_PX;
+
+                if (tilesetCanvas) {
+                    ctx.drawImage(tilesetCanvas, mask * TS, matId * TS, TS, TS, drawX, drawY, TS, TS);
+                } else {
+                    // Fallback
+                    ctx.fillStyle = MAT_DEFS[matId].c1;
+                    ctx.fillRect(drawX, drawY, TS, TS);
+                }
+            }
+        }
+    }
+}
+
+function drawFruits() {
+    let t = player.frame * 0.05;
+    for (let f of fruits) {
+        if (f.collected) continue;
+        
+        let drawX = f.x;
+        let dx = drawX - camera.x;
+        if (dx > MAP_W_PX / 2) drawX -= MAP_W_PX;
+        if (dx < -MAP_W_PX / 2) drawX += MAP_W_PX;
+
+        // Culling
+        if (Math.abs(drawX - camera.x) > canvas.width/2 + 50) continue;
+
+        let yOff = Math.sin(t + f.float) * 5;
+        
+        ctx.save();
+        ctx.translate(drawX, f.y + yOff);
+        
+        if (f.legendary) {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = 'white';
+        }
+
+        // Draw specific fruit shapes
+        switch(f.type) {
+            case 'apple':
+                ctx.fillStyle = '#ff4d4d'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#8B4513'; ctx.fillRect(-1, -12, 2, 6); // stem
+                break;
+            case 'plum':
+                ctx.fillStyle = '#b366ff'; ctx.beginPath(); ctx.ellipse(0, 0, 7, 9, 0, 0, Math.PI*2); ctx.fill();
+                break;
+            case 'cactus':
+                ctx.fillStyle = '#ff66b3'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#33cc33'; ctx.fillRect(-2, -10, 4, 4); // little green bit
+                break;
+            case 'banana':
+                ctx.fillStyle = '#ffd633'; ctx.beginPath(); ctx.arc(0, 0, 10, 0.2, Math.PI-0.2); ctx.lineWidth=4; ctx.strokeStyle='#ffd633'; ctx.stroke();
+                break;
+            // Legendaries
+            case 'dryad':
+                ctx.fillStyle = '#00ff00'; ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(10,5); ctx.lineTo(-10,5); ctx.fill();
+                break;
+            case 'eskimo':
+                ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#fff'; ctx.arc(0,0,5,0,Math.PI*2); ctx.fill();
+                break;
+            case 'dry':
+                ctx.fillStyle = '#ff9900'; ctx.fillRect(-8,-8,16,16);
+                break;
+            case 'mudsap':
+                ctx.fillStyle = '#8c531b'; ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI); ctx.lineTo(0,-10); ctx.fill();
+                break;
+        }
+        ctx.restore();
+    }
+}
+
+function drawPlayer() {
+    let renderX = player.x;
+    // ensure camera centering handles wrap
+    let dx = renderX - camera.x;
+    if (dx > MAP_W_PX / 2) renderX -= MAP_W_PX;
+    if (dx < -MAP_W_PX / 2) renderX += MAP_W_PX;
+
+    // Bulge effect
+    let scale = 1;
+    if (gameState === 'bulging') {
+        scale = 1 + Math.sin(player.bulgeTime) * 0.5 + (player.bulgeTime/3);
+    }
+    
+    if (gameState === 'fly') {
+        // Draw Fly
+        ctx.save();
+        ctx.translate(renderX, player.y);
+        ctx.rotate(player.visualAngle);
+        
+        // Wings
+        ctx.fillStyle = 'rgba(200, 255, 255, 0.6)';
+        let wingBeat = Math.sin(player.frame * 0.5) * 0.5;
+        ctx.save(); ctx.translate(0, -5); ctx.rotate(wingBeat); ctx.beginPath(); ctx.ellipse(0, -10, 5, 15, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+        ctx.save(); ctx.translate(0, 5); ctx.rotate(-wingBeat); ctx.beginPath(); ctx.ellipse(0, 10, 5, 15, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+        
+        // Body
+        ctx.fillStyle = '#222';
+        ctx.beginPath(); ctx.ellipse(0, 0, 15, 8, 0, 0, Math.PI*2); ctx.fill();
+        // Eyes
+        ctx.fillStyle = 'red';
+        ctx.beginPath(); ctx.arc(10, -3, 3, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(10, 3, 3, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+        return;
+    }
+
+    // Draw Maggot Segments (back to front)
+    for (let i = player.segments.length - 1; i >= 0; i--) {
+        let seg = player.segments[i];
+        let sx = seg.x;
+        // wrap check for rendering
+        let sdx = sx - camera.x;
+        if (sdx > MAP_W_PX / 2) sx -= MAP_W_PX;
+        if (sdx < -MAP_W_PX / 2) sx += MAP_W_PX;
+
+        let r = player.radius * 0.8 * (1 - (i / player.segments.length) * 0.4) * scale;
+        
+        ctx.fillStyle = i % 2 === 0 ? '#d4e157' : '#c0ca33'; // yellowish-green maggot
+        ctx.beginPath();
+        ctx.arc(sx, seg.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#9e9d24';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Tiny legs
+        if (i % 2 === 0) {
+            ctx.strokeStyle = '#555';
+            ctx.beginPath();
+            ctx.moveTo(sx, seg.y); ctx.lineTo(sx + r*1.2, seg.y + r*1.2);
+            ctx.moveTo(sx, seg.y); ctx.lineTo(sx - r*1.2, seg.y + r*1.2);
+            ctx.stroke();
+        }
+    }
+
+    // Draw Head
+    ctx.save();
+    ctx.translate(renderX, player.y);
+    ctx.rotate(player.visualAngle);
+    ctx.scale(scale, scale);
+    
+    ctx.fillStyle = '#afb42b';
+    ctx.beginPath();
+    ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Eyes / Mandibles
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(player.radius*0.6, -player.radius*0.4, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(player.radius*0.6, player.radius*0.4, 2, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#333'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(player.radius, -player.radius*0.3); ctx.lineTo(player.radius+4, -player.radius*0.6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(player.radius, player.radius*0.3); ctx.lineTo(player.radius+4, player.radius*0.6); ctx.stroke();
+    
+    ctx.restore();
+}
+
+function render() {
+    ctx.fillStyle = Object.values(BIOMES)[Math.floor((wrapTileX(Math.floor(camera.x/TS)) / MAP_W) * 4)].bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    
+    // Camera Transform
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    
+    // Screen Flip / Gravity Mode logic
+    if (camera.mode === 'flip' && gameState !== 'fly') {
+        // Rotate so player's stick normal (away from wall) points UP (-y)
+        // normal points AWAY from wall. So wall is opposite.
+        let targetRot = Math.atan2(player.stickNormal.y, player.stickNormal.x) + Math.PI/2;
+        
+        // Smooth rotation
+        camera.rotation = angleLerp(camera.rotation, targetRot, 0.1);
+        ctx.rotate(-camera.rotation); // rotate canvas opposite
+    } else {
+        camera.rotation = angleLerp(camera.rotation, 0, 0.1);
+        ctx.rotate(-camera.rotation);
+    }
+
+    ctx.translate(-camera.x, -camera.y);
+
+    drawWorld();
+    drawFruits();
+    drawPlayer();
+
+    // Draw particles
+    for(let p of particles) {
+        let px = p.x;
+        let dx = px - camera.x;
+        if (dx > MAP_W_PX / 2) px -= MAP_W_PX;
+        if (dx < -MAP_W_PX / 2) px += MAP_W_PX;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.beginPath(); ctx.arc(px, p.y, 3, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1.0;
+
+    ctx.restore();
+}
+
+// --- Main Loop & UI ---
+function updateUI() {
+    for (let key in player.inventory) {
+        let el = document.getElementById(`inv-${key}`);
+        if(el) {
+            let max = (key === 'dryad' || key === 'eskimo' || key === 'dry' || key === 'mudsap') ? 1 : 5;
+            el.innerText = `${Math.min(player.inventory[key], max)}/${max}`;
+            if(player.inventory[key] >= max) el.style.color = '#a8e6cf';
+        }
+    }
+}
+
+let msgTimeout;
+function showMessage(text) {
+    let mb = document.getElementById('message-box');
+    mb.innerText = text;
+    mb.style.opacity = 1;
+    clearTimeout(msgTimeout);
+    msgTimeout = setTimeout(() => { mb.style.opacity = 0; }, 4000);
+}
+
+function loop() {
+    if (gameState !== 'title') {
+        updatePlayer();
+        updateParticles();
+        
+        // Camera Follow
+        let targetCamX = player.x;
+        // handle wrap interpolation carefully
+        let cdx = targetCamX - camera.x;
+        if (cdx > MAP_W_PX / 2) camera.x += MAP_W_PX;
+        if (cdx < -MAP_W_PX / 2) camera.x -= MAP_W_PX;
+        
+        camera.x = lerp(camera.x, targetCamX, 0.1);
+        camera.x = wrapX(camera.x); // keep camera in 0-MAP_W_PX range
+        camera.y = lerp(camera.y, player.y, 0.1);
+    }
+
+    render();
+    requestAnimationFrame(loop);
+}
+
+// --- Initialization ---
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+
+document.getElementById('btn-camera').addEventListener('click', (e) => {
+    camera.mode = camera.mode === 'normal' ? 'flip' : 'normal';
+    e.target.innerText = `Camera: ${camera.mode === 'normal' ? 'Normal' : 'Flip'}`;
+    e.target.classList.toggle('active', camera.mode === 'flip');
+});
+
+document.getElementById('start-btn').addEventListener('click', () => {
+    document.getElementById('title-screen').style.display = 'none';
+    gameState = 'play';
+});
+
+resize();
+generateWorld();
+updateUI();
+requestAnimationFrame(loop);
+
+</script>
+</body>
+</html>
