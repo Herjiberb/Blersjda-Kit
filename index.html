@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Blersjda Madness</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { background-color: #1e1b4b; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; touch-action: manipulation; }
+        .bouncing-title { animation: bounce 2s infinite; text-shadow: 0 4px 10px rgba(236, 72, 153, 0.6); }
+        @keyframes bounce { 0%, 100% { transform: translateY(-5%); } 50% { transform: translateY(5%); } }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .glass-panel { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        input[type="text"] { font-size: 16px; } /* Prevents iOS zoom */
+        .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: #ec4899; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // ==========================================
+        // 🎮 THE EASY ARRAY FOR ADDING TONS OF PROMPTS
+        // ==========================================
+        const EASY_PROMPTS_ARRAY = [
+            // Family Friendly Prompts (family: true)
+            { text: "A terrible name for a pet goldfish.", family: true },
+            { text: "What really happens when you flush an airplane toilet.", family: true },
+            { text: "A secret use for belly button fluff.", family: true },
+            { text: "What dogs are actually saying when they bark.", family: true },
+            { text: "The worst flavor of ice cream.", family: true },
+            { text: "A rejected title for the next Star Wars movie.", family: true },
+            { text: "What's really at the end of a rainbow.", family: true },
+            { text: "The absolute worst superpower to have.", family: true },
+            { text: "A new Olympic sport you would definitely win.", family: true },
+            { text: "The strangest thing to bring to a deserted island.", family: true },
+            { text: "What aliens actually think of humans.", family: true },
+            { text: "A terrible excuse for not doing your homework.", family: true },
+            { text: "The real reason dinosaurs went extinct.", family: true },
+            { text: "What the boogeyman is actually afraid of.", family: true },
+            { text: "A brand new holiday we should start celebrating.", family: true },
+            { text: "The worst thing to hear your pilot say.", family: true },
+            { text: "Something you shouldn't do while riding a rollercoaster.", family: true },
+            { text: "The secret ingredient in school cafeteria food.", family: true },
+            { text: "A bad thing to say when getting pulled over by a cop.", family: true },
+            { text: "What a potato thinks about all day.", family: true },
+            { text: "The worst theme for a birthday party.", family: true },
+            { text: "What really goes on inside a vending machine.", family: true },
+            { text: "A terrible name for a brand of toilet paper.", family: true },
+            { text: "The most useless invention ever.", family: true },
+            { text: "What pigeons are really plotting.", family: true },
+            { text: "A bad place to hide during hide-and-seek.", family: true },
+            { text: "The first thing you'd do if you were invisible for a day.", family: true },
+            { text: "A strange thing to find inside your shoe.", family: true },
+
+            // Non-Family Friendly Prompts (family: false)
+            { text: "The worst thing to accidentally text your boss.", family: false },
+            { text: "A terrible thing to yell during a funeral.", family: false },
+            { text: "What's really in the hot dogs.", family: false },
+            { text: "The worst thing to discover on your first date.", family: false },
+            { text: "A terrible safe word.", family: false },
+            { text: "The absolute worst place to get a tattoo.", family: false },
+            { text: "What grandma is secretly hiding in her attic.", family: false },
+            { text: "The real reason you got fired.", family: false },
+            { text: "A completely inappropriate theme for a baby shower.", family: false },
+            { text: "The worst thing to happen during surgery.", family: false },
+            { text: "What your search history says about you.", family: false },
+            { text: "A terrible lie to put on your resume.", family: false },
+            { text: "The worst thing to find in your bed.", family: false },
+            { text: "What really caused the apocalypse.", family: false },
+            { text: "The worst question to ask on a first date.", family: false },
+            { text: "A terrible idea for a reality TV show.", family: false },
+            { text: "What the FBI agent watching your webcam thinks of you.", family: false },
+            { text: "The worst thing to hear while trapped in an elevator.", family: false },
+            { text: "What you actually want written on your tombstone.", family: false },
+            { text: "A terrible thing to bring to a job interview.", family: false },
+            { text: "What really happened at the company Christmas party.", family: false },
+            { text: "The worst secret to keep from your spouse.", family: false },
+            { text: "A rejected flavor of adult beverages.", family: false },
+            { text: "The worst thing to say after 'I love you'.", family: false }
+        ];
+
+        const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
+
+        // ==========================================
+        // UTILS & TTS
+        // ==========================================
+        const generateCode = () => Math.random().toString(36).substring(2, 6).toUpperCase();
+        
+        const speakText = (text, enabled) => {
+            if (!enabled || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.rate = 1.05;
+            msg.pitch = 1.1;
+            window.speechSynthesis.speak(msg);
+        };
+
+        const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
+
+        // ==========================================
+        // UI COMPONENTS
+        // ==========================================
+        const Button = ({ onClick, children, color = "pink", className = "", disabled=false }) => {
+            const colorClasses = {
+                pink: "bg-pink-600 hover:bg-pink-500 border-pink-800",
+                blue: "bg-blue-600 hover:bg-blue-500 border-blue-800",
+                green: "bg-green-600 hover:bg-green-500 border-green-800",
+                purple: "bg-purple-600 hover:bg-purple-500 border-purple-800",
+                gray: "bg-gray-600 hover:bg-gray-500 border-gray-800",
+            };
+            return (
+                <button 
+                    onClick={onClick} 
+                    disabled={disabled}
+                    className={`w-full py-4 px-6 text-xl font-bold uppercase tracking-wider rounded-xl shadow-lg border-b-4 ${colorClasses[color]} active:border-b-0 active:translate-y-1 transition-all ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+                >
+                    {children}
+                </button>
+            );
+        };
+
+        // ==========================================
+        // MAIN APP COMPONENT
+        // ==========================================
+        const App = () => {
+            const [view, setView] = useState('MENU'); // MENU, HOST, JOIN, LOCAL
+            
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                    {view === 'MENU' && <MainMenu setView={setView} />}
+                    {view === 'HOST' && <OnlineHost goBack={() => setView('MENU')} />}
+                    {view === 'JOIN' && <OnlineClient goBack={() => setView('MENU')} />}
+                    {view === 'LOCAL' && <LocalGame goBack={() => setView('MENU')} />}
+                </div>
+            );
+        };
+
+        // ==========================================
+        // MAIN MENU
+        // ==========================================
+        const MainMenu = ({ setView }) => (
+            <div className="max-w-md w-full flex flex-col items-center gap-6 fade-in text-center">
+                <h1 className="text-6xl font-black uppercase bouncing-title mb-4">Blersjda<br/><span className="text-pink-400">Madness</span></h1>
+                <p className="text-xl mb-8 text-blue-200">The Ultimate Party Game</p>
+                
+                <Button color="pink" onClick={() => setView('HOST')}>📺 Host Game (Online)</Button>
+                <Button color="blue" onClick={() => setView('JOIN')}>📱 Join Game (Online)</Button>
+                <Button color="green" onClick={() => setView('LOCAL')}>🛋️ Pass-and-Play (Local)</Button>
+                
+                <div className="mt-8 text-sm text-blue-300 glass-panel p-4 rounded-xl">
+                    <p><strong>Online:</strong> Host puts this on a big screen, players join via phone.</p>
+                    <p className="mt-2"><strong>Local:</strong> One device passed around the room!</p>
+                </div>
+            </div>
+        );
+
+        // ==========================================
+        // ONLINE HOST (THE BIG SCREEN)
+        // ==========================================
+        const OnlineHost = ({ goBack }) => {
+            const [peer, setPeer] = useState(null);
+            const [roomCode, setRoomCode] = useState('');
+            const [players, setPlayers] = useState([]);
+            const [settings, setSettings] = useState({ familyFriendly: false, tts: true });
+            const [gameState, setGameState] = useState('LOBBY'); // LOBBY, ANSWERING, VOTING, ROUND_END, GAME_END
+            const [round, setRound] = useState(1);
+            const [clashes, setClashes] = useState([]);
+            const [currentClashIndex, setCurrentClashIndex] = useState(0);
+            const [timer, setTimer] = useState(0);
+            const [usedPrompts, setUsedPrompts] = useState([]);
+
+            const connectionsRef = useRef({});
+            const stateRef = useRef();
+            
+            // Sync refs for async callbacks
+            useEffect(() => {
+                stateRef.current = { players, gameState, round, clashes, currentClashIndex, settings };
+            }, [players, gameState, round, clashes, currentClashIndex, settings]);
+
+            // Initialize Host Peer
+            useEffect(() => {
+                const code = generateCode();
+                const newPeer = new Peer(`blersjda-${code}`);
+                
+                newPeer.on('open', (id) => {
+                    setRoomCode(code);
+                });
+
+                newPeer.on('connection', (conn) => {
+                    conn.on('data', (data) => handleClientMessage(conn.peer, data, conn));
+                });
+
+                setPeer(newPeer);
+                return () => newPeer.destroy();
+            }, []);
+
+            // Broadcast state to all connected clients
+            const broadcast = (type, payload) => {
+                Object.values(connectionsRef.current).forEach(conn => {
+                    if(conn.open) conn.send({ type, ...payload });
+                });
+            };
+
+            const sendToClient = (peerId, type, payload) => {
+                const conn = connectionsRef.current[peerId];
+                if(conn && conn.open) conn.send({ type, ...payload });
+            }
+
+            const handleClientMessage = (peerId, data, conn) => {
+                if(data.type === 'JOIN') {
+                    connectionsRef.current[peerId] = conn;
+                    setPlayers(prev => {
+                        if(prev.find(p => p.id === peerId)) return prev;
+                        return [...prev, { id: peerId, name: data.name, score: 0 }];
+                    });
+                    conn.send({ type: 'LOBBY_JOINED' });
+                }
+                
+                if(data.type === 'SUBMIT_ANSWER') {
+                    setClashes(prev => {
+                        const next = [...prev];
+                        // Find the clashes this player is in and update their answer
+                        next.forEach(clash => {
+                            if(clash.p1.id === peerId) clash.answers[peerId] = data.answer;
+                            if(clash.p2.id === peerId) clash.answers[peerId] = data.answer;
+                        });
+                        return next;
+                    });
+                }
+
+                if(data.type === 'SUBMIT_VOTE') {
+                    setClashes(prev => {
+                        const next = [...prev];
+                        const clash = next[stateRef.current.currentClashIndex];
+                        clash.votes[peerId] = data.votedFor; // votedFor is player ID
+                        return next;
+                    });
+                }
+            };
+
+            // GAME LOGIC FLOW
+            const startGame = () => {
+                if(players.length < 3) {
+                    alert("Need at least 3 players!");
+                    return;
+                }
+                setRound(1);
+                startRound(1, players, []);
+            };
+
+            const startRound = (r, currentPlayers, prevUsed) => {
+                setRound(r);
+                
+                // 1. Generate Clashes (Round Robin: Every player gets 2 prompts, 2 players per prompt)
+                let available = EASY_PROMPTS_ARRAY.filter(p => !prevUsed.includes(p.text));
+                if(settings.familyFriendly) available = available.filter(p => p.family);
+                available = shuffle(available);
+
+                const newClashes = [];
+                const newUsed = [...prevUsed];
+
+                for(let i=0; i<currentPlayers.length; i++) {
+                    const p1 = currentPlayers[i];
+                    const p2 = currentPlayers[(i+1) % currentPlayers.length];
+                    const prompt = available.pop();
+                    newUsed.push(prompt.text);
+                    newClashes.push({
+                        prompt: prompt.text,
+                        p1, p2,
+                        answers: {}, // { playerId: "text" }
+                        votes: {}    // { voterId: "votedPlayerId" }
+                    });
+                }
+
+                setUsedPrompts(newUsed);
+                setClashes(newClashes);
+                setGameState('ANSWERING');
+                
+                // Broadcast to clients what prompts they need to answer
+                currentPlayers.forEach(player => {
+                    const myPrompts = newClashes.filter(c => c.p1.id === player.id || c.p2.id === player.id);
+                    sendToClient(player.id, 'STATE_ANSWERING', { prompts: myPrompts.map(p => p.prompt) });
+                });
+
+                speakText(`Round ${r}. Look at your devices and answer the prompts!`, settings.tts);
+
+                // Start Timer
+                let timeLeft = 60;
+                setTimer(timeLeft);
+                const int = setInterval(() => {
+                    timeLeft--;
+                    setTimer(timeLeft);
+                    
+                    // Check if all answered
+                    const allAnswered = stateRef.current.clashes.every(c => c.answers[c.p1.id] && c.answers[c.p2.id]);
+                    if(timeLeft <= 0 || allAnswered) {
+                        clearInterval(int);
+                        // Auto-fill blanks
+                        setClashes(prev => {
+                            const filled = [...prev];
+                            filled.forEach(c => {
+                                if(!c.answers[c.p1.id]) c.answers[c.p1.id] = shuffle(DEFAULT_ANSWERS)[0];
+                                if(!c.answers[c.p2.id]) c.answers[c.p2.id] = shuffle(DEFAULT_ANSWERS)[0];
+                            });
+                            return filled;
+                        });
+                        setTimeout(() => startVotingPhase(0), 1000);
+                    }
+                }, 1000);
+            };
+
+            const startVotingPhase = (clashIndex) => {
+                if(clashIndex >= stateRef.current.clashes.length) {
+                    // Round Over
+                    setGameState('ROUND_END');
+                    speakText(`Round ${stateRef.current.round} is over! Let's look at the scores.`, settings.tts);
+                    broadcast('STATE_WAITING', { msg: 'Look at the big screen!' });
+                    return;
+                }
+
+                setGameState('VOTING');
+                setCurrentClashIndex(clashIndex);
+                const clash = stateRef.current.clashes[clashIndex];
+
+                speakText(clash.prompt, settings.tts);
+
+                // Tell everyone NOT answering to vote
+                stateRef.current.players.forEach(p => {
+                    if(p.id !== clash.p1.id && p.id !== clash.p2.id) {
+                        sendToClient(p.id, 'STATE_VOTING', { 
+                            prompt: clash.prompt, 
+                            answers: [
+                                { id: clash.p1.id, text: clash.answers[clash.p1.id] },
+                                { id: clash.p2.id, text: clash.answers[clash.p2.id] }
+                            ]
+                        });
+                    } else {
+                        sendToClient(p.id, 'STATE_WAITING', { msg: 'This is your prompt! Wait for votes.' });
+                    }
+                });
+
+                let timeLeft = 20;
+                setTimer(timeLeft);
+                const int = setInterval(() => {
+                    timeLeft--;
+                    setTimer(timeLeft);
+                    const currentClash = stateRef.current.clashes[clashIndex];
+                    const expectedVotes = stateRef.current.players.length - 2;
+                    const voteCount = Object.keys(currentClash.votes).length;
+
+                    if(timeLeft <= 0 || voteCount >= expectedVotes) {
+                        clearInterval(int);
+                        revealWinner(clashIndex);
+                    }
+                }, 1000);
+            };
+
+            const revealWinner = (clashIndex) => {
+                setGameState('REVEAL');
+                broadcast('STATE_WAITING', { msg: 'Look at the big screen!' });
+                
+                const clash = stateRef.current.clashes[clashIndex];
+                const votes = Object.values(clash.votes);
+                const p1Votes = votes.filter(v => v === clash.p1.id).length;
+                const p2Votes = votes.filter(v => v === clash.p2.id).length;
+                const totalVotes = p1Votes + p2Votes;
+
+                // Calculate Points
+                const basePoints = 1000 * stateRef.current.round;
+                let p1Score = totalVotes > 0 ? Math.floor((p1Votes/totalVotes) * basePoints) : 0;
+                let p2Score = totalVotes > 0 ? Math.floor((p2Votes/totalVotes) * basePoints) : 0;
+
+                // Majority Bonus
+                if(p1Votes > p2Votes) p1Score += Math.floor(basePoints * 0.1);
+                if(p2Votes > p1Votes) p2Score += Math.floor(basePoints * 0.1);
+
+                setPlayers(prev => prev.map(p => {
+                    if(p.id === clash.p1.id) return { ...p, score: p.score + p1Score };
+                    if(p.id === clash.p2.id) return { ...p, score: p.score + p2Score };
+                    return p;
+                }));
+
+                let winnerMsg = "It's a tie!";
+                if(p1Votes > p2Votes) winnerMsg = `${clash.p1.name} wins this one!`;
+                if(p2Votes > p1Votes) winnerMsg = `${clash.p2.name} takes it!`;
+                
+                speakText(winnerMsg, settings.tts);
+
+                setTimeout(() => {
+                    startVotingPhase(clashIndex + 1);
+                }, 5000);
+            };
+
+            const nextRoundOrEnd = () => {
+                if(round >= 3) {
+                    setGameState('GAME_END');
+                    speakText("The game is over! Let's see the final winner!", settings.tts);
+                } else {
+                    startRound(round + 1, players, usedPrompts);
+                }
+            };
+
+            // RENDER LOGIC FOR HOST
+            return (
+                <div className="w-full max-w-4xl flex flex-col items-center fade-in">
+                    
+                    {gameState === 'LOBBY' && (
+                        <div className="w-full text-center">
+                            <h2 className="text-4xl font-bold mb-2">Join at <span className="text-pink-400">blersjda.com</span></h2>
+                            <p className="text-2xl mb-8">Room Code: <span className="font-mono bg-white text-black px-4 py-2 rounded-lg text-5xl tracking-widest">{roomCode || '...'}</span></p>
+                            
+                            <div className="flex gap-4 mb-8 glass-panel p-6 rounded-xl justify-center items-center">
+                                <label className="flex items-center gap-2 cursor-pointer text-xl">
+                                    <input type="checkbox" checked={settings.familyFriendly} onChange={e => setSettings(s => ({...s, familyFriendly: e.target.checked}))} className="w-6 h-6" />
+                                    Family Mode
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer text-xl ml-8">
+                                    <input type="checkbox" checked={settings.tts} onChange={e => setSettings(s => ({...s, tts: e.target.checked}))} className="w-6 h-6" />
+                                    Text-to-Speech
+                                </label>
+                            </div>
+
+                            <div className="glass-panel p-6 rounded-xl min-h-[200px] mb-8">
+                                <h3 className="text-2xl mb-4 text-pink-300">Players ({players.length})</h3>
+                                <div className="flex flex-wrap gap-4 justify-center">
+                                    {players.map(p => <div key={p.id} className="bg-purple-800 px-4 py-2 rounded-full text-xl font-bold animate-bounce">{p.name}</div>)}
+                                    {players.length === 0 && <div className="text-gray-400 flex flex-col items-center"><div className="spinner mb-2"></div>Waiting for players...</div>}
+                                </div>
+                            </div>
+                            
+                            <Button onClick={startGame} disabled={players.length < 3} color="pink">Start Game</Button>
+                            <button onClick={goBack} className="mt-4 text-gray-400 underline">Cancel</button>
+                        </div>
+                    )}
+
+                    {gameState === 'ANSWERING' && (
+                        <div className="text-center w-full">
+                            <h2 className="text-5xl font-black mb-4 text-pink-400">ROUND {round}</h2>
+                            <p className="text-3xl mb-12">Look at your devices and answer the prompts!</p>
+                            <div className="text-8xl font-mono mb-8">{timer}</div>
+                            <div className="glass-panel p-6 rounded-xl">
+                                <h3 className="text-2xl mb-4 text-blue-300">Status</h3>
+                                <div className="flex flex-wrap gap-4 justify-center">
+                                    {players.map(p => {
+                                        // check if player answered all their prompts
+                                        const myClashes = clashes.filter(c => c.p1.id === p.id || c.p2.id === p.id);
+                                        const answeredAll = myClashes.every(c => c.answers[p.id]);
+                                        return (
+                                            <div key={p.id} className={`px-4 py-2 rounded-full text-xl font-bold ${answeredAll ? 'bg-green-600' : 'bg-gray-600'}`}>
+                                                {p.name} {answeredAll ? '✅' : '⏳'}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {(gameState === 'VOTING' || gameState === 'REVEAL') && (
+                        <div className="w-full text-center">
+                            <h2 className="text-4xl font-bold mb-8 text-blue-300">{clashes[currentClashIndex].prompt}</h2>
+                            
+                            <div className="grid grid-cols-2 gap-8 mb-8">
+                                <div className="glass-panel p-8 rounded-xl relative">
+                                    <p className="text-3xl font-bold mb-4">"{clashes[currentClashIndex].answers[clashes[currentClashIndex].p1.id]}"</p>
+                                    {gameState === 'REVEAL' && (
+                                        <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-pink-600 px-6 py-2 rounded-full text-xl font-black bounce">
+                                            {clashes[currentClashIndex].p1.name}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="glass-panel p-8 rounded-xl relative">
+                                    <p className="text-3xl font-bold mb-4">"{clashes[currentClashIndex].answers[clashes[currentClashIndex].p2.id]}"</p>
+                                    {gameState === 'REVEAL' && (
+                                        <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-pink-600 px-6 py-2 rounded-full text-xl font-black bounce">
+                                            {clashes[currentClashIndex].p2.name}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {gameState === 'VOTING' && (
+                                <>
+                                    <div className="text-6xl font-mono mb-4">{timer}</div>
+                                    <p className="text-xl text-gray-300">Voters: {Object.keys(clashes[currentClashIndex].votes).length} / {players.length - 2}</p>
+                                </>
+                            )}
+                            
+                            {gameState === 'REVEAL' && (
+                                <div className="text-4xl font-black text-pink-400 fade-in">
+                                    {(() => {
+                                        const c = clashes[currentClashIndex];
+                                        const v = Object.values(c.votes);
+                                        const p1v = v.filter(x => x===c.p1.id).length;
+                                        const p2v = v.filter(x => x===c.p2.id).length;
+                                        return `${p1v} Votes vs ${p2v} Votes`;
+                                    })()}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {gameState === 'ROUND_END' && (
+                        <div className="w-full text-center">
+                            <h2 className="text-5xl font-black mb-8 text-pink-400">Round {round} Leaderboard</h2>
+                            <div className="flex flex-col gap-4 w-full max-w-lg mx-auto mb-8">
+                                {[...players].sort((a,b) => b.score - a.score).map((p, i) => (
+                                    <div key={p.id} className="glass-panel p-4 rounded-xl flex justify-between items-center text-2xl font-bold">
+                                        <span>{i+1}. {p.name}</span>
+                                        <span className="text-blue-300">{p.score}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <Button onClick={nextRoundOrEnd} color="pink">Continue</Button>
+                        </div>
+                    )}
+
+                    {gameState === 'GAME_END' && (
+                        <div className="w-full text-center">
+                            <h2 className="text-6xl font-black mb-4 text-pink-400 bouncing-title">FINAL SCORES</h2>
+                            <div className="flex flex-col gap-4 w-full max-w-lg mx-auto mb-8">
+                                {[...players].sort((a,b) => b.score - a.score).map((p, i) => (
+                                    <div key={p.id} className={`glass-panel p-4 rounded-xl flex justify-between items-center text-3xl font-bold ${i===0 ? 'border-4 border-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.6)]' : ''}`}>
+                                        <span>{i===0?'👑 ':''}{p.name}</span>
+                                        <span className="text-blue-300">{p.score}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <Button onClick={() => window.location.reload()} color="blue">Play Again</Button>
+                        </div>
+                    )}
+
+                </div>
+            );
+        };
+
+        // ==========================================
+        // ONLINE CLIENT (THE PHONE)
+        // ==========================================
+        const OnlineClient = ({ goBack }) => {
+            const [peer, setPeer] = useState(null);
+            const [conn, setConn] = useState(null);
+            const [code, setCode] = useState('');
+            const [name, setName] = useState('');
+            const [clientState, setClientState] = useState('LOGIN'); // LOGIN, WAITING, ANSWERING, VOTING
+            
+            const [promptsToAnswer, setPromptsToAnswer] = useState([]);
+            const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
+            const [answerInput, setAnswerInput] = useState('');
+            
+            const [voteData, setVoteData] = useState(null); // { prompt, answers: [{id, text}] }
+
+            const joinGame = () => {
+                if(!code || !name) return;
+                const newPeer = new Peer();
+                newPeer.on('open', () => {
+                    const connection = newPeer.connect(`blersjda-${code.toUpperCase()}`);
+                    connection.on('open', () => {
+                        connection.send({ type: 'JOIN', name });
+                        setConn(connection);
+                        setClientState('WAITING_LOBBY');
+                    });
+                    connection.on('data', handleHostMessage);
+                    connection.on('error', () => alert("Connection failed. Check code."));
+                });
+                setPeer(newPeer);
+            };
+
+            const handleHostMessage = (data) => {
+                if(data.type === 'LOBBY_JOINED') setClientState('WAITING');
+                if(data.type === 'STATE_WAITING') {
+                    setClientState('WAITING');
+                    setVoteData(data.msg); // reuse variable for message
+                }
+                if(data.type === 'STATE_ANSWERING') {
+                    setPromptsToAnswer(data.prompts);
+                    setCurrentPromptIndex(0);
+                    setAnswerInput('');
+                    setClientState('ANSWERING');
+                }
+                if(data.type === 'STATE_VOTING') {
+                    setVoteData(data);
+                    setClientState('VOTING');
+                }
+            };
+
+            const submitAnswer = () => {
+                if(!answerInput) return;
+                conn.send({ type: 'SUBMIT_ANSWER', answer: answerInput });
+                if(currentPromptIndex < promptsToAnswer.length - 1) {
+                    setCurrentPromptIndex(prev => prev + 1);
+                    setAnswerInput('');
+                } else {
+                    setClientState('WAITING');
+                    setVoteData("Answers submitted! Look at the screen.");
+                }
+            };
+
+            const submitVote = (playerId) => {
+                conn.send({ type: 'SUBMIT_VOTE', votedFor: playerId });
+                setClientState('WAITING');
+                setVoteData("Vote cast! Waiting for others...");
+            };
+
+            return (
+                <div className="w-full max-w-md flex flex-col items-center fade-in text-center px-4">
+                    {clientState === 'LOGIN' && (
+                        <div className="w-full glass-panel p-8 rounded-xl">
+                            <h2 className="text-3xl font-bold mb-6">Join Game</h2>
+                            <input 
+                                type="text" placeholder="ROOM CODE" maxLength={4}
+                                value={code} onChange={e => setCode(e.target.value.toUpperCase())}
+                                className="w-full mb-4 p-4 rounded-xl bg-purple-900 border-2 border-pink-500 text-center font-mono text-3xl uppercase outline-none focus:border-pink-300"
+                            />
+                            <input 
+                                type="text" placeholder="YOUR NAME" maxLength={12}
+                                value={name} onChange={e => setName(e.target.value)}
+                                className="w-full mb-8 p-4 rounded-xl bg-purple-900 border-2 border-pink-500 text-center font-bold text-2xl outline-none focus:border-pink-300"
+                            />
+                            <Button onClick={joinGame} color="pink" disabled={!name || code.length !== 4}>Join!</Button>
+                            <button onClick={goBack} className="mt-6 text-gray-400 underline">Cancel</button>
+                        </div>
+                    )}
+
+                    {clientState === 'WAITING_LOBBY' && (
+                        <div className="w-full flex flex-col items-center mt-20">
+                            <div className="spinner mb-6"></div>
+                            <h2 className="text-3xl font-bold text-pink-400">You're In!</h2>
+                            <p className="text-xl mt-2 text-blue-200">Look at the main screen.</p>
+                        </div>
+                    )}
+
+                    {clientState === 'WAITING' && (
+                        <div className="w-full flex flex-col items-center mt-20">
+                            <h2 className="text-3xl font-bold text-pink-400 mb-4">Hold tight.</h2>
+                            <p className="text-xl text-blue-200">{typeof voteData === 'string' ? voteData : 'Look at the main screen.'}</p>
+                        </div>
+                    )}
+
+                    {clientState === 'ANSWERING' && (
+                        <div className="w-full text-left mt-10">
+                            <p className="text-pink-400 font-bold mb-2">Prompt {currentPromptIndex + 1} of {promptsToAnswer.length}</p>
+                            <h3 className="text-2xl font-bold mb-6 leading-snug">{promptsToAnswer[currentPromptIndex]}</h3>
+                            <textarea 
+                                value={answerInput}
+                                onChange={e => setAnswerInput(e.target.value)}
+                                placeholder="Type your brilliant answer..."
+                                className="w-full p-4 rounded-xl bg-purple-900 border-2 border-pink-500 text-xl outline-none focus:border-pink-300 h-32 mb-6"
+                            />
+                            <Button onClick={submitAnswer} color="pink" disabled={!answerInput.trim()}>Submit</Button>
+                        </div>
+                    )}
+
+                    {clientState === 'VOTING' && voteData && voteData.answers && (
+                        <div className="w-full text-center mt-10">
+                            <p className="text-pink-400 font-bold mb-4 uppercase tracking-widest">Vote Now</p>
+                            <h3 className="text-xl font-bold mb-8 opacity-80">{voteData.prompt}</h3>
+                            <div className="flex flex-col gap-4">
+                                {shuffle([...voteData.answers]).map(ans => (
+                                    <button 
+                                        key={ans.id}
+                                        onClick={() => submitVote(ans.id)}
+                                        className="w-full p-6 bg-blue-700 hover:bg-blue-600 rounded-xl text-2xl font-bold shadow-lg border-b-4 border-blue-900 active:border-b-0 active:translate-y-1 transition-all"
+                                    >
+                                        "{ans.text}"
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // ==========================================
+        // LOCAL GAME (HOTSEAT)
+        // ==========================================
+        const LocalGame = ({ goBack }) => {
+            const [localState, setLocalState] = useState('SETUP'); // SETUP, PASS, ANSWER, VOTING_ROOM, ROUND_END, END
+            const [players, setPlayers] = useState([]);
+            const [nameInput, setNameInput] = useState('');
+            const [round, setRound] = useState(1);
+            const [settings, setSettings] = useState({ familyFriendly: false });
+            
+            const [clashes, setClashes] = useState([]);
+            const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+            const [currentPromptIndex, setCurrentPromptIndex] = useState(0); // 0 or 1 (since 2 prompts per player)
+            const [answerInput, setAnswerInput] = useState('');
+            
+            const [currentClashIndex, setCurrentClashIndex] = useState(0);
+
+            const addPlayer = () => {
+                if(nameInput.trim() && !players.find(p => p.name.toLowerCase() === nameInput.trim().toLowerCase())) {
+                    setPlayers([...players, { id: Date.now().toString(), name: nameInput.trim(), score: 0 }]);
+                    setNameInput('');
+                }
+            };
+
+            const startGame = () => {
+                if(players.length < 3) return alert("Need at least 3 players!");
+                startLocalRound(1, players, []);
+            };
+
+            const startLocalRound = (r, currentPlayers, prevUsed) => {
+                setRound(r);
+                
+                let available = EASY_PROMPTS_ARRAY.filter(p => !prevUsed.includes(p.text));
+                if(settings.familyFriendly) available = available.filter(p => p.family);
+                available = shuffle(available);
+
+                const newClashes = [];
+                for(let i=0; i<currentPlayers.length; i++) {
+                    const p1 = currentPlayers[i];
+                    const p2 = currentPlayers[(i+1) % currentPlayers.length];
+                    const prompt = available.pop();
+                    newClashes.push({ prompt: prompt.text, p1, p2, answers: {} });
+                }
+
+                setClashes(newClashes);
+                setCurrentPlayerIndex(0);
+                setCurrentPromptIndex(0);
+                setLocalState('PASS');
+            };
+
+            const getMyPrompts = () => {
+                const me = players[currentPlayerIndex];
+                return clashes.filter(c => c.p1.id === me.id || c.p2.id === me.id);
+            };
+
+            const submitLocalAnswer = () => {
+                const me = players[currentPlayerIndex];
+                const myPrompts = getMyPrompts();
+                const activeClash = myPrompts[currentPromptIndex];
+
+                // Save answer
+                setClashes(prev => {
+                    const next = [...prev];
+                    const clashRef = next.find(c => c.prompt === activeClash.prompt);
+                    clashRef.answers[me.id] = answerInput || shuffle(DEFAULT_ANSWERS)[0];
+                    return next;
+                });
+
+                setAnswerInput('');
+
+                if(currentPromptIndex === 0) {
+                    setCurrentPromptIndex(1);
+                } else {
+                    // Move to next player
+                    if(currentPlayerIndex < players.length - 1) {
+                        setCurrentPlayerIndex(prev => prev + 1);
+                        setCurrentPromptIndex(0);
+                        setLocalState('PASS');
+                    } else {
+                        // All answered! Time to vote
+                        setCurrentClashIndex(0);
+                        setLocalState('VOTING_ROOM');
+                    }
+                }
+            };
+
+            const handleRoomVote = (winnerId) => {
+                const clash = clashes[currentClashIndex];
+                const basePoints = 1000 * round;
+                
+                setPlayers(prev => prev.map(p => {
+                    if(winnerId === 'TIE') {
+                        if(p.id === clash.p1.id || p.id === clash.p2.id) return { ...p, score: p.score + Math.floor(basePoints/2) };
+                    } else if (p.id === winnerId) {
+                        return { ...p, score: p.score + basePoints + Math.floor(basePoints * 0.1) }; // Winner gets 100% + 10% bonus
+                    }
+                    return p;
+                }));
+
+                if(currentClashIndex < clashes.length - 1) {
+                    setCurrentClashIndex(prev => prev + 1);
+                } else {
+                    setLocalState('ROUND_END');
+                }
+            };
+
+            return (
+                <div className="w-full max-w-2xl flex flex-col items-center fade-in px-4">
+                    {localState === 'SETUP' && (
+                        <div className="w-full text-center">
+                            <h2 className="text-4xl font-bold mb-4 text-pink-400">Local Hotseat</h2>
+                            <p className="text-lg mb-6 text-blue-200">Pass one device around to play!</p>
+                            
+                            <div className="glass-panel p-6 rounded-xl mb-6 flex flex-col gap-4">
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="text" value={nameInput} onChange={e=>setNameInput(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && addPlayer()}
+                                        placeholder="Player Name" 
+                                        className="flex-1 p-3 rounded-lg bg-purple-900 border-2 border-pink-500 outline-none"
+                                    />
+                                    <Button onClick={addPlayer} color="blue" className="w-auto px-6 py-3 text-sm">Add</Button>
+                                </div>
+                                <div className="flex flex-wrap gap-2 mt-4">
+                                    {players.map(p => <div key={p.id} className="bg-pink-600 px-4 py-1 rounded-full font-bold">{p.name}</div>)}
+                                </div>
+                            </div>
+
+                            <label className="flex items-center justify-center gap-2 cursor-pointer text-xl mb-8">
+                                <input type="checkbox" checked={settings.familyFriendly} onChange={e => setSettings({familyFriendly: e.target.checked})} className="w-6 h-6" />
+                                Family Mode
+                            </label>
+
+                            <Button onClick={startGame} disabled={players.length < 3} color="pink">Start ({players.length} Players)</Button>
+                            <button onClick={goBack} className="mt-6 text-gray-400 underline">Cancel</button>
+                        </div>
+                    )}
+
+                    {localState === 'PASS' && (
+                        <div className="w-full text-center mt-20 fade-in">
+                            <h2 className="text-5xl font-black mb-8">Pass the device to</h2>
+                            <div className="text-7xl font-black text-pink-400 bounce mb-12 uppercase">{players[currentPlayerIndex].name}</div>
+                            <Button onClick={() => setLocalState('ANSWER')} color="blue">I am {players[currentPlayerIndex].name}</Button>
+                        </div>
+                    )}
+
+                    {localState === 'ANSWER' && (
+                        <div className="w-full text-left mt-10 fade-in">
+                            <p className="text-pink-400 font-bold mb-2">Prompt {currentPromptIndex + 1} of 2 for {players[currentPlayerIndex].name}</p>
+                            <h3 className="text-3xl font-bold mb-6">{getMyPrompts()[currentPromptIndex].prompt}</h3>
+                            <textarea 
+                                value={answerInput} onChange={e => setAnswerInput(e.target.value)}
+                                placeholder="Type answer here..."
+                                className="w-full p-4 rounded-xl bg-purple-900 border-2 border-pink-500 text-2xl outline-none h-40 mb-6"
+                            />
+                            <Button onClick={submitLocalAnswer} color="pink">Submit</Button>
+                        </div>
+                    )}
+
+                    {localState === 'VOTING_ROOM' && (
+                        <div className="w-full text-center fade-in">
+                            <h2 className="text-3xl font-bold text-pink-400 mb-2 uppercase">Time to Vote!</h2>
+                            <p className="text-lg text-blue-200 mb-8">Room, shout for your favorite! Host, tap the winner.</p>
+                            
+                            <h3 className="text-3xl font-bold mb-8 bg-blue-900 p-4 rounded-xl border border-blue-700">{clashes[currentClashIndex].prompt}</h3>
+
+                            <div className="flex flex-col gap-6 mb-8">
+                                <button onClick={() => handleRoomVote(clashes[currentClashIndex].p1.id)} className="w-full p-6 bg-purple-800 rounded-xl text-3xl font-bold border-4 border-transparent hover:border-pink-500 text-left relative">
+                                    "{clashes[currentClashIndex].answers[clashes[currentClashIndex].p1.id]}"
+                                    <span className="absolute bottom-2 right-4 text-sm text-pink-300">By {clashes[currentClashIndex].p1.name}</span>
+                                </button>
+                                
+                                <button onClick={() => handleRoomVote(clashes[currentClashIndex].p2.id)} className="w-full p-6 bg-purple-800 rounded-xl text-3xl font-bold border-4 border-transparent hover:border-blue-500 text-left relative">
+                                    "{clashes[currentClashIndex].answers[clashes[currentClashIndex].p2.id]}"
+                                    <span className="absolute bottom-2 right-4 text-sm text-blue-300">By {clashes[currentClashIndex].p2.name}</span>
+                                </button>
+                            </div>
+
+                            <button onClick={() => handleRoomVote('TIE')} className="text-gray-400 underline font-bold">It's a Tie (Split Points)</button>
+                        </div>
+                    )}
+
+                    {localState === 'ROUND_END' && (
+                        <div className="w-full text-center fade-in mt-10">
+                            <h2 className="text-5xl font-black mb-8 text-pink-400">Scores</h2>
+                            <div className="flex flex-col gap-4 w-full mb-8">
+                                {[...players].sort((a,b) => b.score - a.score).map((p, i) => (
+                                    <div key={p.id} className="glass-panel p-4 rounded-xl flex justify-between items-center text-2xl font-bold">
+                                        <span>{i+1}. {p.name}</span>
+                                        <span className="text-blue-300">{p.score}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            {round < 3 ? 
+                                <Button onClick={() => startLocalRound(round + 1, players, clashes.map(c=>c.prompt))} color="pink">Start Round {round + 1}</Button> :
+                                <Button onClick={() => setLocalState('END')} color="pink">See Final Winner</Button>
+                            }
+                        </div>
+                    )}
+
+                    {localState === 'END' && (
+                        <div className="w-full text-center mt-10 fade-in">
+                            <h2 className="text-6xl font-black mb-8 text-pink-400 bouncing-title">GAME OVER</h2>
+                            <div className="text-8xl mb-8">👑</div>
+                            <h3 className="text-5xl font-bold mb-12">{[...players].sort((a,b)=>b.score-a.score)[0].name} Wins!</h3>
+                            <Button onClick={() => window.location.reload()} color="blue">Home</Button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
