@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
     <style>
         body { 
             background-color: #0f0a29; 
@@ -334,42 +334,51 @@
             // Initialize Host Peer
             useEffect(() => {
                 const code = generateCode();
+                setRoomCode(code);
                 
-                // Advanced WebRTC configuration supporting fallback TURN relays
-                const peerConfig = {
-                    config: {
-                        iceServers: [
-                            { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' },
-                            {
-                                urls: 'turn:openrelay.metered.ca:80',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            },
-                            {
-                                urls: 'turn:openrelay.metered.ca:443',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            },
-                            {
-                                urls: 'turns:openrelay.metered.ca:443?transport=tcp',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            }
-                        ]
-                    }
-                };
-                
-                const hostPeer = new Peer(`blersjda-${code}`, peerConfig);
-                
-                hostPeer.on('open', () => setRoomCode(code));
-
-                hostPeer.on('connection', (conn) => {
-                    conn.on('data', (data) => handleClientMessage(data, conn));
-                    conn.on('close', () => handleClientDisconnect(conn.metadata?.userId));
+                // Connect securely over TLS via Port 8884 (Required for HTTPS/GitHub Pages)
+                const mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+                const mockConnections = {};
+            
+                mqttClient.on('connect', () => {
+                    console.log(`Host successfully secured room topic: blersjda/${code}/host`);
+                    // Subscribe to client actions intended for this specific host
+                    mqttClient.subscribe(`blersjda/${code}/host`, (err) => {
+                        if (err) console.error("Host subscription routing error:", err);
+                    });
                 });
-
-                return () => hostPeer.destroy();
+            
+                mqttClient.on('message', (topic, message) => {
+                    try {
+                        const data = JSON.parse(message.toString());
+                        
+                        if (data && data.userId) {
+                            const userId = data.userId;
+                            
+                            // Dynamically build a mock connection object mimicking PeerJS interfaces
+                            if (!mockConnections[userId]) {
+                                mockConnections[userId] = {
+                                    open: true,
+                                    metadata: { userId },
+                                    send: (payload) => {
+                                        // Route outgoing server frames directly to this client's private inbox
+                                        mqttClient.publish(`blersjda/${code}/client/${userId}`, JSON.stringify(payload));
+                                    }
+                                };
+                            }
+                            
+                            // Directly feeds your core room orchestration logic unmodified
+                            handleClientMessage(data, mockConnections[userId]);
+                        }
+                    } catch (e) {
+                        console.error("Failed to parse host MQTT message packet:", e);
+                    }
+                });
+            
+                // Clean up connections when the host terminates or unmounts the lobby
+                return () => {
+                    if (mqttClient) mqttClient.end();
+                };
             }, []);
 
             // Send to everyone connected
@@ -905,41 +914,43 @@
                 if(!code || !name) return;
                 localStorage.setItem('blersjda_name', name);
                 
-                // Must match the host configuration exactly
-                const peerConfig = {
-                    config: {
-                        iceServers: [
-                            { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' },
-                            { urls: 'stun:stun2.l.google.com:19302' },
-                            { urls: 'stun:stun3.l.google.com:19302' },
-                            { urls: 'stun:stun4.l.google.com:19302' },
-                            { urls: 'stun:stun.services.mozilla.com' },
-                            { urls: 'stun:global.stun.twilio.com:3478' }
-                        ],
-                        iceCandidatePoolSize: 10
-                    }
-                };
+                // Clean and normalize user text input to ensure topic path uniformity
+                const roomCode = code.toUpperCase().trim();
                 
-                const newPeer = new Peer(peerConfig);
+                // Establish a secure socket connection
+                const mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
                 
-                newPeer.on('open', () => {
-                    // Force the connection to use reliable delivery packets over standard Wi-Fi
-                    const connection = newPeer.connect(`blersjda-${code.toUpperCase()}`, { reliable: true });
+                mqttClient.on('connect', () => {
+                    console.log(`Player connecting to secure cluster room: ${roomCode}`);
                     
-                    connection.on('open', () => {
-                        connection.send({ type: 'JOIN', userId, name });
-                        setConn(connection);
-                    });
-                    
-                    connection.on('data', handleHostMessage);
-                    
-                    // Fallback timeout in case room doesn't exist
-                    setTimeout(() => {
-                        if(clientState === 'LOGIN') {
-                            //alert("Could not find room. Is the code correct?");
+                    // Subscribe to an isolated private inbound topic for this specific player
+                    mqttClient.subscribe(`blersjda/${roomCode}/client/${userId}`, (err) => {
+                        if (!err) {
+                            // Mock connection object so submitAnswer() and submitVote() execute flawlessly
+                            const mockConnection = {
+                                send: (payload) => {
+                                    mqttClient.publish(`blersjda/${roomCode}/host`, JSON.stringify(payload));
+                                }
+                            };
+                            
+                            setConn(mockConnection);
+                            
+                            // Instantly register with the host
+                            mockConnection.send({ type: 'JOIN', userId, name });
+                        } else {
+                            console.error("Player connection path subscription failed:", err);
                         }
-                    }, 5000);
+                    });
+                });
+            
+                mqttClient.on('message', (topic, message) => {
+                    try {
+                        const data = JSON.parse(message.toString());
+                        // Delivers game state transitions, prompt lists, and voting options directly to the client UI
+                        handleHostMessage(data);
+                    } catch (e) {
+                        console.error("Failed to parse client inbound MQTT packet:", e);
+                    }
                 });
             };
 
