@@ -905,43 +905,34 @@
                 if(!code || !name) return;
                 localStorage.setItem('blersjda_name', name);
                 
-                // Advanced WebRTC configuration supporting fallback TURN relays
+                // Must match the host configuration exactly
                 const peerConfig = {
                     config: {
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
                             { urls: 'stun:stun1.l.google.com:19302' },
-                            {
-                                urls: 'turn:openrelay.metered.ca:80',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            },
-                            {
-                                urls: 'turn:openrelay.metered.ca:443',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            },
-                            {
-                                urls: 'turns:openrelay.metered.ca:443?transport=tcp',
-                                username: 'openrelayproject',
-                                credential: 'openrelayproject'
-                            }
-                        ]
+                            { urls: 'stun:stun2.l.google.com:19302' },
+                            { urls: 'stun:stun3.l.google.com:19302' },
+                            { urls: 'stun:stun4.l.google.com:19302' },
+                            { urls: 'stun:stun.services.mozilla.com' },
+                            { urls: 'stun:global.stun.twilio.com:3478' }
+                        ],
+                        iceCandidatePoolSize: 10
                     }
                 };
                 
                 const newPeer = new Peer(peerConfig);
+                
                 newPeer.on('open', () => {
-                    const connection = newPeer.connect(`blersjda-${code.toUpperCase()}`);
+                    // Force the connection to use reliable delivery packets over standard Wi-Fi
+                    const connection = newPeer.connect(`blersjda-${code.toUpperCase()}`, { reliable: true });
+                    
                     connection.on('open', () => {
                         connection.send({ type: 'JOIN', userId, name });
                         setConn(connection);
                     });
+                    
                     connection.on('data', handleHostMessage);
-                    connection.on('error', () => {
-                        alert("Connection failed. Check code.");
-                        setClientState('LOGIN');
-                    });
                     
                     // Fallback timeout in case room doesn't exist
                     setTimeout(() => {
