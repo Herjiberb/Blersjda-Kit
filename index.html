@@ -65,6 +65,21 @@
             text-shadow: 0px 0px 20px rgba(236,72,153,0.5);
         }
         @keyframes shine { to { background-position: 200% center; } }
+
+        /* New Animations */
+        .blinking-eyes { transform-origin: center; animation: blink 4s infinite; }
+        @keyframes blink { 0%, 96%, 98%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
+        
+        .sniffing { animation: sniff 1.5s ease-in-out infinite; }
+        @keyframes sniff { 
+            0%, 100% { transform: translateY(0) rotate(0deg); } 
+            25% { transform: translateY(-8px) rotate(-5deg) scale(1.05); } 
+            50% { transform: translateY(0) rotate(0deg) scale(1); } 
+            75% { transform: translateY(-8px) rotate(5deg) scale(1.05); } 
+        }
+        
+        .goo-drop { position: absolute; bottom: -10px; width: 14px; height: 14px; border-radius: 50%; opacity: 0; animation: drip 1.5s infinite ease-in; }
+        @keyframes drip { 0% { transform: translateY(0) scale(1); opacity: 0.8; } 100% { transform: translateY(50px) scale(0); opacity: 0; } }
     </style>
 </head>
 <body>
@@ -176,9 +191,9 @@
         // ==========================================
         // MONSTER AVATAR COMPONENT
         // ==========================================
-        const AVATAR_COLORS = ['#ec4899', '#22c55e', '#06b6d4', '#f97316', '#eab308'];
-        const AVATAR_BODIES = ['blob', 'square', 'triangle'];
-        const AVATAR_EYES = ['one', 'two', 'three'];
+        const AVATAR_COLORS = ['#ec4899', '#22c55e', '#06b6d4', '#f97316', '#eab308', '#ef4444', '#a855f7', '#bef264'];
+        const AVATAR_BODIES = ['blob', 'square', 'triangle', 'circle'];
+        const AVATAR_EYES = ['one', 'two', 'three', 'four'];
         const AVATAR_MOUTHS = ['smile', 'fangs', 'flat'];
 
         const generateAvatar = (existingAvatars = []) => {
@@ -205,15 +220,18 @@
                 switch(body) {
                     case 'square': return <rect x="15" y="20" width="70" height="70" rx="15" fill={color} />;
                     case 'triangle': return <path d="M50 15 L85 85 L15 85 Z" fill={color} strokeLinejoin="round" strokeWidth="5" stroke={color}/>;
+                    case 'circle': return <circle cx="50" cy="55" r="35" fill={color} />;
                     case 'blob': default: return <path d="M20 50 Q20 20 50 20 T80 50 T50 85 T20 50 Z" fill={color} />;
                 }
             };
 
             const renderEyes = () => {
+                // Wrapped in g.blinking-eyes to enable the blink animation
                 switch(eyes) {
-                    case 'one': return <g><circle cx="50" cy="45" r="12" fill="white"/><circle cx="50" cy="45" r="5" fill="#0f0a29"/></g>;
-                    case 'three': return <g><circle cx="50" cy="32" r="8" fill="white"/><circle cx="50" cy="32" r="3" fill="#0f0a29"/><circle cx="32" cy="45" r="10" fill="white"/><circle cx="32" cy="45" r="4" fill="#0f0a29"/><circle cx="68" cy="45" r="10" fill="white"/><circle cx="68" cy="45" r="4" fill="#0f0a29"/></g>;
-                    case 'two': default: return <g><circle cx="35" cy="45" r="10" fill="white"/><circle cx="35" cy="45" r="4" fill="#0f0a29"/><circle cx="65" cy="45" r="10" fill="white"/><circle cx="65" cy="45" r="4" fill="#0f0a29"/></g>;
+                    case 'one': return <g className="blinking-eyes"><circle cx="50" cy="45" r="12" fill="white"/><circle cx="50" cy="45" r="5" fill="#0f0a29"/></g>;
+                    case 'three': return <g className="blinking-eyes"><circle cx="50" cy="32" r="8" fill="white"/><circle cx="50" cy="32" r="3" fill="#0f0a29"/><circle cx="32" cy="45" r="10" fill="white"/><circle cx="32" cy="45" r="4" fill="#0f0a29"/><circle cx="68" cy="45" r="10" fill="white"/><circle cx="68" cy="45" r="4" fill="#0f0a29"/></g>;
+                    case 'four': return <g className="blinking-eyes"><circle cx="35" cy="38" r="7" fill="white"/><circle cx="35" cy="38" r="3" fill="#0f0a29"/><circle cx="65" cy="38" r="7" fill="white"/><circle cx="65" cy="38" r="3" fill="#0f0a29"/><circle cx="42" cy="52" r="6" fill="white"/><circle cx="42" cy="52" r="2" fill="#0f0a29"/><circle cx="58" cy="52" r="6" fill="white"/><circle cx="58" cy="52" r="2" fill="#0f0a29"/></g>;
+                    case 'two': default: return <g className="blinking-eyes"><circle cx="35" cy="45" r="10" fill="white"/><circle cx="35" cy="45" r="4" fill="#0f0a29"/><circle cx="65" cy="45" r="10" fill="white"/><circle cx="65" cy="45" r="4" fill="#0f0a29"/></g>;
                 }
             };
 
@@ -334,6 +352,7 @@
             const [players, setPlayers] = useState([]);
             const [audience, setAudience] = useState([]);
             const [settings, setSettings] = useState({ familyFriendly: false, tts: true });
+			const [showKickMenu, setShowKickMenu] = useState(false);
             
             const [gameState, setGameState] = useState('LOBBY'); // LOBBY, ANSWERING, VOTING, REVEAL, ROUND_END, GAME_END
             const [round, setRound] = useState(1);
@@ -351,10 +370,16 @@
             useEffect(() => {
                 const audio = audioRef.current;
                 if (!audio) return;
-                audio.loop = true;
                 let fadeInterval;
 
                 if (gameState === 'ANSWERING') {
+                    let track = 'music.wav';
+                    if (round === 2) track = 'music_2.wav';
+                    if (round === 3) track = 'music_3.wav';
+                    
+                    if (!audio.src.endsWith(track)) audio.src = track;
+                    
+                    audio.loop = true;
                     audio.volume = 0;
                     audio.play().catch(e => console.log("Audio play prevented:", e));
                     // Fade in
@@ -510,18 +535,33 @@
                         } 
                         
                         if (stateRef.current.gameState === 'LOBBY') {
-                            // Check unique name in lobby
                             let finalName = name;
                             if (prevPlayers.some(p => p.name.toLowerCase() === name.toLowerCase())) {
                                 finalName = name + ` ${Math.floor(Math.random()*100)}`;
                             }
                             const avatar = generateAvatar(prevPlayers.map(p => p.avatar));
-                            conn.send({ type: 'LOBBY_JOINED', isAudience: false });
+                            conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar });
                             return [...prevPlayers, { userId, name: finalName, score: 0, avatar, connected: true }];
                         } 
-                        
                         return prevPlayers;
                     });
+
+                    if (stateRef.current.gameState !== 'LOBBY') {
+                        const isExistingPlayer = stateRef.current.players.some(p => p.userId === userId);
+                        if (!isExistingPlayer) {
+                            setAudience(prev => {
+                                const exists = prev.find(a => a.userId === userId);
+                                if (exists) {
+                                    exists.name = name;
+                                    return [...prev];
+                                }
+                                const audAvatar = generateAvatar([...stateRef.current.players, ...prev].map(p => p.avatar));
+                                conn.send({ type: 'LOBBY_JOINED', isAudience: true, avatar: audAvatar });
+                                return [...prev, { userId, name, avatar: audAvatar, connected: true }];
+                            });
+                            setTimeout(() => syncPlayerState(userId, true), 500);
+                        }
+                    }
 
                     // Handle audience join if not in lobby
                     if (stateRef.current.gameState !== 'LOBBY') {
@@ -763,8 +803,10 @@
                 if(p1Votes > p2Votes) winnerMsg = isP1Sweep ? `Flawless victory for ${clash.p1.name}!` : `${clash.p1.name} wins!`;
                 if(p2Votes > p1Votes) winnerMsg = isP2Sweep ? `Flawless victory for ${clash.p2.name}!` : `${clash.p2.name} wins!`;
                 
-                // Play victory sound on sweeps
-                if (isP1Sweep || isP2Sweep) {
+                // Play sounds based on result
+                if (p1Votes === p2Votes && totalValidVotes > 0) {
+                    try { new Audio('draw.wav').play(); } catch(e){ console.log("Audio play prevented"); }
+                } else if (isP1Sweep || isP2Sweep) {
                     try { new Audio('victory.wav').play(); } catch(e){ console.log("Audio play prevented"); }
                 }
 
@@ -792,6 +834,12 @@
 
             // RENDER LOGIC FOR HOST
             const isPlaying = gameState !== 'LOBBY' && gameState !== 'GAME_END';
+			
+			const kickUser = (id) => {
+                sendToClient(id, 'KICKED', { msg: 'You have been kicked by the host.' });
+                setPlayers(prev => prev.filter(p => p.userId !== id));
+                setAudience(prev => prev.filter(a => a.userId !== id));
+            };
 
             return (
                 <div className="w-full max-w-5xl flex flex-col items-center fade-in text-center relative z-10">
@@ -845,7 +893,40 @@
                             </div>
                             
                             <Button onClick={startGame} disabled={players.length < 4} color="pink" className="max-w-md text-2xl h-20">Start Game</Button>
-                            <button onClick={goBack} className="block mx-auto mt-6 text-gray-400 hover:text-white underline uppercase tracking-widest text-sm font-bold transition-colors">Close Room</button>
+                            
+                            <div className="flex gap-6 justify-center mt-6">
+                                <button onClick={() => setShowKickMenu(true)} className="text-pink-400 hover:text-white underline uppercase tracking-widest text-sm font-bold transition-colors">Manage Players</button>
+                                <button onClick={goBack} className="text-gray-400 hover:text-white underline uppercase tracking-widest text-sm font-bold transition-colors">Close Room</button>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {showKickMenu && (
+                        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4">
+                            <div className="glass-panel p-8 rounded-3xl w-full max-w-lg border border-pink-500 max-h-[80vh] overflow-y-auto">
+                                <h3 className="text-3xl font-black text-pink-400 mb-6 uppercase">Manage Lobby</h3>
+                                
+                                <div className="space-y-4 mb-6 text-left">
+                                    <h4 className="font-bold text-cyan-300">Players ({players.length})</h4>
+                                    {players.map(p => (
+                                        <div key={p.userId} className="flex justify-between items-center bg-purple-900/50 p-3 rounded-lg">
+                                            <span>{p.name}</span>
+                                            <button onClick={() => kickUser(p.userId)} className="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-sm font-bold uppercase">Kick</button>
+                                        </div>
+                                    ))}
+                                    {players.length === 0 && <p className="text-gray-400 text-sm">No players yet.</p>}
+                                    
+                                    <h4 className="font-bold text-cyan-300 mt-6">Audience ({audience.length})</h4>
+                                    {audience.map(a => (
+                                        <div key={a.userId} className="flex justify-between items-center bg-purple-900/50 p-3 rounded-lg">
+                                            <span>{a.name}</span>
+                                            <button onClick={() => kickUser(a.userId)} className="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-sm font-bold uppercase">Kick</button>
+                                        </div>
+                                    ))}
+                                    {audience.length === 0 && <p className="text-gray-400 text-sm">No audience yet.</p>}
+                                </div>
+                                <Button color="gray" onClick={() => setShowKickMenu(false)}>Close Menu</Button>
+                            </div>
                         </div>
                     )}
 
@@ -991,10 +1072,27 @@
             );
         };
 
+        const ClientWinAnimation = ({ avatar }) => {
+            if (!avatar) return null;
+            return (
+                <div className="fixed bottom-10 right-4 z-50 flex flex-col items-center pointer-events-none fade-in">
+                    <div className="bg-black/80 px-4 py-1 rounded-full text-green-400 font-bold mb-2 text-sm uppercase shadow-lg">Winner!</div>
+                    <div className="sniffing relative">
+                        <MonsterAvatar attributes={avatar} size={130} />
+                        <div className="goo-drop" style={{ background: avatar.color, left: '20%', animationDelay: '0s' }}></div>
+                        <div className="goo-drop" style={{ background: avatar.color, left: '50%', animationDelay: '0.4s' }}></div>
+                        <div className="goo-drop" style={{ background: avatar.color, left: '80%', animationDelay: '0.8s' }}></div>
+                    </div>
+                </div>
+            );
+        };
+
         // ==========================================
         // ONLINE CLIENT (THE PHONE)
         // ==========================================
         const OnlineClient = ({ goBack }) => {
+            const [myAvatar, setMyAvatar] = useState(null);
+            const [myVotedFor, setMyVotedFor] = useState(null);
             const [conn, setConn] = useState(null);
             const [code, setCode] = useState('');
             const [name, setName] = useState('');
@@ -1065,7 +1163,12 @@
             const handleHostMessage = (data) => {
                 if(data.type === 'LOBBY_JOINED') {
                     setClientState('WAITING_LOBBY');
+                    if (data.avatar) setMyAvatar(data.avatar);
                     setVoteData(data.isAudience ? "You joined as Audience!" : "You're in! Look at the big screen.");
+                }
+                if(data.type === 'KICKED') {
+                    alert(data.msg);
+                    goBack();
                 }
                 if(data.type === 'STATE_WAITING') {
                     setClientState('WAITING');
@@ -1116,12 +1219,21 @@
 
             const submitVote = (playerId) => {
                 conn.send({ type: 'SUBMIT_VOTE', userId, votedFor: playerId });
+                setMyVotedFor(playerId);
                 setClientState('WAITING');
                 setVoteData("Vote cast! Look at the screen.");
             };
 
             return (
                 <div className="w-full max-w-md flex flex-col items-center scale-in text-center px-4 relative z-10">
+                    
+                    {clientState === 'REVEAL' && voteData && (
+                        ((voteData.p1Votes > voteData.p2Votes && (userId === voteData.p1.userId || myVotedFor === voteData.p1.userId)) ||
+                         (voteData.p2Votes > voteData.p1Votes && (userId === voteData.p2.userId || myVotedFor === voteData.p2.userId))) 
+                    ) && (
+                        <ClientWinAnimation avatar={myAvatar} />
+                    )}
+					
                     {clientState === 'LOGIN' && (
                         <div className="w-full glass-panel p-8 rounded-3xl shadow-2xl border border-pink-500/30">
                             <h2 className="text-4xl font-black mb-8 text-pink-400 uppercase tracking-widest">Join Game</h2>
