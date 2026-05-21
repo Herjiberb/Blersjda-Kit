@@ -413,7 +413,16 @@
                 else if (gameState === 'VOTING') {
                     const clash = clashes[currentClashIndex];
                     if (!isAudience && (clash.p1.userId === userId || clash.p2.userId === userId)) {
-                        sendToClient(userId, 'STATE_WAITING', { msg: "It's your prompt! You can't vote." });
+                        sendToClient(userId, 'STATE_VOTING', { 
+                            prompt: clash.prompt, 
+                            answers: [
+                                { id: clash.p1.userId, text: clash.answers[clash.p1.userId] },
+                                { id: clash.p2.userId, text: clash.answers[clash.p2.userId] }
+                            ],
+                            allowPass: false,
+                            readOnly: true,
+                            msg: "Your battle! You can't vote, but watch the results."
+                        });
                     } else {
                         sendToClient(userId, 'STATE_VOTING', { 
                             prompt: clash.prompt, 
@@ -421,7 +430,8 @@
                                 { id: clash.p1.userId, text: clash.answers[clash.p1.userId] },
                                 { id: clash.p2.userId, text: clash.answers[clash.p2.userId] }
                             ],
-                            allowPass: isAudience
+                            allowPass: isAudience,
+                            readOnly: false
                         });
                     }
                 }
@@ -573,7 +583,9 @@
                 if(clashIndex >= stateRef.current.clashes.length) {
                     setGameState('ROUND_END');
                     speakText(`Round ${stateRef.current.round} is over! Let's see the leaderboard.`, settings.tts);
-                    broadcast('STATE_WAITING', { msg: 'Look at the big screen!' });
+                    
+                    const sortedPlayers = [...stateRef.current.players].sort((a,b) => b.score - a.score);
+                    broadcast('STATE_LEADERBOARD', { players: sortedPlayers, round: stateRef.current.round, isFinal: false });
                     return;
                 }
 
@@ -583,16 +595,25 @@
 
                 speakText(clash.prompt, settings.tts);
 
-                // Notify Voters
+                // Notify Players
                 stateRef.current.players.forEach(p => {
                     if(p.userId !== clash.p1.userId && p.userId !== clash.p2.userId) {
+                        // Normal voter
                         sendToClient(p.userId, 'STATE_VOTING', { 
                             prompt: clash.prompt, 
                             answers: [ { id: clash.p1.userId, text: clash.answers[clash.p1.userId] }, { id: clash.p2.userId, text: clash.answers[clash.p2.userId] } ],
-                            allowPass: false
+                            allowPass: false,
+                            readOnly: false
                         });
                     } else {
-                        sendToClient(p.userId, 'STATE_WAITING', { msg: 'This is your battle! Wait for votes.' });
+                        // Battling player - can see answers, but cannot vote
+                        sendToClient(p.userId, 'STATE_VOTING', { 
+                            prompt: clash.prompt, 
+                            answers: [ { id: clash.p1.userId, text: clash.answers[clash.p1.userId] }, { id: clash.p2.userId, text: clash.answers[clash.p2.userId] } ],
+                            allowPass: false,
+                            readOnly: true,
+                            msg: "Your battle! You can't vote, but watch the results."
+                        });
                     }
                 });
 
@@ -680,6 +701,9 @@
                 if(round >= 3) {
                     setGameState('GAME_END');
                     speakText("The game is over! Let's see who mastered the madness!", settings.tts);
+                    
+                    const sortedPlayers = [...players].sort((a,b) => b.score - a.score);
+                    broadcast('STATE_LEADERBOARD', { players: sortedPlayers, isFinal: true });
                 } else {
                     startRound(round + 1, players, usedPrompts);
                 }
@@ -973,6 +997,10 @@
                     setVoteData(data);
                     setClientState('VOTING');
                 }
+                if(data.type === 'STATE_LEADERBOARD') {
+                    setVoteData(data);
+                    setClientState('LEADERBOARD');
+                }
             };
 
             const submitAnswer = () => {
@@ -1050,34 +1078,47 @@
                             </p>
                             <h3 className="text-3xl font-black mb-8 leading-snug drop-shadow-md">{promptsToAnswer[currentPromptIndex]}</h3>
                             
-                            <textarea 
-                                value={answerInput}
-                                onChange={e => setAnswerInput(e.target.value)}
-                                placeholder="Type your brilliant answer..."
-                                className="w-full p-5 rounded-2xl bg-purple-950 border-2 border-pink-500 text-2xl font-bold outline-none focus:border-cyan-400 h-48 mb-8 resize-none shadow-inner"
-                            />
+                            <div className="relative mb-4">
+                                <textarea 
+                                    value={answerInput}
+                                    maxLength={75}
+                                    onChange={e => setAnswerInput(e.target.value)}
+                                    placeholder="Type your brilliant answer..."
+                                    className={`w-full p-5 rounded-2xl bg-purple-950 border-2 text-2xl font-bold outline-none focus:ring-2 focus:ring-cyan-500/50 h-40 resize-none shadow-inner transition-colors ${answerInput.length >= 65 ? 'border-red-500' : 'border-pink-500 focus:border-cyan-400'}`}
+                                />
+                                <span className={`absolute bottom-4 right-4 font-mono font-bold text-sm px-2 py-1 rounded bg-black/50 ${answerInput.length >= 65 ? 'text-red-400 animate-pulse' : 'text-purple-400'}`}>
+                                    {answerInput.length}/75
+                                </span>
+                            </div>
                             <Button onClick={submitAnswer} color="pink" disabled={!answerInput.trim()} className="h-16">Submit Answer</Button>
                         </div>
                     )}
 
                     {clientState === 'VOTING' && voteData && voteData.answers && (
                         <div className="w-full text-center mt-4 p-4 glass-panel rounded-3xl border-t-8 border-cyan-500">
-                            <p className="text-cyan-400 font-black mb-6 uppercase tracking-widest text-lg animate-pulse">Vote Now</p>
+                            <p className="text-cyan-400 font-black mb-6 uppercase tracking-widest text-lg animate-pulse">
+                                {voteData.readOnly ? "Watch The Battle!" : "Vote Now"}
+                            </p>
                             <h3 className="text-2xl font-bold mb-8 text-purple-200 leading-snug">{voteData.prompt}</h3>
                             
+                            {voteData.readOnly && voteData.msg && (
+                                <p className="text-pink-400 font-bold mb-4">{voteData.msg}</p>
+                            )}
+                    
                             <div className="flex flex-col gap-6">
                                 {shuffle([...voteData.answers]).map((ans, idx) => (
                                     <button 
                                         key={ans.id}
-                                        onClick={() => submitVote(ans.id)}
-                                        className={`w-full p-6 ${idx%2===0 ? 'bg-pink-700 hover:bg-pink-600 border-pink-900' : 'bg-blue-700 hover:bg-blue-600 border-blue-900'} rounded-2xl text-2xl font-black shadow-[0_8px_0_rgba(0,0,0,0.3)] border-b-8 active:border-b-0 active:translate-y-2 transition-all break-words leading-tight`}
+                                        onClick={() => !voteData.readOnly && submitVote(ans.id)}
+                                        disabled={voteData.readOnly}
+                                        className={`w-full p-6 ${idx%2===0 ? 'bg-pink-700 border-pink-900' : 'bg-blue-700 border-blue-900'} rounded-2xl text-2xl font-black break-words leading-tight transition-all ${!voteData.readOnly ? 'hover:bg-opacity-80 shadow-[0_8px_0_rgba(0,0,0,0.3)] border-b-8 active:border-b-0 active:translate-y-2' : 'opacity-75 cursor-default border-2'}`}
                                     >
                                         "{ans.text}"
                                     </button>
                                 ))}
                             </div>
                             
-                            {voteData.allowPass && (
+                            {voteData.allowPass && !voteData.readOnly && (
                                 <button 
                                     onClick={() => submitVote('PASS')}
                                     className="mt-8 text-gray-400 hover:text-white font-bold uppercase tracking-widest p-4 transition-colors"
@@ -1085,6 +1126,28 @@
                                     Pass / Don't Vote
                                 </button>
                             )}
+                        </div>
+                    )}
+                    {clientState === 'LEADERBOARD' && voteData && voteData.players && (
+                        <div className="w-full max-w-md mt-4 p-6 glass-panel rounded-3xl border-t-8 border-yellow-500 scale-in">
+                            <h2 className="text-4xl font-black text-yellow-400 mb-2 uppercase tracking-widest text-center">
+                                {voteData.isFinal ? "Final Ranks" : `Round ${voteData.round} Over`}
+                            </h2>
+                            <p className="text-center text-purple-200 mb-8 font-bold text-sm uppercase tracking-widest">
+                                {voteData.isFinal ? "Game Over!" : "Look at the big screen"}
+                            </p>
+                            
+                            <div className="flex flex-col gap-3">
+                                {voteData.players.map((p, i) => (
+                                    <div key={p.userId} className={`p-4 rounded-xl flex justify-between items-center font-bold shadow-md ${i===0 ? 'bg-yellow-600/30 border border-yellow-500' : 'bg-black/30'}`}>
+                                        <div className="flex gap-4 items-center">
+                                            <span className={i===0 ? 'text-yellow-400 text-2xl' : 'text-purple-400'}>#{i+1}</span>
+                                            <span className="text-xl break-all">{p.name}</span>
+                                        </div>
+                                        <span className="text-cyan-300 font-mono text-2xl ml-4">{p.score}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>
