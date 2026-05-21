@@ -326,6 +326,42 @@
 
             const connectionsRef = useRef({});
             const stateRef = useRef();
+			
+			// Audio ref for background music
+            const audioRef = useRef(typeof Audio !== "undefined" ? new Audio('music.wav') : null);
+            
+            useEffect(() => {
+                const audio = audioRef.current;
+                if (!audio) return;
+                audio.loop = true;
+                let fadeInterval;
+
+                if (gameState === 'ANSWERING') {
+                    audio.volume = 0;
+                    audio.play().catch(e => console.log("Audio play prevented:", e));
+                    // Fade in
+                    let vol = 0;
+                    fadeInterval = setInterval(() => {
+                        vol += 0.05;
+                        if (vol >= 0.5) { vol = 0.5; clearInterval(fadeInterval); } // 0.5 max volume
+                        audio.volume = vol;
+                    }, 100);
+                } else if (audio.volume > 0) {
+                    // Fade out
+                    let vol = audio.volume;
+                    fadeInterval = setInterval(() => {
+                        vol -= 0.1;
+                        if (vol <= 0) {
+                            vol = 0;
+                            clearInterval(fadeInterval);
+                            audio.pause();
+                            audio.currentTime = 0;
+                        }
+                        try { audio.volume = vol; } catch(e){}
+                    }, 100);
+                }
+                return () => clearInterval(fadeInterval);
+            }, [gameState]);
             
             useEffect(() => {
                 stateRef.current = { players, audience, gameState, round, clashes, currentClashIndex, settings };
@@ -557,11 +593,20 @@
 
                 speakText(`Round ${r} begins. Players, look at your devices!`, settings.tts);
 
-                let timeLeft = 60;
+                if (r === 3) {
+                    speakText(`Welcome to the final round: The Whip of the Blersj!`, settings.tts);
+                } else {
+                    speakText(`Round ${r} begins. Players, look at your devices!`, settings.tts);
+                }
+
+                let timeLeft = 90; // Changed from 60 to 90 seconds
                 setTimer(timeLeft);
+                broadcast('TIMER_SYNC', { timeLeft }); // Initial sync to clients
+                
                 const int = setInterval(() => {
                     timeLeft--;
                     setTimer(timeLeft);
+                    broadcast('TIMER_SYNC', { timeLeft }); // Sync timer every second
                     
                     const allAnswered = stateRef.current.clashes.every(c => c.answers[c.p1.userId] && c.answers[c.p2.userId]);
                     if(timeLeft <= 0 || allAnswered) {
@@ -651,7 +696,15 @@
 
             const revealWinner = (clashIndex) => {
                 setGameState('REVEAL');
-                broadcast('STATE_WAITING', { msg: 'Look at the big screen!' });
+                broadcast('STATE_REVEAL', { 
+                    prompt: clash.prompt,
+                    p1: clash.p1, 
+                    p2: clash.p2,
+                    p1Answer: clash.answers[clash.p1.userId],
+                    p2Answer: clash.answers[clash.p2.userId],
+                    p1Votes, p2Votes,
+                    p1Score, p2Score
+                });
                 
                 const clash = stateRef.current.clashes[clashIndex];
                 const votes = Object.values(clash.votes).filter(v => v !== 'PASS');
@@ -659,7 +712,7 @@
                 const p2Votes = votes.filter(v => v === clash.p2.userId).length;
                 const totalValidVotes = p1Votes + p2Votes;
 
-                const basePoints = 1000 * stateRef.current.round;
+                const basePoints = stateRef.current.round === 3 ? 4000 : 1000 * stateRef.current.round;
                 let p1Score = totalValidVotes > 0 ? Math.floor((p1Votes/totalValidVotes) * basePoints) : 0;
                 let p2Score = totalValidVotes > 0 ? Math.floor((p2Votes/totalValidVotes) * basePoints) : 0;
 
@@ -770,7 +823,9 @@
 
                     {gameState === 'ANSWERING' && (
                         <div className="w-full scale-in">
-                            <h2 className="text-6xl font-black mb-2 text-pink-400 uppercase tracking-widest bouncing-title">ROUND {round}</h2>
+                            <h2 className="text-6xl font-black mb-2 text-pink-400 uppercase tracking-widest bouncing-title">
+                                {round === 3 ? "WHIP OF THE BLERSJ" : `ROUND ${round}`}
+                            </h2>
                             <p className="text-3xl mb-12 font-bold text-cyan-200">Look at your devices and answer!</p>
                             
                             <div className="text-9xl font-black font-mono mb-12 text-transparent bg-clip-text bg-gradient-to-b from-white to-purple-400 drop-shadow-2xl">{timer}</div>
@@ -920,6 +975,7 @@
             const [promptsToAnswer, setPromptsToAnswer] = useState([]);
             const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
             const [answerInput, setAnswerInput] = useState('');
+			const [clientTimeLeft, setClientTimeLeft] = useState(0);
             
             const [voteData, setVoteData] = useState(null); 
             const [userId] = useState(() => {
@@ -1003,6 +1059,13 @@
                     setVoteData(data);
                     setClientState('LEADERBOARD');
                 }
+				if(data.type === 'TIMER_SYNC') {
+                    setClientTimeLeft(data.timeLeft);
+                }
+                if(data.type === 'STATE_REVEAL') {
+                    setVoteData(data);
+                    setClientState('REVEAL');
+                }
             };
 
             const submitAnswer = () => {
@@ -1080,6 +1143,10 @@
                             </p>
                             <h3 className="text-3xl font-black mb-8 leading-snug drop-shadow-md">{promptsToAnswer[currentPromptIndex]}</h3>
                             
+                            <div className="text-4xl font-black text-cyan-300 text-center mb-6">
+                                {clientTimeLeft}s
+                            </div>
+                            
                             <div className="relative mb-4">
                                 <textarea 
                                     value={answerInput}
@@ -1128,6 +1195,32 @@
                                     Pass / Don't Vote
                                 </button>
                             )}
+                        </div>
+                    )}
+					{clientState === 'REVEAL' && voteData && voteData.prompt && (
+                        <div className="w-full text-center mt-4 p-4 glass-panel rounded-3xl border-t-8 border-green-500 scale-in">
+                            <h2 className="text-2xl font-black text-green-400 mb-6 uppercase tracking-widest">Results!</h2>
+                            <h3 className="text-xl font-bold mb-6 text-purple-200">{voteData.prompt}</h3>
+                            
+                            <div className="flex flex-col gap-4 text-left">
+                                <div className={`p-4 rounded-xl ${voteData.p1Votes > voteData.p2Votes ? 'bg-green-900/50 border-2 border-green-400' : 'bg-black/30'}`}>
+                                    <p className="text-xl font-bold mb-2">"{voteData.p1Answer}"</p>
+                                    <p className="text-pink-400 font-black uppercase text-sm mb-2">{voteData.p1.name}</p>
+                                    <div className="flex justify-between font-mono font-bold text-sm">
+                                        <span className="text-cyan-300 bg-black/50 px-2 py-1 rounded">{voteData.p1Votes} Votes</span>
+                                        <span className="text-yellow-300 bg-black/50 px-2 py-1 rounded">+{voteData.p1Score} Pts</span>
+                                    </div>
+                                </div>
+
+                                <div className={`p-4 rounded-xl ${voteData.p2Votes > voteData.p1Votes ? 'bg-green-900/50 border-2 border-green-400' : 'bg-black/30'}`}>
+                                    <p className="text-xl font-bold mb-2">"{voteData.p2Answer}"</p>
+                                    <p className="text-blue-400 font-black uppercase text-sm mb-2">{voteData.p2.name}</p>
+                                    <div className="flex justify-between font-mono font-bold text-sm">
+                                        <span className="text-cyan-300 bg-black/50 px-2 py-1 rounded">{voteData.p2Votes} Votes</span>
+                                        <span className="text-yellow-300 bg-black/50 px-2 py-1 rounded">+{voteData.p2Score} Pts</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
                     {clientState === 'LEADERBOARD' && voteData && voteData.players && (
