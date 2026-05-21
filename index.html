@@ -138,6 +138,24 @@
             { text: "A terrible safe word for life in general.", family: false },
             { text: "The real reason that sock is stuck to your ceiling.", family: false },
             { text: "Worst thing to find on your phone after lending it to a friend.", family: false },
+			{ text: "What the FBI agent watching through your webcam is thinking right now.", family: false },
+            { text: "The worst message to receive from an unknown number at 3 AM.", family: false },
+            { text: "A terrible thing to bring to a hostage negotiation.", family: false },
+            { text: "The worst theme for a children's birthday party.", family: false },
+            { text: "What really caused the Titanic to sink.", family: false },
+            { text: "The worst thing to accidentally drop in a public toilet.", family: false },
+            { text: "What your sleep paralysis demon does when you're not looking.", family: false },
+            { text: "The real reason they locked up the bathroom at the gas station.", family: false },
+            { text: "A terrible thing to shout right as the airplane touches down.", family: false },
+            { text: "The worst thing to find hidden inside a breakfast burrito.", family: false },
+            { text: "What the fortune cookie actually said before they censored it.", family: false },
+            { text: "A terrible name for a retirement home.", family: false },
+            { text: "The worst question to ask on a first date.", family: false },
+            { text: "What your dog really thinks about when you step out of the shower.", family: false },
+            { text: "The absolute worst thing to say to a police officer who just pulled you over.", family: false },
+            { text: "A completely inappropriate song to play at a wedding reception.", family: false },
+            { text: "The real reason aliens haven't made contact with us yet.", family: false },
+            { text: "A terrible excuse for showing up three hours late to a funeral.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -696,15 +714,6 @@
 
             const revealWinner = (clashIndex) => {
                 setGameState('REVEAL');
-                broadcast('STATE_REVEAL', { 
-                    prompt: clash.prompt,
-                    p1: clash.p1, 
-                    p2: clash.p2,
-                    p1Answer: clash.answers[clash.p1.userId],
-                    p2Answer: clash.answers[clash.p2.userId],
-                    p1Votes, p2Votes,
-                    p1Score, p2Score
-                });
                 
                 const clash = stateRef.current.clashes[clashIndex];
                 const votes = Object.values(clash.votes).filter(v => v !== 'PASS');
@@ -726,6 +735,17 @@
                 if (isP1Sweep) p1Score += 500;
                 if (isP2Sweep) p2Score += 500;
 
+                // Broadcast AFTER variables are defined!
+                broadcast('STATE_REVEAL', { 
+                    prompt: clash.prompt,
+                    p1: clash.p1, 
+                    p2: clash.p2,
+                    p1Answer: clash.answers[clash.p1.userId],
+                    p2Answer: clash.answers[clash.p2.userId],
+                    p1Votes, p2Votes,
+                    p1Score, p2Score
+                });
+
                 setPlayers(prev => prev.map(p => {
                     if(p.userId === clash.p1.userId) return { ...p, score: p.score + p1Score };
                     if(p.userId === clash.p2.userId) return { ...p, score: p.score + p2Score };
@@ -743,6 +763,11 @@
                 if(p1Votes > p2Votes) winnerMsg = isP1Sweep ? `Flawless victory for ${clash.p1.name}!` : `${clash.p1.name} wins!`;
                 if(p2Votes > p1Votes) winnerMsg = isP2Sweep ? `Flawless victory for ${clash.p2.name}!` : `${clash.p2.name} wins!`;
                 
+                // Play victory sound on sweeps
+                if (isP1Sweep || isP2Sweep) {
+                    try { new Audio('victory.wav').play(); } catch(e){ console.log("Audio play prevented"); }
+                }
+
                 speakText(winnerMsg, settings.tts);
 
                 setTimeout(() => {
@@ -754,6 +779,9 @@
                 if(round >= 3) {
                     setGameState('GAME_END');
                     speakText("The game is over! Let's see who mastered the madness!", settings.tts);
+                    
+                    // Play victory sound for the winner reveal
+                    try { new Audio('victory.wav').play(); } catch(e){ console.log("Audio play prevented"); }
                     
                     const sortedPlayers = [...players].sort((a,b) => b.score - a.score);
                     broadcast('STATE_LEADERBOARD', { players: sortedPlayers, isFinal: true });
