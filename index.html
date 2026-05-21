@@ -992,10 +992,12 @@
                     setCurrentPromptIndex(0);
                     setAnswerInput('');
                     setClientState('ANSWERING');
+                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]); // Vibrate: BZZZ - pause - BZZZ
                 }
                 if(data.type === 'STATE_VOTING') {
                     setVoteData(data);
                     setClientState('VOTING');
+                    if (navigator.vibrate && !data.readOnly) navigator.vibrate(200); // Short buzz to vote
                 }
                 if(data.type === 'STATE_LEADERBOARD') {
                     setVoteData(data);
