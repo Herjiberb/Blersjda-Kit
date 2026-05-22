@@ -20,7 +20,7 @@
         }
         
         /* Typography & Animations */
-        .bouncing-title { animation: bounce 2s infinite; text-shadow: 0 4px 15px rgba(236, 72, 153, 0.8); }
+        .bouncing-title { animation: bounce 2s infinite; text-shadow: 0 4px 20px rgba(0, 0, 0, 0.7); }
         .bouncing-win { animation: bounceWin 0.5s infinite alternate; }
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
         .scale-in { animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
@@ -107,21 +107,78 @@
         .slide-up-fade { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
+        /* Epic Blue Lightning Logo */
         .logo-box {
-            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(6, 182, 212, 0.2));
-            border: 2px dashed rgba(255,255,255,0.2);
+            background: radial-gradient(circle at center, rgba(0, 102, 255, 0.3) 0%, rgba(0, 0, 0, 0.8) 100%);
+            border: 3px solid #00f3ff;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.6), inset 0 0 40px rgba(0, 85, 255, 0.6);
             border-radius: 30px;
             padding: 40px 20px;
             position: relative;
             overflow: hidden;
         }
         .logo-box::after {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-            animation: spin 15s linear infinite;
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(transparent, rgba(0, 243, 255, 0.4), transparent 20%);
+            animation: spin 4s linear infinite;
         }
+        .lightning-overlay {
+            position: absolute; inset: 0; pointer-events: none;
+            background-image: url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><path d="M100 0 L60 100 L120 80 L80 200 L160 80 L80 100 Z" fill="rgba(0,243,255,0.15)"/></svg>');
+            background-size: 150px; animation: flashOverlay 2s infinite;
+        }
+        @keyframes flashOverlay { 0%, 93%, 98% { opacity: 0; transform: scale(1); } 95%, 99% { opacity: 1; transform: scale(1.1); } }
+        
+        .epic-text {
+            background: linear-gradient(180deg, #ffffff 0%, #00f3ff 50%, #0055ff 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .pulse-glow-blue { animation: pulseGlowBlue 1.5s infinite alternate; }
+        @keyframes pulseGlowBlue { 0% { box-shadow: 0 0 15px rgba(0,102,255,0.5); } 100% { box-shadow: 0 0 40px rgba(0,243,255,1); } }
+
+        /* Battle Animation - INTENSE */
+        .battle-container { 
+            position: relative; width: 100%; height: 180px; overflow: hidden; margin-top: 20px; 
+            border-radius: 20px; background: #050011; border: 4px solid #ff0000;
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.5);
+            animation: lightningBg 3s infinite;
+        }
+        @keyframes lightningBg { 0%, 95%, 98% { background: #050011; } 96%, 99% { background: #e0f7fa; } }
+        
+        .fighter-left { position: absolute; left: 10px; bottom: 20px; animation: rollInLeft 0.5s forwards cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .fighter-right { position: absolute; right: 10px; bottom: 20px; animation: rollInRight 0.5s forwards cubic-bezier(0.2, 0.8, 0.2, 1); }
+        
+        .fighter-left > svg { animation: intenseFightLeft 0.4s infinite alternate ease-in-out 0.5s; }
+        .fighter-right > svg { animation: intenseFightRight 0.4s infinite alternate ease-in-out 0.5s; transform: scaleX(-1); }
+
+        @keyframes intenseFightLeft {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(40px, -20px) rotate(20deg) scale(1.1); }
+            50% { transform: translate(15px, 10px) rotate(-10deg); }
+            75% { transform: translate(50px, -30px) rotate(35deg) scale(1.3); }
+            100% { transform: translate(-10px, 0) rotate(-5deg); }
+        }
+        @keyframes intenseFightRight {
+            0% { transform: scaleX(-1) translate(0, 0) rotate(0deg); }
+            25% { transform: scaleX(-1) translate(40px, -20px) rotate(20deg) scale(1.1); }
+            50% { transform: scaleX(-1) translate(15px, 10px) rotate(-10deg); }
+            75% { transform: scaleX(-1) translate(50px, -30px) rotate(35deg) scale(1.3); }
+            100% { transform: scaleX(-1) translate(-10px, 0) rotate(-5deg); }
+        }
+
+        .blood-particle { position: absolute; background: #ff1111; border-radius: 50%; animation: spurt 0.8s infinite; z-index: 10; box-shadow: 0 0 5px #ff0000; }
+        @keyframes spurt {
+            0% { transform: translate(0,0) scale(1.5); opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+        }
+
+        .lifesteal-beam {
+            position: absolute; top: 60px; left: 60px; right: 60px; height: 15px;
+            background: linear-gradient(90deg, #ff0000 0%, #ffff00 50%, #00ff00 100%);
+            border-radius: 10px; filter: blur(3px); z-index: 5;
+            animation: beamPulse 0.15s infinite;
+        }
+        @keyframes beamPulse { 0% { opacity: 0.4; height: 8px; box-shadow: 0 0 10px #ff0000; } 100% { opacity: 1; height: 20px; box-shadow: 0 0 30px #00ff00; } }
     </style>
 </head>
 <body>
@@ -506,30 +563,172 @@
                 </div>
             );
         };
+		
+		// ==========================================
+		// LIGHTNING LOGO COMPONENT
+		// ==========================================
+		const LightningLogo = () => {
+			const canvasRef = useRef(null);
+
+			useEffect(() => {
+				const canvas = canvasRef.current;
+				if (!canvas) return;
+				const ctx = canvas.getContext('2d');
+				let animationId;
+
+				// Automatically match canvas size to screen/parent container bounds
+				const resize = () => {
+					const rect = canvas.parentElement.getBoundingClientRect();
+					canvas.width = rect.width || 400;
+					canvas.height = rect.height || 200;
+				};
+				resize();
+				window.addEventListener('resize', resize);
+
+				let activeStrikes = [];
+
+				// Generates natural zig-zag lightning paths between points
+				const createStrike = () => {
+					const w = canvas.width;
+					const h = canvas.height;
+					
+					const isHorizontal = Math.random() > 0.5;
+					let sx, sy, ex, ey;
+
+					if (isHorizontal) {
+						sx = 0;
+						sy = Math.random() * (h * 0.6) + h * 0.2;
+						ex = w;
+						ey = Math.random() * (h * 0.6) + h * 0.2;
+					} else {
+						sx = Math.random() * w;
+						sy = 0;
+						ex = Math.random() * w;
+						ey = h;
+					}
+
+					// Picks between Yellow and Electric Blue
+					const color = Math.random() > 0.5 ? '#facc15' : '#38bdf8';
+					const segments = 12;
+					const displacement = 25; // Jaggedness factor
+					
+					const path = [{ x: sx, y: sy }];
+					for (let i = 1; i < segments; i++) {
+						const t = i / segments;
+						const baseX = sx + (ex - sx) * t;
+						const baseY = sy + (ey - sy) * t;
+						
+						const jitterX = (Math.random() - 0.5) * displacement;
+						const jitterY = (Math.random() - 0.5) * displacement;
+						
+						path.push({ x: baseX + jitterX, y: baseY + jitterY });
+					}
+					path.push({ x: ex, y: ey });
+
+					return {
+						path,
+						color,
+						alpha: 1,
+						width: Math.random() * 2 + 2.5,
+						decay: Math.random() * 0.06 + 0.04 // Fade out speed
+					};
+				};
+
+				let frameCounter = 0;
+
+				const render = () => {
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+					
+					frameCounter++;
+					// Fire a flash strike randomly at balanced intervals
+					if (frameCounter % 25 === 0 && Math.random() > 0.4) {
+						activeStrikes.push(createStrike());
+						if (Math.random() > 0.75) {
+							// Trigger an immediate double fork strike
+							setTimeout(() => {
+								if (canvasRef.current) activeStrikes.push(createStrike());
+							}, 60);
+						}
+					}
+
+					activeStrikes = activeStrikes.filter(strike => {
+						strike.alpha -= strike.decay;
+						if (strike.alpha <= 0) return false;
+
+						ctx.save();
+						ctx.globalAlpha = strike.alpha;
+						ctx.strokeStyle = strike.color;
+						ctx.lineWidth = strike.width;
+						
+						// Lightning Neon Glow Effect
+						ctx.shadowColor = strike.color;
+						ctx.shadowBlur = 14;
+
+						ctx.beginPath();
+						ctx.moveTo(strike.path[0].x, strike.path[0].y);
+						for (let i = 1; i < strike.path.length; i++) {
+							ctx.lineTo(strike.path[i].x, strike.path[i].y);
+						}
+						ctx.stroke();
+
+						// Ultra-bright inner electrical core
+						ctx.strokeStyle = '#ffffff';
+						ctx.lineWidth = strike.width * 0.35;
+						ctx.shadowBlur = 0;
+						ctx.stroke();
+
+						ctx.restore();
+						return true;
+					});
+
+					animationId = requestAnimationFrame(render);
+				};
+
+				render();
+
+				return () => {
+					window.removeEventListener('resize', resize);
+					cancelAnimationFrame(animationId);
+				};
+			}, []);
+
+			return (
+				<div className="relative w-full h-52 flex items-center justify-center mb-2 overflow-hidden select-none">
+					{/* Background Canvas for Lightning Strikes */}
+					<canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0" />
+					
+					{/* Cleaner, non-chaotic logo typography */}
+					<h1 className="text-6xl md:text-7xl font-black uppercase tracking-tight relative z-10 text-center select-none leading-none drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
+						Blersjda<br/>
+						<span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-200 to-blue-400">
+							Madness
+						</span>
+					</h1>
+				</div>
+			);
+		};
 
         // ==========================================
         // MAIN MENU
         // ==========================================
         const MainMenu = ({ setView }) => (
-            <div className="max-w-md w-full flex flex-col items-center gap-6 scale-in text-center">
-                <div className="logo-box pulse-glow w-full mb-2">
-                    <h1 className="text-6xl md:text-7xl font-black uppercase bouncing-title tracking-tight relative z-10">
-                        Blersjda<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-cyan-400 drop-shadow-lg">Madness</span>
-                    </h1>
-                </div>
-                <p className="text-xl mb-6 text-cyan-300 font-bold tracking-widest uppercase wobble-anim">The Ultimate Party Game</p>
-                
-                <div className="w-full space-y-4 relative z-10">
-                    <Button color="pink" onClick={() => setView('HOST')} className="h-20 text-2xl transition-transform hover:scale-105">📺 Host Game</Button>
-                    <Button color="blue" onClick={() => setView('JOIN')} className="h-20 text-2xl transition-transform hover:scale-105">📱 Join Game</Button>
-                </div>
-                
-                <div className="mt-8 text-sm text-purple-200 glass-panel p-5 rounded-2xl w-full slide-up-fade">
-                    <p className="mb-2"><strong>How to play:</strong> Host puts this on a big screen or TV. Everyone else joins using their phones!</p>
-                    <p className="text-pink-300 font-bold">4+ Players Required.</p>
-                </div>
-            </div>
-        );
+			<div className="max-w-md w-full flex flex-col items-center gap-6 scale-in text-center">
+				{/* Swapped out logo-box with the lightning component */}
+				<LightningLogo />
+				
+				<p className="text-xl mb-6 text-cyan-300 font-bold tracking-widest uppercase wobble-anim">The Ultimate Party Game</p>
+				
+				<div className="w-full space-y-4 relative z-10">
+					<Button color="pink" onClick={() => setView('HOST')} className="h-20 text-2xl transition-transform hover:scale-105">📺 Host Game</Button>
+					<Button color="blue" onClick={() => setView('JOIN')} className="h-20 text-2xl transition-transform hover:scale-105">📱 Join Game</Button>
+				</div>
+				
+				<div className="mt-8 text-sm text-purple-200 glass-panel p-5 rounded-2xl w-full slide-up-fade">
+					<p className="mb-2"><strong>How to play:</strong> Host puts this on a big screen or TV. Everyone else joins using their phones!</p>
+					<p className="text-pink-300 font-bold">4+ Players Required.</p>
+				</div>
+			</div>
+		);
 
         // ==========================================
         // ONLINE HOST (THE BIG SCREEN)
@@ -809,51 +1008,53 @@
             const newUsed = [...prevUsed];
 
             // --- NEW DYNAMIC GROUPING LOGIC ---
-            // Create a pool where each player is entered twice (since everyone answers 2 prompts)
+            // Requirement: Exactly 4 prompts, every player answers exactly 2 prompts.
+            const numPrompts = 4;
+            const totalSlots = currentPlayers.length * 2;
+            let sizes = Array(numPrompts).fill(Math.floor(totalSlots / numPrompts));
+            for(let i = 0; i < totalSlots % numPrompts; i++) sizes[i]++;
+            
+            let groups = [];
+            let validGroups = false;
+            let attempts = 0;
+            
             let playerPool = [];
             currentPlayers.forEach(p => { playerPool.push(p, p); });
             
-            // Determine group sizes (mix of 2 and 3)
-            let sizes = [];
-            let remainingSlots = playerPool.length;
-            while(remainingSlots > 0) {
-                // Favor 3 if there are enough players, otherwise 2
-                let size = (remainingSlots >= 3 && currentPlayers.length > 3) ? (Math.random() > 0.4 ? 3 : 2) : 2;
-                if (remainingSlots - size === 1) size = 3; // Prevent a single leftover slot
-                if (remainingSlots === 4) size = 2; // Split 4 evenly into 2 and 2
-                sizes.push(size);
-                remainingSlots -= size;
-            }
-
-            // Shuffle and validate to ensure no player is in the same prompt twice
-            let validGroups = false;
-            let groups = [];
-            let attempts = 0;
-            
-            while(!validGroups && attempts < 100) {
-                playerPool = shuffle(playerPool);
-                groups = [];
-                let offset = 0;
+            while(!validGroups && attempts < 500) {
+                playerPool = shuffle([...playerPool]);
+                groups = Array.from({length: numPrompts}, () => []);
+                let poolIdx = 0;
                 validGroups = true;
                 
-                for(let s of sizes) {
-                    let currentGroup = playerPool.slice(offset, offset + s);
-                    let uniqueIds = new Set(currentGroup.map(p => p.userId));
-                    if(uniqueIds.size !== currentGroup.length) {
-                        validGroups = false;
-                        break;
+                for(let i=0; i<numPrompts; i++) {
+                    for(let j=0; j<sizes[i]; j++) {
+                        let p = playerPool[poolIdx++];
+                        if(groups[i].some(existing => existing.userId === p.userId)) {
+                            validGroups = false;
+                            break;
+                        }
+                        groups[i].push(p);
                     }
-                    groups.push(currentGroup);
-                    offset += s;
+                    if(!validGroups) break;
                 }
                 attempts++;
             }
 
-            // Fallback to traditional round-robin if the randomizer hits a dead end
+            // Fallback sequential assignment if randomizer hits a dead end
             if (!validGroups) {
-                groups = [];
-                for(let i=0; i<currentPlayers.length; i++) {
-                    groups.push([currentPlayers[i], currentPlayers[(i+1) % currentPlayers.length]]);
+                groups = Array.from({length: numPrompts}, () => []);
+                let counts = {};
+                currentPlayers.forEach(p => counts[p.userId] = 0);
+                for(let i=0; i<numPrompts; i++) {
+                    // Sort available by those who need assignments the most
+                    let available = currentPlayers.filter(p => counts[p.userId] < 2).sort((a,b) => counts[a.userId] - counts[b.userId]);
+                    for(let j=0; j<sizes[i]; j++) {
+                        if (available[j]) {
+                            groups[i].push(available[j]);
+                            counts[available[j].userId]++;
+                        }
+                    }
                 }
             }
 
@@ -864,7 +1065,7 @@
                 
                 newClashes.push({
                     prompt: prompt.text,
-                    players: group, // Changed from p1/p2 to an array of players
+                    players: group, 
                     answers: {}, 
                     votes: {}   
                 });
@@ -1538,18 +1739,27 @@
                     )}
 					
 					{clientState === 'WAITING_BATTLE' && (
-                        <div className="w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in border-t-8 border-orange-500">
-                            <h2 className="text-3xl font-black text-orange-400 mb-2 uppercase tracking-widest">Answers In!</h2>
-                            <p className="text-lg text-purple-200 font-bold mb-6 text-center">Enjoy the battle while others finish.</p>
+                        <div className="w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in border-t-8 border-red-600">
+                            <h2 className="text-3xl font-black text-red-500 mb-2 uppercase tracking-widest animate-pulse">Answers In!</h2>
+                            <p className="text-lg text-purple-200 font-bold mb-6 text-center">Prepare for absolute carnage...</p>
 
-                            <div className="battle-container">
+                            <div className="battle-container w-full h-48 relative overflow-hidden rounded-xl border-4 border-red-700">
                                 {battleAvatars && (
                                     <>
-                                        <div className="fighter-left"><MonsterAvatar attributes={battleAvatars[0]} size={60} /></div>
-                                        <div className="fireball fb-left"></div>
+                                        <div className="lifesteal-beam"></div>
+                                        <div className="fighter-left absolute left-4 bottom-4"><MonsterAvatar attributes={battleAvatars[0]} size={80} /></div>
+                                        
+                                        {/* Blood Particles */}
+                                        {Array.from({length: 15}).map((_, i) => (
+                                            <div key={'p1'+i} className="blood-particle" style={{
+                                                left: '50%', top: '50%', width: Math.random()*12+4+'px', height: Math.random()*12+4+'px',
+                                                '--dx': (Math.random()*200-100)+'px', '--dy': (Math.random()*200-100)+'px',
+                                                animationDelay: Math.random()+'s',
+                                                animationDuration: (Math.random()*0.5 + 0.5)+'s'
+                                            }}></div>
+                                        ))}
 
-                                        <div className="fighter-right"><MonsterAvatar attributes={battleAvatars[1]} size={60} /></div>
-                                        <div className="fireball fb-right"></div>
+                                        <div className="fighter-right absolute right-4 bottom-4"><MonsterAvatar attributes={battleAvatars[1]} size={80} /></div>
                                     </>
                                 )}
                             </div>
