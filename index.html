@@ -96,6 +96,32 @@
         @keyframes shootRight { 0% { left: 80px; opacity: 1; transform: scale(0.5); } 80% { opacity: 1; transform: scale(1.5); } 100% { left: calc(100% - 80px); opacity: 0; transform: scale(2); } }
         @keyframes shootLeft { 0% { right: 80px; opacity: 1; transform: scale(0.5); } 80% { opacity: 1; transform: scale(1.5); } 100% { right: calc(100% - 80px); opacity: 0; transform: scale(2); } }
         @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+		
+		/* New Fun Animations */
+        .wobble-anim { animation: wobble 2s infinite ease-in-out; }
+        @keyframes wobble { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg) scale(1.05); } }
+        
+        .pulse-glow { animation: pulseGlow 2s infinite alternate; }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 10px rgba(236,72,153,0.5); } 100% { box-shadow: 0 0 30px rgba(236,72,153,1); } }
+        
+        .slide-up-fade { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .logo-box {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(6, 182, 212, 0.2));
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 30px;
+            padding: 40px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .logo-box::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            animation: spin 15s linear infinite;
+        }
     </style>
 </head>
 <body>
@@ -486,17 +512,19 @@
         // ==========================================
         const MainMenu = ({ setView }) => (
             <div className="max-w-md w-full flex flex-col items-center gap-6 scale-in text-center">
-                <h1 className="text-6xl md:text-7xl font-black uppercase bouncing-title mb-2 tracking-tight">
-                    Blersjda<br/><span className="text-pink-400">Madness</span>
-                </h1>
-                <p className="text-xl mb-6 text-cyan-300 font-bold tracking-widest uppercase">The Ultimate Party Game</p>
+                <div className="logo-box pulse-glow w-full mb-2">
+                    <h1 className="text-6xl md:text-7xl font-black uppercase bouncing-title tracking-tight relative z-10">
+                        Blersjda<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-cyan-400 drop-shadow-lg">Madness</span>
+                    </h1>
+                </div>
+                <p className="text-xl mb-6 text-cyan-300 font-bold tracking-widest uppercase wobble-anim">The Ultimate Party Game</p>
                 
-                <div className="w-full space-y-4">
-                    <Button color="pink" onClick={() => setView('HOST')} className="h-20 text-2xl">📺 Host Game</Button>
-                    <Button color="blue" onClick={() => setView('JOIN')} className="h-20 text-2xl">📱 Join Game</Button>
+                <div className="w-full space-y-4 relative z-10">
+                    <Button color="pink" onClick={() => setView('HOST')} className="h-20 text-2xl transition-transform hover:scale-105">📺 Host Game</Button>
+                    <Button color="blue" onClick={() => setView('JOIN')} className="h-20 text-2xl transition-transform hover:scale-105">📱 Join Game</Button>
                 </div>
                 
-                <div className="mt-8 text-sm text-purple-200 glass-panel p-5 rounded-2xl w-full">
+                <div className="mt-8 text-sm text-purple-200 glass-panel p-5 rounded-2xl w-full slide-up-fade">
                     <p className="mb-2"><strong>How to play:</strong> Host puts this on a big screen or TV. Everyone else joins using their phones!</p>
                     <p className="text-pink-300 font-bold">4+ Players Required.</p>
                 </div>
@@ -640,7 +668,7 @@
                 const { gameState, clashes, currentClashIndex } = stateRef.current;
                 
                 if (gameState === 'ANSWERING' && !isAudience) {
-                    const myClashes = clashes.filter(c => c.p1.userId === userId || c.p2.userId === userId);
+                    const myClashes = clashes.filter(c => c.players.some(p => p.userId === userId));
                     const unanswered = myClashes.filter(c => !c.answers[userId]).map(c => c.prompt);
                     if (unanswered.length > 0) {
                         sendToClient(userId, 'STATE_ANSWERING', { prompts: unanswered });
@@ -650,13 +678,10 @@
                 } 
                 else if (gameState === 'VOTING') {
                     const clash = clashes[currentClashIndex];
-                    if (!isAudience && (clash.p1.userId === userId || clash.p2.userId === userId)) {
+                    if (!isAudience && clash.players.some(p => p.userId === userId)) {
                         sendToClient(userId, 'STATE_VOTING', { 
                             prompt: clash.prompt, 
-                            answers: [
-                                { id: clash.p1.userId, text: clash.answers[clash.p1.userId] },
-                                { id: clash.p2.userId, text: clash.answers[clash.p2.userId] }
-                            ],
+                            answers: clash.players.map(p => ({ id: p.userId, text: clash.answers[p.userId] })),
                             allowPass: false,
                             readOnly: true,
                             msg: "Your battle! You can't vote, but watch the results."
@@ -664,10 +689,7 @@
                     } else {
                         sendToClient(userId, 'STATE_VOTING', { 
                             prompt: clash.prompt, 
-                            answers: [
-                                { id: clash.p1.userId, text: clash.answers[clash.p1.userId] },
-                                { id: clash.p2.userId, text: clash.answers[clash.p2.userId] }
-                            ],
+                            answers: clash.players.map(p => ({ id: p.userId, text: clash.answers[p.userId] })),
                             allowPass: isAudience,
                             readOnly: false
                         });
@@ -908,23 +930,17 @@
 
                 speakText(clash.prompt, settings.tts);
 
+                const mappedAnswers = clash.players.map(cp => ({ id: cp.userId, text: clash.answers[cp.userId] }));
+
                 // Notify Players
                 stateRef.current.players.forEach(p => {
-                    if(p.userId !== clash.p1.userId && p.userId !== clash.p2.userId) {
-                        // Normal voter
+                    if(!clash.players.some(cp => cp.userId === p.userId)) {
                         sendToClient(p.userId, 'STATE_VOTING', { 
-                            prompt: clash.prompt, 
-                            answers: [ { id: clash.p1.userId, text: clash.answers[clash.p1.userId] }, { id: clash.p2.userId, text: clash.answers[clash.p2.userId] } ],
-                            allowPass: false,
-                            readOnly: false
+                            prompt: clash.prompt, answers: mappedAnswers, allowPass: false, readOnly: false
                         });
                     } else {
-                        // Battling player - can see answers, but cannot vote
                         sendToClient(p.userId, 'STATE_VOTING', { 
-                            prompt: clash.prompt, 
-                            answers: [ { id: clash.p1.userId, text: clash.answers[clash.p1.userId] }, { id: clash.p2.userId, text: clash.answers[clash.p2.userId] } ],
-                            allowPass: false,
-                            readOnly: true,
+                            prompt: clash.prompt, answers: mappedAnswers, allowPass: false, readOnly: true,
                             msg: "Your battle! You can't vote, but watch the results."
                         });
                     }
@@ -932,9 +948,7 @@
 
                 stateRef.current.audience.forEach(a => {
                     sendToClient(a.userId, 'STATE_VOTING', { 
-                        prompt: clash.prompt, 
-                        answers: [ { id: clash.p1.userId, text: clash.answers[clash.p1.userId] }, { id: clash.p2.userId, text: clash.answers[clash.p2.userId] } ],
-                        allowPass: true
+                        prompt: clash.prompt, answers: mappedAnswers, allowPass: true
                     });
                 });
 
@@ -945,13 +959,11 @@
                     setTimer(timeLeft);
                     
                     const currentClash = stateRef.current.clashes[clashIndex];
-                    // Count expected connected players who aren't battling
                     const expectedPlayerVotes = stateRef.current.players.filter(p => 
-                        connectionsRef.current[p.userId]?.open && p.userId !== currentClash.p1.userId && p.userId !== currentClash.p2.userId
+                        connectionsRef.current[p.userId]?.open && !currentClash.players.some(cp => cp.userId === p.userId)
                     ).length;
                     
                     const expectedAudienceVotes = stateRef.current.audience.filter(a => connectionsRef.current[a.userId]?.open).length;
-                    
                     const expectedTotal = expectedPlayerVotes + expectedAudienceVotes;
                     const voteCount = Object.keys(currentClash.votes).length;
 
@@ -1163,7 +1175,7 @@
                                 <h3 className="text-2xl mb-6 text-pink-300 font-bold tracking-widest uppercase">Writing Progress</h3>
                                 <div className="flex flex-wrap gap-6 justify-center items-end">
                                     {players.map(p => {
-                                        const myClashes = clashes.filter(c => c.p1.userId === p.userId || c.p2.userId === p.userId);
+                                        const myClashes = clashes.filter(c => c.players.some(cp => cp.userId === p.userId));
                                         const answeredAll = myClashes.every(c => c.answers[p.userId]);
                                         return (
                                             <div key={p.userId} className="flex flex-col items-center transition-all duration-300" style={{ opacity: answeredAll ? 1 : 0.5, transform: answeredAll ? 'scale(1.1)' : 'scale(1)'}}>
@@ -1197,54 +1209,38 @@
                                 {clashes[currentClashIndex].prompt}
                             </h2>
                             
-                            <div className="grid grid-cols-2 gap-8 mb-10 w-full max-w-6xl mx-auto">
-                                {/* Player 1 Box */}
-                                <div className={`glass-panel p-10 rounded-3xl relative transition-all duration-500 ${gameState === 'REVEAL' && clashes[currentClashIndex].revealData?.p1Votes > clashes[currentClashIndex].revealData?.p2Votes ? 'border-4 border-green-400 bg-green-900/30 shadow-[0_0_50px_rgba(74,222,128,0.3)]' : ''} ${gameState === 'REVEAL' && clashes[currentClashIndex].revealData?.p1Votes < clashes[currentClashIndex].revealData?.p2Votes ? 'opacity-50' : ''}`}>
-                                    <p className="text-4xl font-bold mb-12 break-words">"{clashes[currentClashIndex].answers[clashes[currentClashIndex].p1.userId]}"</p>
-                                    
-                                    {gameState === 'REVEAL' && (
-                                        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
-                                            <div className={clashes[currentClashIndex].revealData?.p1Votes > clashes[currentClashIndex].revealData?.p2Votes ? 'bouncing-win' : ''}>
-                                                <MonsterAvatar attributes={clashes[currentClashIndex].p1.avatar} size={100} />
-                                            </div>
-                                            <div className="bg-pink-600 px-6 py-2 rounded-full text-xl font-black shadow-lg mt-2 border-2 border-white/20 whitespace-nowrap">
-                                                {clashes[currentClashIndex].p1.name}
-                                            </div>
-                                            <div className="mt-2 text-3xl font-black text-cyan-300 bg-black/50 px-4 py-1 rounded-xl">
-                                                {clashes[currentClashIndex].revealData?.p1Votes} Votes
-                                            </div>
-                                            {clashes[currentClashIndex].revealData?.p1Voters?.length > 0 && (
-                                                <div className="mt-3 text-lg text-purple-200 font-bold bg-black/40 px-4 py-2 rounded-xl max-w-full text-center">
-                                                    Voted: {clashes[currentClashIndex].revealData.p1Voters.join(', ')}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
+                            <div className={`grid gap-8 mb-10 w-full max-w-6xl mx-auto ${clashes[currentClashIndex].players.length > 2 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                                {clashes[currentClashIndex].players.map((player) => {
+                                    const answer = clashes[currentClashIndex].answers[player.userId];
+                                    const stat = gameState === 'REVEAL' ? clashes[currentClashIndex].revealData?.playerStats.find(s => s.userId === player.userId) : null;
+                                    const isWinner = gameState === 'REVEAL' && clashes[currentClashIndex].revealData?.winners.some(w => w.userId === player.userId);
+                                    const isLoser = gameState === 'REVEAL' && !isWinner;
 
-                                {/* Player 2 Box */}
-                                <div className={`glass-panel p-10 rounded-3xl relative transition-all duration-500 ${gameState === 'REVEAL' && clashes[currentClashIndex].revealData?.p2Votes > clashes[currentClashIndex].revealData?.p1Votes ? 'border-4 border-green-400 bg-green-900/30 shadow-[0_0_50px_rgba(74,222,128,0.3)]' : ''} ${gameState === 'REVEAL' && clashes[currentClashIndex].revealData?.p2Votes < clashes[currentClashIndex].revealData?.p1Votes ? 'opacity-50' : ''}`}>
-                                    <p className="text-4xl font-bold mb-12 break-words">"{clashes[currentClashIndex].answers[clashes[currentClashIndex].p2.userId]}"</p>
-                                    
-                                    {gameState === 'REVEAL' && (
-                                        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
-                                            <div className={clashes[currentClashIndex].revealData?.p2Votes > clashes[currentClashIndex].revealData?.p1Votes ? 'bouncing-win' : ''}>
-                                                <MonsterAvatar attributes={clashes[currentClashIndex].p2.avatar} size={100} />
-                                            </div>
-                                            <div className="bg-blue-600 px-6 py-2 rounded-full text-xl font-black shadow-lg mt-2 border-2 border-white/20 whitespace-nowrap">
-                                                {clashes[currentClashIndex].p2.name}
-                                            </div>
-                                            <div className="mt-2 text-3xl font-black text-cyan-300 bg-black/50 px-4 py-1 rounded-xl">
-                                                {clashes[currentClashIndex].revealData?.p2Votes} Votes
-                                            </div>
-                                            {clashes[currentClashIndex].revealData?.p2Voters?.length > 0 && (
-                                                <div className="mt-3 text-lg text-purple-200 font-bold bg-black/40 px-4 py-2 rounded-xl max-w-full text-center">
-                                                    Voted: {clashes[currentClashIndex].revealData.p2Voters.join(', ')}
+                                    return (
+                                        <div key={player.userId} className={`glass-panel p-10 rounded-3xl relative transition-all duration-500 ${isWinner ? 'border-4 border-green-400 bg-green-900/30 shadow-[0_0_50px_rgba(74,222,128,0.3)]' : ''} ${isLoser ? 'opacity-50' : ''}`}>
+                                            <p className="text-4xl font-bold mb-12 break-words">"{answer}"</p>
+                                            
+                                            {gameState === 'REVEAL' && stat && (
+                                                <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+                                                    <div className={isWinner ? 'bouncing-win' : ''}>
+                                                        <MonsterAvatar attributes={player.avatar} size={100} />
+                                                    </div>
+                                                    <div className={`px-6 py-2 rounded-full text-xl font-black shadow-lg mt-2 border-2 border-white/20 whitespace-nowrap ${isWinner ? 'bg-green-600' : 'bg-pink-600'}`}>
+                                                        {player.name}
+                                                    </div>
+                                                    <div className="mt-2 text-3xl font-black text-cyan-300 bg-black/50 px-4 py-1 rounded-xl">
+                                                        {stat.votes} Votes
+                                                    </div>
+                                                    {stat.voters?.length > 0 && (
+                                                        <div className="mt-3 text-lg text-purple-200 font-bold bg-black/40 px-4 py-2 rounded-xl max-w-full text-center">
+                                                            Voted: {stat.voters.join(', ')}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
-                                    )}
-                                </div>
+                                    );
+                                })}
                             </div>
 
                             {gameState === 'VOTING' && (
@@ -1459,11 +1455,18 @@
                 <div className="w-full max-w-md flex flex-col items-center scale-in text-center px-4 relative z-10">
                     
                     {clientState === 'REVEAL' && voteData && (
-                        ((voteData.p1Votes > voteData.p2Votes && (userId === voteData.p1.userId || myVotedFor === voteData.p1.userId)) ||
-                         (voteData.p2Votes > voteData.p1Votes && (userId === voteData.p2.userId || myVotedFor === voteData.p2.userId))) 
-                    ) && (
-                        <ClientWinAnimation avatar={myAvatar} />
-                    )}
+						((voteData.p1Votes > voteData.p2Votes && (userId === voteData.p1.userId || myVotedFor === voteData.p1.userId)) ||
+						 (voteData.p2Votes > voteData.p1Votes && (userId === voteData.p2.userId || myVotedFor === voteData.p2.userId))) 
+					) && (
+						voteData.stats && (() => {
+							const myStat = voteData.stats.find(s => s.userId === userId || s.userId === myVotedFor);
+							if(!myStat) return false;
+							const maxVotes = Math.max(...voteData.stats.map(s => s.votes));
+							return myStat.votes === maxVotes && maxVotes > 0;
+						})() && (
+							<ClientWinAnimation avatar={myAvatar} />
+						)
+					)}
 					
                     {clientState === 'LOGIN' && (
                         <div className="w-full glass-panel p-8 rounded-3xl shadow-2xl border border-pink-500/30">
@@ -1589,35 +1592,28 @@
                     )}
 					{clientState === 'REVEAL' && voteData && voteData.prompt && (
                         <div className="w-full text-center mt-4 p-4 glass-panel rounded-3xl border-t-8 border-green-500 scale-in">
-                            <h2 className="text-2xl font-black text-green-400 mb-6 uppercase tracking-widest">Results!</h2>
+                            <h2 className="text-2xl font-black text-green-400 mb-6 uppercase tracking-widest wobble-anim">Results!</h2>
                             <h3 className="text-xl font-bold mb-6 text-purple-200">{voteData.prompt}</h3>
                             
-                            <div className="flex flex-col gap-4 text-left">
-                                <div className={`p-4 rounded-xl ${voteData.p1Votes > voteData.p2Votes ? 'bg-green-900/50 border-2 border-green-400' : 'bg-black/30'}`}>
-                                    <p className="text-xl font-bold mb-2">"{voteData.p1Answer}"</p>
-                                    <p className="text-pink-400 font-black uppercase text-sm mb-2">{voteData.p1.name}</p>
-                                    <div className="flex justify-between font-mono font-bold text-sm">
-                                        <span className="text-cyan-300 bg-black/50 px-2 py-1 rounded">{voteData.p1Votes} Votes</span>
-                                        <span className="text-yellow-300 bg-black/50 px-2 py-1 rounded">+{voteData.p1Score} Pts</span>
-                                    </div>
-                                    {/* NEW VOTER DISPLAY FOR P1 */}
-                                    {voteData.p1Voters && voteData.p1Voters.length > 0 && (
-                                        <div className="mt-3 text-xs text-green-300 italic opacity-80 break-words">Voted: {voteData.p1Voters.join(', ')}</div>
-                                    )}
-                                </div>
+                            <div className="flex flex-col gap-4 text-left slide-up-fade">
+                                {voteData.stats.map(stat => {
+                                    const maxVotes = Math.max(...voteData.stats.map(s => s.votes));
+                                    const isWinner = stat.votes === maxVotes && maxVotes > 0;
 
-                                <div className={`p-4 rounded-xl ${voteData.p2Votes > voteData.p1Votes ? 'bg-green-900/50 border-2 border-green-400' : 'bg-black/30'}`}>
-                                    <p className="text-xl font-bold mb-2">"{voteData.p2Answer}"</p>
-                                    <p className="text-blue-400 font-black uppercase text-sm mb-2">{voteData.p2.name}</p>
-                                    <div className="flex justify-between font-mono font-bold text-sm">
-                                        <span className="text-cyan-300 bg-black/50 px-2 py-1 rounded">{voteData.p2Votes} Votes</span>
-                                        <span className="text-yellow-300 bg-black/50 px-2 py-1 rounded">+{voteData.p2Score} Pts</span>
-                                    </div>
-                                    {/* NEW VOTER DISPLAY FOR P2 */}
-                                    {voteData.p2Voters && voteData.p2Voters.length > 0 && (
-                                        <div className="mt-3 text-xs text-green-300 italic opacity-80 break-words">Voted: {voteData.p2Voters.join(', ')}</div>
-                                    )}
-                                </div>
+                                    return (
+                                        <div key={stat.userId} className={`p-4 rounded-xl transition-all ${isWinner ? 'bg-green-900/50 border-2 border-green-400 shadow-[0_0_15px_rgba(74,222,128,0.4)]' : 'bg-black/30'}`}>
+                                            <p className="text-xl font-bold mb-2">"{stat.answer}"</p>
+                                            <p className="text-pink-400 font-black uppercase text-sm mb-2">{stat.name}</p>
+                                            <div className="flex justify-between font-mono font-bold text-sm">
+                                                <span className="text-cyan-300 bg-black/50 px-2 py-1 rounded">{stat.votes} Votes</span>
+                                                <span className="text-yellow-300 bg-black/50 px-2 py-1 rounded">+{stat.score} Pts</span>
+                                            </div>
+                                            {stat.voters && stat.voters.length > 0 && (
+                                                <div className="mt-3 text-xs text-green-300 italic opacity-80 break-words">Voted: {stat.voters.join(', ')}</div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
