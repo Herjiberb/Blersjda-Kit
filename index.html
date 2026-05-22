@@ -179,6 +179,110 @@
             animation: beamPulse 0.15s infinite;
         }
         @keyframes beamPulse { 0% { opacity: 0.4; height: 8px; box-shadow: 0 0 10px #ff0000; } 100% { opacity: 1; height: 20px; box-shadow: 0 0 30px #00ff00; } }
+		
+		/* Sparkly Insane UI Background */
+        .sparkle-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 40px 70px, #ff00ff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50px 160px, #00ffff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 130px 80px, #ffff00, rgba(0,0,0,0)),
+                radial-gradient(3px 3px at 160px 120px, #ff00ff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            animation: sparkleMove 8s linear infinite;
+            opacity: 0.6;
+        }
+        @keyframes sparkleMove {
+            from { background-position: 0 0; }
+            to { background-position: -200px 200px; }
+        }
+
+        .rainbow-border {
+            position: relative;
+            background-clip: padding-box;
+            border: 4px solid transparent;
+        }
+        .rainbow-border::before {
+            content: ''; position: absolute; inset: -4px; z-index: -1;
+            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
+            background-size: 200% 200%; border-radius: inherit; animation: rainbowPan 3s linear infinite;
+        }
+        @keyframes rainbowPan { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+
+        /* Turn-Based Battle Animations */
+        .jump-pound-left { animation: jumpPoundLeft 4s infinite; transform-origin: bottom center; }
+        .jump-pound-right { animation: jumpPoundRight 4s infinite; transform-origin: bottom center; animation-delay: 2s; }
+
+        @keyframes jumpPoundLeft {
+            0%, 20%, 100% { transform: translateY(0) scale(1); }
+            5% { transform: translateY(-70px) scale(1.2) rotate(15deg); }
+            10% { transform: translateY(0) scale(1.1) translateX(30px) rotate(-10deg); filter: drop-shadow(0 0 20px #ff00ff); }
+            15% { transform: translateY(0) scale(1) rotate(0); filter: none; }
+        }
+        @keyframes jumpPoundRight {
+            0%, 20%, 100% { transform: translateY(0) scale(1) scaleX(-1); }
+            5% { transform: translateY(-70px) scale(1.2) scaleX(-1) rotate(-15deg); }
+            10% { transform: translateY(0) scale(1.1) translateX(-30px) scaleX(-1) rotate(10deg); filter: drop-shadow(0 0 20px #00ffff); }
+            15% { transform: translateY(0) scale(1) scaleX(-1) rotate(0); filter: none; }
+        }
+
+        /* Lightning Arc */
+        .lightning-arc {
+            position: absolute; top: 40px; left: 80px; right: 80px; height: 30px;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100%" height="30" xmlns="http://www.w3.org/2000/svg"><path d="M0 15 L 20 0 L 40 25 L 60 5 L 80 20 L 100 10 L 120 15" stroke="%2300ffff" stroke-width="4" fill="none"/></svg>');
+            background-size: 120px 30px;
+            filter: drop-shadow(0 0 10px #00ffff) drop-shadow(0 0 20px #00ffff);
+            opacity: 0; animation: zapRight 4s infinite; z-index: 5;
+        }
+        @keyframes zapRight {
+            0%, 14%, 18%, 100% { opacity: 0; }
+            15%, 17% { opacity: 1; transform: scaleY(1.5); }
+            16% { opacity: 0.5; transform: scaleY(-1); }
+        }
+
+        /* Fireball */
+        .epic-fireball {
+            position: absolute; top: 40px; left: 80px; width: 40px; height: 40px;
+            background: radial-gradient(circle, #ffffff, #ffeb3b, #ff0000);
+            border-radius: 50%; box-shadow: 0 0 30px #ff0000, 0 0 50px #ffeb3b;
+            opacity: 0; animation: shootFire 4s infinite; animation-delay: 2s; z-index: 5;
+        }
+        @keyframes shootFire {
+            0%, 10% { opacity: 0; left: calc(100% - 100px); transform: scale(0.5); }
+            11% { opacity: 1; transform: scale(1); }
+            14% { opacity: 1; left: 60px; transform: scale(2.5); }
+            15%, 100% { opacity: 0; left: 60px; transform: scale(3); }
+        }
+
+        /* Shotgun Reveal Animations */
+        .shotgun-container { 
+            position: absolute; right: -80px; top: 50%; transform: translateY(-50%); 
+            z-index: 50; animation: pumpShoot 1.5s forwards; pointer-events: none; font-size: 4rem; 
+        }
+        .bullet-hole { 
+            position: absolute; width: 25px; height: 25px; background: #000; border-radius: 50%; 
+            box-shadow: inset 0 0 8px rgba(255,255,255,0.3), 0 0 10px rgba(0,0,0,0.9); 
+            z-index: 10; opacity: 0; animation: blastHole 0.1s forwards; 
+        }
+        .shatter { animation: shatterAnim 1s forwards; transform-origin: center; animation-fill-mode: forwards; }
+
+        @keyframes pumpShoot {
+            0% { transform: translateY(-50%) translateX(100px) rotate(-30deg); opacity: 0; }
+            20% { transform: translateY(-50%) translateX(-20px) rotate(0deg); opacity: 1; }
+            40% { transform: translateY(-50%) translateX(10px) rotate(10deg); }
+            50% { transform: translateY(-50%) translateX(-20px) rotate(0deg); }
+            60% { transform: translateY(-50%) translateX(-20px) rotate(0deg) scale(1.3); filter: brightness(2); }
+            65% { transform: translateY(-50%) translateX(40px) rotate(20deg); filter: brightness(1); }
+            100% { transform: translateY(-50%) translateX(200px) rotate(45deg); opacity: 0; }
+        }
+        @keyframes blastHole { to { opacity: 1; } }
+        @keyframes shatterAnim {
+            0% { transform: rotate(0deg) scale(1); filter: contrast(1); }
+            100% { transform: rotate(10deg) scale(0.9) translateY(40px); opacity: 0.4; filter: contrast(2) grayscale(0.8) blur(1px); }
+        }
     </style>
 </head>
 <body>
@@ -297,8 +401,21 @@
             { text: "A terrible idea for a new Lego set.", family: true },
             { text: "What the mall Santa is thinking about right now.", family: true },
             { text: "The worst thing to bring to a potluck dinner.", family: true },
-            { text: "The worst reason to live a poop trail from the fridge to the bed.", family: true },
+            { text: "The worst reason to leave a poop trail from the fridge to the bed.", family: true },
             { text: "A new TV show that no one asked for.", family: true },
+			{ text: "The worst hole to use to play your recorder.", family: true },
+			{ text: "The real reason you lost your sock monkey.", family: true },
+			{ text: "The top secret location of Bat Man's Bat Cave.", family: true },
+			{ text: "A secret message hidden on the back of the Declaration of Independence.", family: true },
+            { text: "The real reason the chicken crossed the road.", family: true },
+            { text: "A terrible superpower for a baker to have.", family: true },
+            { text: "What your dog names you in their head.", family: true },
+            { text: "The absolute worst flavor of toothpaste.", family: true },
+            { text: "A rejected rule for the game of basketball.", family: true },
+            { text: "What you definitely don't want to find inside a snow globe.", family: true },
+            { text: "The real reason the ocean is so salty.", family: true },
+            { text: "A terrible name for a fierce pirate ship.", family: true },
+            { text: "What trees talk about when we aren't around.", family: true },
             
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
@@ -413,6 +530,16 @@
             { text: "A horribly inappropriate theme for a baby shower.", family: false },
             { text: "The worst item to buy at a gas station at 2 AM.", family: false },
             { text: "What really killed George Washington.", family: false },
+			{ text: "The worst thing to fill the shampoo bottle with.", family: false },
+            { text: "A terrible place to hide a stash of adult magazines.", family: false },
+            { text: "What your browser history will say at your funeral.", family: false },
+            { text: "A highly questionable use for mayonnaise.", family: false },
+            { text: "The worst thing to say immediately after dying in a corn field.", family: false },
+            { text: "A terrible time to accidentally send a nude.", family: false },
+            { text: "What really goes on at the retirement home after 9 PM.", family: false },
+            { text: "The absolute worst flavor of edible underwear.", family: false },
+            { text: "A bad excuse for having a handcuff key on your keychain.", family: false },
+            { text: "What the coroner surprisingly found in the victim's left pocket.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -557,6 +684,7 @@
             const [view, setView] = useState('MENU');
             return (
                 <div className="min-h-screen flex flex-col items-center justify-center p-4 relative z-10">
+                    <div className="sparkle-bg"></div> {/* NEW SPARKLE LAYER */}
                     {view === 'MENU' && <MainMenu setView={setView} />}
                     {view === 'HOST' && <OnlineHost goBack={() => setView('MENU')} />}
                     {view === 'JOIN' && <OnlineClient goBack={() => setView('MENU')} />}
@@ -1739,27 +1867,23 @@
                     )}
 					
 					{clientState === 'WAITING_BATTLE' && (
-                        <div className="w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in border-t-8 border-red-600">
+                        <div className="w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in rainbow-border">
                             <h2 className="text-3xl font-black text-red-500 mb-2 uppercase tracking-widest animate-pulse">Answers In!</h2>
                             <p className="text-lg text-purple-200 font-bold mb-6 text-center">Prepare for absolute carnage...</p>
 
-                            <div className="battle-container w-full h-48 relative overflow-hidden rounded-xl border-4 border-red-700">
+                            <div className="battle-container w-full h-48 relative overflow-hidden rounded-xl border-4 border-red-700 bg-black/50">
                                 {battleAvatars && (
                                     <>
-                                        <div className="lifesteal-beam"></div>
-                                        <div className="fighter-left absolute left-4 bottom-4"><MonsterAvatar attributes={battleAvatars[0]} size={80} /></div>
+                                        {/* New Epic Animations */}
+                                        <div className="lightning-arc"></div>
+                                        <div className="epic-fireball"></div>
                                         
-                                        {/* Blood Particles */}
-                                        {Array.from({length: 15}).map((_, i) => (
-                                            <div key={'p1'+i} className="blood-particle" style={{
-                                                left: '50%', top: '50%', width: Math.random()*12+4+'px', height: Math.random()*12+4+'px',
-                                                '--dx': (Math.random()*200-100)+'px', '--dy': (Math.random()*200-100)+'px',
-                                                animationDelay: Math.random()+'s',
-                                                animationDuration: (Math.random()*0.5 + 0.5)+'s'
-                                            }}></div>
-                                        ))}
-
-                                        <div className="fighter-right absolute right-4 bottom-4"><MonsterAvatar attributes={battleAvatars[1]} size={80} /></div>
+                                        <div className="fighter-left absolute left-4 bottom-4 jump-pound-left">
+                                            <MonsterAvatar attributes={battleAvatars[0]} size={80} />
+                                        </div>
+                                        <div className="fighter-right absolute right-4 bottom-4 jump-pound-right">
+                                            <MonsterAvatar attributes={battleAvatars[1]} size={80} />
+                                        </div>
                                     </>
                                 )}
                             </div>
@@ -1801,25 +1925,42 @@
                         </div>
                     )}
 					{clientState === 'REVEAL' && voteData && voteData.prompt && (
-                        <div className="w-full text-center mt-4 p-4 glass-panel rounded-3xl border-t-8 border-green-500 scale-in">
+                        <div className="w-full text-center mt-4 p-4 glass-panel rounded-3xl border-t-8 border-green-500 scale-in rainbow-border">
                             <h2 className="text-2xl font-black text-green-400 mb-6 uppercase tracking-widest wobble-anim">Results!</h2>
                             <h3 className="text-xl font-bold mb-6 text-purple-200">{voteData.prompt}</h3>
                             
-                            <div className="flex flex-col gap-4 text-left slide-up-fade">
+                            <div className="flex flex-col gap-4 text-left slide-up-fade relative overflow-hidden p-2">
                                 {voteData.stats.map(stat => {
                                     const maxVotes = Math.max(...voteData.stats.map(s => s.votes));
                                     const isWinner = stat.votes === maxVotes && maxVotes > 0;
+                                    const isLoser = !isWinner && maxVotes > 0; // Ensures tie doesn't trigger shotgun
+                                    
+                                    // Randomized bullet holes
+                                    const blastDelay = Math.random() * 0.2 + 0.9;
 
                                     return (
-                                        <div key={stat.userId} className={`p-4 rounded-xl transition-all ${isWinner ? 'bg-green-900/50 border-2 border-green-400 shadow-[0_0_15px_rgba(74,222,128,0.4)]' : 'bg-black/30'}`}>
-                                            <p className="text-xl font-bold mb-2">"{stat.answer}"</p>
-                                            <p className="text-pink-400 font-black uppercase text-sm mb-2">{stat.name}</p>
-                                            <div className="flex justify-between font-mono font-bold text-sm">
+                                        <div key={stat.userId} 
+                                            className={`relative p-4 rounded-xl transition-all ${isWinner ? 'bg-green-900/50 border-2 border-green-400 shadow-[0_0_15px_rgba(74,222,128,0.4)] z-20' : 'bg-black/80 z-10'} ${isLoser ? 'shatter' : ''}`} 
+                                            style={{ animationDelay: isLoser ? '0.9s' : '0s' }}>
+                                            
+                                            {/* Shotgun Blast on Loser */}
+                                            {isLoser && (
+                                                <>
+                                                    <div className="shotgun-container">🔫</div>
+                                                    <div className="bullet-hole" style={{ top: '15%', left: '20%', animationDelay: `${blastDelay}s` }}></div>
+                                                    <div className="bullet-hole" style={{ top: '65%', left: '75%', animationDelay: `${blastDelay + 0.1}s` }}></div>
+                                                    <div className="bullet-hole" style={{ top: '45%', left: '45%', animationDelay: `${blastDelay + 0.05}s` }}></div>
+                                                </>
+                                            )}
+
+                                            <p className="text-xl font-bold mb-2 relative z-10">"{stat.answer}"</p>
+                                            <p className="text-pink-400 font-black uppercase text-sm mb-2 relative z-10">{stat.name}</p>
+                                            <div className="flex justify-between font-mono font-bold text-sm relative z-10">
                                                 <span className="text-cyan-300 bg-black/50 px-2 py-1 rounded">{stat.votes} Votes</span>
                                                 <span className="text-yellow-300 bg-black/50 px-2 py-1 rounded">+{stat.score} Pts</span>
                                             </div>
                                             {stat.voters && stat.voters.length > 0 && (
-                                                <div className="mt-3 text-xs text-green-300 italic opacity-80 break-words">Voted: {stat.voters.join(', ')}</div>
+                                                <div className="mt-3 text-xs text-green-300 italic opacity-80 break-words relative z-10">Voted: {stat.voters.join(', ')}</div>
                                             )}
                                         </div>
                                     );
