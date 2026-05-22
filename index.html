@@ -80,6 +80,22 @@
         
         .goo-drop { position: absolute; bottom: -10px; width: 14px; height: 14px; border-radius: 50%; opacity: 0; animation: drip 1.5s infinite ease-in; }
         @keyframes drip { 0% { transform: translateY(0) scale(1); opacity: 0.8; } 100% { transform: translateY(50px) scale(0); opacity: 0; } }
+		/* Battle Animation */
+        .battle-container { position: relative; width: 100%; height: 160px; overflow: hidden; margin-top: 20px; border-radius: 20px; background: rgba(0,0,0,0.2); border: 2px solid rgba(236,72,153,0.3); }
+        .fighter-left { position: absolute; left: -80px; bottom: 20px; animation: rollInLeft 1s forwards cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .fighter-right { position: absolute; right: -80px; bottom: 20px; animation: rollInRight 1s forwards cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .fighter-left > svg { animation: bob 1s infinite alternate ease-in-out 1s; }
+        .fighter-right > svg { animation: bob 1s infinite alternate ease-in-out 1.2s; transform: scaleX(-1); }
+
+        .fireball { position: absolute; width: 24px; height: 24px; background: radial-gradient(circle, #fff, #ffeb3b, #ff9800, #f44336); border-radius: 50%; box-shadow: 0 0 15px #ff9800; top: 60px; opacity: 0; z-index: 10; }
+        .fb-left { left: 80px; animation: shootRight 2s infinite 1s; }
+        .fb-right { right: 80px; animation: shootLeft 2s infinite 1.5s; }
+
+        @keyframes rollInLeft { from { transform: translateX(0) rotate(-360deg); } to { transform: translateX(100px) rotate(0deg); } }
+        @keyframes rollInRight { from { transform: translateX(0) rotate(360deg); } to { transform: translateX(-100px) rotate(0deg); } }
+        @keyframes shootRight { 0% { left: 80px; opacity: 1; transform: scale(0.5); } 80% { opacity: 1; transform: scale(1.5); } 100% { left: calc(100% - 80px); opacity: 0; transform: scale(2); } }
+        @keyframes shootLeft { 0% { right: 80px; opacity: 1; transform: scale(0.5); } 80% { opacity: 1; transform: scale(1.5); } 100% { right: calc(100% - 80px); opacity: 0; transform: scale(2); } }
+        @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-10px); } }
     </style>
 </head>
 <body>
@@ -144,6 +160,60 @@
             { text: "The worst way to prove you're a regular at a restaurant door.", family: true },
             { text: "A surprising new verse for the song about the night the skeletons came to life.", family: true },
             { text: "The most awkward thing to yell while pulling on a door that goes both ways.", family: true },
+			{ text: "What Paul Revere actually yelled during his midnight ride.", family: true },
+			{ text: "A terrible name for a new planet in our solar system.", family: true },
+			{ text: "The real reason the Leaning Tower of Pisa leans.", family: true },
+			{ text: "What really caused the Great Fire of London.", family: true },
+			{ text: "The worst thing to bring to a medieval jousting tournament.", family: true },
+			{ text: "A rejected design for the Statue of Liberty.", family: true },
+			{ text: "What George Washington's wooden teeth tasted like.", family: true },
+			{ text: "The real reason ancient Egyptians built the pyramids.", family: true },
+			{ text: "A terrible brand deal for Julius Caesar.", family: true },
+			{ text: "What Neil Armstrong forgot to say on the moon.", family: true },
+			{ text: "The worst animal to ride into battle.", family: true },
+			{ text: "What the Sphinx is secretly thinking about.", family: true },
+			{ text: "A rejected name for the Internet.", family: true },
+			{ text: "The most annoying thing about living in a castle.", family: true },
+			{ text: "What Shakespeare's rough drafts looked like.", family: true },
+			{ text: "A weird thing to find in King Tut's tomb.", family: true },
+			{ text: "The real reason the Mona Lisa is smiling.", family: true },
+			{ text: "What early humans actually used fire for.", family: true },
+			{ text: "The worst thing to happen during the Boston Tea Party.", family: true },
+			{ text: "A terrible excuse for losing a sword fight.", family: true },
+			{ text: "The secret ingredient in the first Thanksgiving dinner.", family: true },
+			{ text: "What Leonardo da Vinci was trying to invent before he gave up.", family: true },
+			{ text: "A terrible item to put in a 1980s time capsule.", family: true },
+			{ text: "The real reason Amelia Earhart got lost.", family: true },
+			{ text: "A terrible name for a new streaming service.", family: true },
+			{ text: "The real reason the ice cream machine at McDonald's is always broken.", family: true },
+            { text: "What the WiFi password at Hogwarts probably is.", family: true },
+            { text: "A terrible new theme for a Disney ride.", family: true },
+            { text: "What your pet thinks when you pick up their poop.", family: true },
+            { text: "The worst thing to hear from the back seat on a road trip.", family: true },
+            { text: "A rejected name for the newest Minion.", family: true },
+            { text: "What the Monopoly guy actually does for a living.", family: true },
+            { text: "The secret ingredient in Krabby Patties.", family: true },
+            { text: "A horrible idea for a new Olympic mascot.", family: true },
+            { text: "What the tooth fairy does with all those teeth.", family: true },
+            { text: "The worst song to play during musical chairs.", family: true },
+            { text: "What Batman does on his day off.", family: true },
+            { text: "A terrible catchphrase for a morning news anchor.", family: true },
+            { text: "What your Roomba is secretly plotting.", family: true },
+            { text: "The worst thing to find inside a piñata.", family: true },
+            { text: "A completely useless app on your phone.", family: true },
+            { text: "The real reason Waldo is always hiding.", family: true },
+            { text: "What the pigeons are actually plotting in the park.", family: true },
+            { text: "A terrible flavor of Gatorade.", family: true },
+            { text: "What the Lego people do when you turn off the lights.", family: true },
+            { text: "The worst animal to bring to show and tell.", family: true },
+            { text: "A terrible name for a brand of toilet paper.", family: true },
+            { text: "What really happens inside a Pokéball.", family: true },
+            { text: "The worst thing to drop in a swimming pool.", family: true },
+            { text: "A rejected feature for the newest iPhone.", family: true },
+            { text: "What the skeletons in the closet are actually chatting about.", family: true },
+            { text: "A terrible idea for a new Lego set.", family: true },
+            { text: "What the mall Santa is thinking about right now.", family: true },
+            { text: "The worst thing to bring to a potluck dinner.", family: true },
             
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
@@ -205,6 +275,59 @@
             { text: "The manager's reaction to John Cena trying (and failing) to hide in plain sight at your office party.", family: false },
             { text: "The most chaotic thing to blurt out right before the wedding vows.", family: false },
             { text: "A surprising reason your smart home device suddenly starts playing heckin' boppin' music.", family: false },
+			{ text: "What Abraham Lincoln was really doing in the theater box.", family: false },
+			{ text: "The worst search term to accidentally project during a history presentation.", family: false },
+			{ text: "A historically inaccurate but hilarious reason for the French Revolution.", family: false },
+			{ text: "What Ben Franklin was actually trying to do with that kite.", family: false },
+			{ text: "A terrible thing to discover in a Victorian asylum.", family: false },
+			{ text: "What Cleopatra's Tinder bio would say.", family: false },
+			{ text: "The worst thing to accidentally send in a telegraph.", family: false },
+			{ text: "What Marie Antoinette actually said instead of 'let them eat cake.'", family: false },
+			{ text: "A truly cursed artifact found in the Vatican archives.", family: false },
+			{ text: "The real reason the Roman Empire fell.", family: false },
+			{ text: "What really happened at the first Thanksgiving after everyone got drunk.", family: false },
+			{ text: "The absolute worst thing to yell during a guillotine execution.", family: false },
+			{ text: "What Genghis Khan's search history looked like.", family: false },
+			{ text: "A terrible way to die during the Black Plague.", family: false },
+			{ text: "What Christopher Columbus was actually looking for.", family: false },
+			{ text: "The most awkward thing to happen in a medieval torture chamber.", family: false },
+			{ text: "A rejected commandment Moses left off the tablet.", family: false },
+			{ text: "The real reason they built the Great Wall of China.", family: false },
+			{ text: "The worst souvenir to bring back from the WWII.", family: false },
+			{ text: "What Winston Churchill's drunk texts looked like.", family: false },
+			{ text: "A terrible historical event to theme your bachelor party around.", family: false },
+			{ text: "What Henry VIII was actually thinking during his weddings.", family: false },
+			{ text: "The worst place to hide a body in Ancient Rome.", family: false },
+			{ text: "A historically accurate but terrible pickup line.", family: false },
+			{ text: "The worst thing to whisper in someone's ear at a urinal.", family: false },
+            { text: "What your incognito tab would say if it could testify in court.", family: false },
+            { text: "A terrible excuse for failing a breathalyzer.", family: false },
+            { text: "The worst thing to find in your Uber driver's trunk.", family: false },
+            { text: "What the HR department really thinks of your 'quick question'.", family: false },
+            { text: "A horrible icebreaker for an Alcoholics Anonymous meeting.", family: false },
+            { text: "The worst thing to say right after your blood-covered nitrile gloves break.", family: false },
+            { text: "What really happens at a Mormon bachelor party.", family: false },
+            { text: "A terrible safe word for a haunted house.", family: false },
+            { text: "The worst search query to project in a boardroom meeting.", family: false },
+            { text: "What your doctor is humming when they clean your elbows.", family: false },
+            { text: "A terrible text to get from your proctologist.", family: false },
+            { text: "The worst thing to accidentally send to your mother-in-law.", family: false },
+            { text: "What your sleep paralysis demon's personal bio looks like.", family: false },
+            { text: "A terrible phrase to have tattooed on your lower back.", family: false },
+            { text: "The absolute worst thing to say during a eulogy.", family: false },
+            { text: "What your penis is secretly thinking about.", family: false },
+            { text: "A horrible reason to end up in the ER at 3 AM.", family: false },
+            { text: "The worst thing to find under the mattress in a cheap motel.", family: false },
+            { text: "What really happens in the VIP room of a Chuck E. Cheese.", family: false },
+            { text: "A terrible way to tell someone they have an STD.", family: false },
+            { text: "The worst Yelp review you could leave for a funeral home.", family: false },
+            { text: "What Jeffrey Dahmer's search history looked like.", family: false },
+            { text: "The worst thing to discover about your date's basement.", family: false },
+            { text: "A terrible excuse for why you're covered in blood.", family: false },
+            { text: "What the local priest is actually praying for.", family: false },
+            { text: "A horribly inappropriate theme for a baby shower.", family: false },
+            { text: "The worst item to buy at a gas station at 2 AM.", family: false },
+            { text: "What really killed George Washington.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -641,80 +764,131 @@
             const startGame = () => {
                 if(players.length < 4) return;
                 setRound(1);
-                startRound(1, players, []);
+                startRound(1, players, usedPrompts); // Changed from [] to usedPrompts
             };
 
             const startRound = (r, currentPlayers, prevUsed) => {
-                setRound(r);
+            setRound(r);
+            
+            let available = PROMPTS.filter(p => !prevUsed.includes(p.text));
+            if(settings.familyFriendly) available = available.filter(p => p.family);
+            
+            // Fallback: If we run out of unique prompts, reset the pool
+            if (available.length < currentPlayers.length) {
+                prevUsed = [];
+                available = PROMPTS.filter(p => settings.familyFriendly ? p.family : true);
+            }
+            
+            available = shuffle(available);
+
+            const newClashes = [];
+            const newUsed = [...prevUsed];
+
+            // --- NEW DYNAMIC GROUPING LOGIC ---
+            // Create a pool where each player is entered twice (since everyone answers 2 prompts)
+            let playerPool = [];
+            currentPlayers.forEach(p => { playerPool.push(p, p); });
+            
+            // Determine group sizes (mix of 2 and 3)
+            let sizes = [];
+            let remainingSlots = playerPool.length;
+            while(remainingSlots > 0) {
+                // Favor 3 if there are enough players, otherwise 2
+                let size = (remainingSlots >= 3 && currentPlayers.length > 3) ? (Math.random() > 0.4 ? 3 : 2) : 2;
+                if (remainingSlots - size === 1) size = 3; // Prevent a single leftover slot
+                if (remainingSlots === 4) size = 2; // Split 4 evenly into 2 and 2
+                sizes.push(size);
+                remainingSlots -= size;
+            }
+
+            // Shuffle and validate to ensure no player is in the same prompt twice
+            let validGroups = false;
+            let groups = [];
+            let attempts = 0;
+            
+            while(!validGroups && attempts < 100) {
+                playerPool = shuffle(playerPool);
+                groups = [];
+                let offset = 0;
+                validGroups = true;
                 
-                let available = PROMPTS.filter(p => !prevUsed.includes(p.text));
-                if(settings.familyFriendly) available = available.filter(p => p.family);
-                available = shuffle(available);
-
-                const newClashes = [];
-                const newUsed = [...prevUsed];
-
-                for(let i=0; i<currentPlayers.length; i++) {
-                    const p1 = currentPlayers[i];
-                    const p2 = currentPlayers[(i+1) % currentPlayers.length];
-                    
-                    // Fallback if we run out of prompts (rare)
-                    const prompt = available.pop() || { text: `Wildcard prompt for ${p1.name} and ${p2.name}!` };
-                    newUsed.push(prompt.text);
-                    
-                    newClashes.push({
-                        prompt: prompt.text,
-                        p1, p2,
-                        answers: {}, 
-                        votes: {}   
-                    });
-                }
-
-                setUsedPrompts(newUsed);
-                setClashes(newClashes);
-                setGameState('ANSWERING');
-                
-                currentPlayers.forEach(player => {
-                    const myPrompts = newClashes.filter(c => c.p1.userId === player.userId || c.p2.userId === player.userId);
-                    sendToClient(player.userId, 'STATE_ANSWERING', { prompts: myPrompts.map(p => p.prompt) });
-                });
-                
-                stateRef.current.audience.forEach(aud => {
-                    sendToClient(aud.userId, 'STATE_WAITING', { msg: "Players are answering prompts..." });
-                });
-
-                speakText(`Round ${r} begins. Players, look at your devices!`, settings.tts);
-
-                if (r === 3) {
-                    speakText(`Welcome to the final round: The Whip of the Blersj!`, settings.tts);
-                } else {
-                    speakText(`Round ${r} begins. Players, look at your devices!`, settings.tts);
-                }
-
-                let timeLeft = 90; // Changed from 60 to 90 seconds
-                setTimer(timeLeft);
-                broadcast('TIMER_SYNC', { timeLeft }); // Initial sync to clients
-                
-                const int = setInterval(() => {
-                    timeLeft--;
-                    setTimer(timeLeft);
-                    broadcast('TIMER_SYNC', { timeLeft }); // Sync timer every second
-                    
-                    const allAnswered = stateRef.current.clashes.every(c => c.answers[c.p1.userId] && c.answers[c.p2.userId]);
-                    if(timeLeft <= 0 || allAnswered) {
-                        clearInterval(int);
-                        setClashes(prev => {
-                            const filled = [...prev];
-                            filled.forEach(c => {
-                                if(!c.answers[c.p1.userId]) c.answers[c.p1.userId] = shuffle(DEFAULT_ANSWERS)[0];
-                                if(!c.answers[c.p2.userId]) c.answers[c.p2.userId] = shuffle(DEFAULT_ANSWERS)[0];
-                            });
-                            return filled;
-                        });
-                        setTimeout(() => startVotingPhase(0), 1000);
+                for(let s of sizes) {
+                    let currentGroup = playerPool.slice(offset, offset + s);
+                    let uniqueIds = new Set(currentGroup.map(p => p.userId));
+                    if(uniqueIds.size !== currentGroup.length) {
+                        validGroups = false;
+                        break;
                     }
-                }, 1000);
-            };
+                    groups.push(currentGroup);
+                    offset += s;
+                }
+                attempts++;
+            }
+
+            // Fallback to traditional round-robin if the randomizer hits a dead end
+            if (!validGroups) {
+                groups = [];
+                for(let i=0; i<currentPlayers.length; i++) {
+                    groups.push([currentPlayers[i], currentPlayers[(i+1) % currentPlayers.length]]);
+                }
+            }
+
+            // Assign prompts to the valid groups
+            groups.forEach(group => {
+                const prompt = available.pop() || { text: `Wildcard prompt for a massive brawl!` };
+                newUsed.push(prompt.text);
+                
+                newClashes.push({
+                    prompt: prompt.text,
+                    players: group, // Changed from p1/p2 to an array of players
+                    answers: {}, 
+                    votes: {}   
+                });
+            });
+            // --- END DYNAMIC GROUPING ---
+
+            setUsedPrompts(newUsed);
+            setClashes(newClashes);
+            setGameState('ANSWERING');
+            
+            // Notify players of their prompts
+            currentPlayers.forEach(player => {
+                const myPrompts = newClashes.filter(c => c.players.some(p => p.userId === player.userId));
+                sendToClient(player.userId, 'STATE_ANSWERING', { prompts: myPrompts.map(p => p.prompt) });
+            });
+            
+            stateRef.current.audience.forEach(aud => {
+                sendToClient(aud.userId, 'STATE_WAITING', { msg: "Players are answering prompts..." });
+            });
+
+            speakText(r === 3 ? `Welcome to the final round: The Whip of the Blersj!` : `Round ${r} begins. Players, look at your devices!`, settings.tts);
+
+            let timeLeft = 90;
+            setTimer(timeLeft);
+            broadcast('TIMER_SYNC', { timeLeft });
+            
+            const int = setInterval(() => {
+                timeLeft--;
+                setTimer(timeLeft);
+                broadcast('TIMER_SYNC', { timeLeft });
+                
+                // Check if ALL players in ALL clashes have answered
+                const allAnswered = stateRef.current.clashes.every(c => c.players.every(p => c.answers[p.userId]));
+                if(timeLeft <= 0 || allAnswered) {
+                    clearInterval(int);
+                    setClashes(prev => {
+                        const filled = [...prev];
+                        filled.forEach(c => {
+                            c.players.forEach(p => {
+                                if(!c.answers[p.userId]) c.answers[p.userId] = shuffle(DEFAULT_ANSWERS)[0];
+                            });
+                        });
+                        return filled;
+                    });
+                    setTimeout(() => startVotingPhase(0), 1000);
+                }
+            }, 1000);
+        };
 
             const startVotingPhase = (clashIndex) => {
                 if(clashIndex >= stateRef.current.clashes.length) {
@@ -787,69 +961,79 @@
             };
 
             const revealWinner = (clashIndex) => {
-                setGameState('REVEAL');
-                
-                const clash = stateRef.current.clashes[clashIndex];
-                const votes = Object.values(clash.votes).filter(v => v !== 'PASS');
-                const p1Votes = votes.filter(v => v === clash.p1.userId).length;
-                const p2Votes = votes.filter(v => v === clash.p2.userId).length;
-                const totalValidVotes = p1Votes + p2Votes;
+            setGameState('REVEAL');
+            
+            const clash = stateRef.current.clashes[clashIndex];
+            const votes = Object.values(clash.votes).filter(v => v !== 'PASS');
+            const totalValidVotes = votes.length;
 
-                const basePoints = stateRef.current.round === 3 ? 4000 : 1000 * stateRef.current.round;
-                let p1Score = totalValidVotes > 0 ? Math.floor((p1Votes/totalValidVotes) * basePoints) : 0;
-                let p2Score = totalValidVotes > 0 ? Math.floor((p2Votes/totalValidVotes) * basePoints) : 0;
-
-                // Bonuses
-                if(p1Votes > p2Votes) p1Score += Math.floor(basePoints * 0.2);
-                if(p2Votes > p1Votes) p2Score += Math.floor(basePoints * 0.2);
-                
-                const isP1Sweep = totalValidVotes > 0 && p1Votes === totalValidVotes;
-                const isP2Sweep = totalValidVotes > 0 && p2Votes === totalValidVotes;
-
-                if (isP1Sweep) p1Score += 500;
-                if (isP2Sweep) p2Score += 500;
-
-                // Broadcast AFTER variables are defined!
-                broadcast('STATE_REVEAL', { 
-                    prompt: clash.prompt,
-                    p1: clash.p1, 
-                    p2: clash.p2,
-                    p1Answer: clash.answers[clash.p1.userId],
-                    p2Answer: clash.answers[clash.p2.userId],
-                    p1Votes, p2Votes,
-                    p1Score, p2Score
-                });
-
-                setPlayers(prev => prev.map(p => {
-                    if(p.userId === clash.p1.userId) return { ...p, score: p.score + p1Score };
-                    if(p.userId === clash.p2.userId) return { ...p, score: p.score + p2Score };
-                    return p;
-                }));
-
-                // Attach reveal data temporarily to the clash for rendering
-                setClashes(prev => {
-                    const next = [...prev];
-                    next[clashIndex].revealData = { p1Votes, p2Votes, isP1Sweep, isP2Sweep };
-                    return next;
-                });
-
-                let winnerMsg = "It's a tie!";
-                if(p1Votes > p2Votes) winnerMsg = isP1Sweep ? `Flawless victory for ${clash.p1.name}!` : `${clash.p1.name} wins!`;
-                if(p2Votes > p1Votes) winnerMsg = isP2Sweep ? `Flawless victory for ${clash.p2.name}!` : `${clash.p2.name} wins!`;
-                
-                // Play sounds based on result
-                if (p1Votes === p2Votes && totalValidVotes > 0) {
-                    try { new Audio('draw.wav').play(); } catch(e){ console.log("Audio play prevented"); }
-                } else if (isP1Sweep || isP2Sweep) {
-                    try { new Audio('victory.wav').play(); } catch(e){ console.log("Audio play prevented"); }
-                }
-
-                speakText(winnerMsg, settings.tts);
-
-                setTimeout(() => {
-                    startVotingPhase(clashIndex + 1);
-                }, 6000);
+            const getVoterName = (uid) => {
+                const p = stateRef.current.players.find(x => x.userId === uid);
+                if (p) return p.name;
+                const a = stateRef.current.audience.find(x => x.userId === uid);
+                return a ? a.name : 'Audience';
             };
+
+            const basePoints = stateRef.current.round === 3 ? 4000 : 1000 * stateRef.current.round;
+            
+            // Calculate stats dynamically for all players in this clash
+            const playerStats = clash.players.map(p => {
+                const pVotesCount = votes.filter(v => v === p.userId).length;
+                const pVoters = Object.keys(clash.votes).filter(uid => clash.votes[uid] === p.userId).map(getVoterName);
+                let score = totalValidVotes > 0 ? Math.floor((pVotesCount/totalValidVotes) * basePoints) : 0;
+                const isSweep = totalValidVotes > 0 && pVotesCount === totalValidVotes;
+                if (isSweep) score += 500;
+                
+                return { userId: p.userId, name: p.name, avatar: p.avatar, answer: clash.answers[p.userId], votes: pVotesCount, voters: pVoters, score, isSweep };
+            });
+
+            // Find the maximum votes to award a bonus
+            const maxVotes = Math.max(...playerStats.map(s => s.votes));
+            const winners = playerStats.filter(s => s.votes === maxVotes);
+            
+            // Award bonus to the winner(s)
+            if (maxVotes > 0) {
+                winners.forEach(w => {
+                    const statRef = playerStats.find(s => s.userId === w.userId);
+                    statRef.score += Math.floor(basePoints * 0.2);
+                });
+            }
+
+            broadcast('STATE_REVEAL', { 
+                prompt: clash.prompt,
+                stats: playerStats // Sending dynamic array instead of p1/p2
+            });
+
+            // Distribute scores
+            setPlayers(prev => prev.map(p => {
+                const clashStat = playerStats.find(s => s.userId === p.userId);
+                if(clashStat) return { ...p, score: p.score + clashStat.score };
+                return p;
+            }));
+
+            setClashes(prev => {
+                const next = [...prev];
+                next[clashIndex].revealData = { playerStats, winners }; 
+                return next;
+            });
+
+            let winnerMsg = "It's a tie!";
+            if (maxVotes > 0 && winners.length === 1) {
+                winnerMsg = winners[0].isSweep ? `Flawless victory for ${winners[0].name}!` : `${winners[0].name} wins!`;
+            }
+            
+            if (winners.length > 1 && totalValidVotes > 0) {
+                try { new Audio('draw.wav').play(); } catch(e){ console.log("Audio play prevented"); }
+            } else if (winners.length === 1 && winners[0].isSweep) {
+                try { new Audio('victory.wav').play(); } catch(e){ console.log("Audio play prevented"); }
+            }
+
+            speakText(winnerMsg, settings.tts);
+
+            setTimeout(() => {
+                startVotingPhase(clashIndex + 1);
+            }, 6000);
+        };
 
             const nextRoundOrEnd = () => {
                 if(round >= 3) {
@@ -1027,6 +1211,11 @@
                                             <div className="mt-2 text-3xl font-black text-cyan-300 bg-black/50 px-4 py-1 rounded-xl">
                                                 {clashes[currentClashIndex].revealData?.p1Votes} Votes
                                             </div>
+                                            {clashes[currentClashIndex].revealData?.p1Voters?.length > 0 && (
+                                                <div className="mt-3 text-lg text-purple-200 font-bold bg-black/40 px-4 py-2 rounded-xl max-w-full text-center">
+                                                    Voted: {clashes[currentClashIndex].revealData.p1Voters.join(', ')}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -1046,6 +1235,11 @@
                                             <div className="mt-2 text-3xl font-black text-cyan-300 bg-black/50 px-4 py-1 rounded-xl">
                                                 {clashes[currentClashIndex].revealData?.p2Votes} Votes
                                             </div>
+                                            {clashes[currentClashIndex].revealData?.p2Voters?.length > 0 && (
+                                                <div className="mt-3 text-lg text-purple-200 font-bold bg-black/40 px-4 py-2 rounded-xl max-w-full text-center">
+                                                    Voted: {clashes[currentClashIndex].revealData.p2Voters.join(', ')}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -1131,6 +1325,7 @@
             const [code, setCode] = useState('');
             const [name, setName] = useState('');
             const [clientState, setClientState] = useState('LOGIN'); 
+            const [battleAvatars, setBattleAvatars] = useState(null);
             
             const [promptsToAnswer, setPromptsToAnswer] = useState([]);
             const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
@@ -1246,8 +1441,8 @@
                     setCurrentPromptIndex(prev => prev + 1);
                     setAnswerInput('');
                 } else {
-                    setClientState('WAITING');
-                    setVoteData("Answers submitted! Waiting for others...");
+                    setClientState('WAITING_BATTLE'); // CHANGED STATE
+                    setBattleAvatars([generateAvatar(), generateAvatar()]); // GENERATE 2 RANDOM AVATARS
                 }
             };
 
@@ -1336,7 +1531,26 @@
                             <Button onClick={submitAnswer} color="pink" disabled={!answerInput.trim()} className="h-16">Submit Answer</Button>
                         </div>
                     )}
+					
+					{clientState === 'WAITING_BATTLE' && (
+                        <div className="w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in border-t-8 border-orange-500">
+                            <h2 className="text-3xl font-black text-orange-400 mb-2 uppercase tracking-widest">Answers In!</h2>
+                            <p className="text-lg text-purple-200 font-bold mb-6 text-center">Enjoy the battle while others finish.</p>
 
+                            <div className="battle-container">
+                                {battleAvatars && (
+                                    <>
+                                        <div className="fighter-left"><MonsterAvatar attributes={battleAvatars[0]} size={60} /></div>
+                                        <div className="fireball fb-left"></div>
+
+                                        <div className="fighter-right"><MonsterAvatar attributes={battleAvatars[1]} size={60} /></div>
+                                        <div className="fireball fb-right"></div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+					
                     {clientState === 'VOTING' && voteData && voteData.answers && (
                         <div className="w-full text-center mt-4 p-4 glass-panel rounded-3xl border-t-8 border-cyan-500">
                             <p className="text-cyan-400 font-black mb-6 uppercase tracking-widest text-lg animate-pulse">
@@ -1384,6 +1598,10 @@
                                         <span className="text-cyan-300 bg-black/50 px-2 py-1 rounded">{voteData.p1Votes} Votes</span>
                                         <span className="text-yellow-300 bg-black/50 px-2 py-1 rounded">+{voteData.p1Score} Pts</span>
                                     </div>
+                                    {/* NEW VOTER DISPLAY FOR P1 */}
+                                    {voteData.p1Voters && voteData.p1Voters.length > 0 && (
+                                        <div className="mt-3 text-xs text-green-300 italic opacity-80 break-words">Voted: {voteData.p1Voters.join(', ')}</div>
+                                    )}
                                 </div>
 
                                 <div className={`p-4 rounded-xl ${voteData.p2Votes > voteData.p1Votes ? 'bg-green-900/50 border-2 border-green-400' : 'bg-black/30'}`}>
@@ -1393,6 +1611,10 @@
                                         <span className="text-cyan-300 bg-black/50 px-2 py-1 rounded">{voteData.p2Votes} Votes</span>
                                         <span className="text-yellow-300 bg-black/50 px-2 py-1 rounded">+{voteData.p2Score} Pts</span>
                                     </div>
+                                    {/* NEW VOTER DISPLAY FOR P2 */}
+                                    {voteData.p2Voters && voteData.p2Voters.length > 0 && (
+                                        <div className="mt-3 text-xs text-green-300 italic opacity-80 break-words">Voted: {voteData.p2Voters.join(', ')}</div>
+                                    )}
                                 </div>
                             </div>
                         </div>
