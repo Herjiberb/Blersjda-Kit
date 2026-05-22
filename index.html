@@ -200,18 +200,6 @@
             to { background-position: -200px 200px; }
         }
 
-        .rainbow-border {
-            position: relative;
-            background-clip: padding-box;
-            border: 4px solid transparent;
-        }
-        .rainbow-border::before {
-            content: ''; position: absolute; inset: -4px; z-index: -1;
-            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
-            background-size: 200% 200%; border-radius: inherit; animation: rainbowPan 3s linear infinite;
-        }
-        @keyframes rainbowPan { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-
         /* Turn-Based Battle Animations */
         .jump-pound-left { animation: jumpPoundLeft 4s infinite; transform-origin: bottom center; }
         .jump-pound-right { animation: jumpPoundRight 4s infinite; transform-origin: bottom center; animation-delay: 2s; }
@@ -416,6 +404,26 @@
             { text: "The real reason the ocean is so salty.", family: true },
             { text: "A terrible name for a fierce pirate ship.", family: true },
             { text: "What trees talk about when we aren't around.", family: true },
+			{ text: "The worst animal to assign as a school crossing guard.", family: true },
+            { text: "What the sun is really thinking about when it sets.", family: true },
+            { text: "A terrible new flavor for a children's juice box.", family: true },
+            { text: "The real reason your left sock always goes missing.", family: true },
+            { text: "What toddlers are actually plotting when they whisper to each other.", family: true },
+            { text: "A horrible thing to find at the very bottom of a cereal box.", family: true },
+            { text: "What the family car complains about to the garage at night.", family: true },
+            { text: "The worst magical spell to accidentally cast on yourself.", family: true },
+            { text: "A rejected warning label for a backyard trampoline.", family: true },
+            { text: "What dust bunnies are actually made of.", family: true },
+            { text: "A completely useless superpower for a mom to have.", family: true },
+            { text: "The most chaotic thing to do in a quiet library.", family: true },
+            { text: "What actually happens when you feed a gremlin broccoli.", family: true },
+            { text: "The real reason the school bell rings so loudly.", family: true },
+            { text: "A terrible name for a grumpy substitute teacher.", family: true },
+            { text: "What your toothbrush secretly complains about to the toothpaste.", family: true },
+            { text: "The worst thing to discover inside your freshly carved jack-o'-lantern.", family: true },
+            { text: "A rejected, absolutely putrid flavor for lip balm.", family: true },
+            { text: "The secret, mildly concerning ingredient in fairy dust.", family: true },
+            { text: "What the ants at the picnic are actually saying about your sandwich.", family: true },
             
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
@@ -540,6 +548,11 @@
             { text: "The absolute worst flavor of edible underwear.", family: false },
             { text: "A bad excuse for having a handcuff key on your keychain.", family: false },
             { text: "What the coroner surprisingly found in the victim's left pocket.", family: false },
+			{ text: "The worst reason to own 20 Tickle-Me Elmo dolls.", family: false },
+            { text: "A terrible item to accidentally leave on the nightstand when your parents visit.", family: false },
+            { text: "The most awkward place to realize your pants are completely split open.", family: false },
+            { text: "What your physical examiner is actually thinking about during the exam.", family: false },
+            { text: "The absolute worst shape for a mouth guard.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -673,6 +686,84 @@
                             {p.text}
                         </div>
                     ))}
+                </div>
+            );
+        };
+		
+		// ==========================================
+        // JS BATTLE ANIMATION COMPONENT
+        // ==========================================
+        const JSBattleAnimation = ({ avatars }) => {
+            const [leftPos, setLeftPos] = useState({ x: -150, y: 0, r: 0 });
+            const [rightPos, setRightPos] = useState({ x: 150, y: 0, r: 0 });
+            const [clashEffect, setClashEffect] = useState(false);
+
+            useEffect(() => {
+                let frame;
+                let startTime = performance.now();
+                const cycleDuration = 1800; // 1.8 seconds per clash cycle
+
+                const animate = (time) => {
+                    const elapsed = time - startTime;
+                    const t = (elapsed % cycleDuration) / cycleDuration;
+                    
+                    let lX = -120, lY = 0, lR = 0;
+                    let rX = 120, rY = 0, rR = 0;
+                    let clashing = false;
+
+                    if (t < 0.4) {
+                        // Phase 1: Charge
+                        const p = t / 0.4;
+                        const ease = p * p * (3 - 2 * p); // smooth step
+                        lX = -120 + ease * 90;
+                        rX = 120 - ease * 90;
+                        lY = -Math.sin(p * Math.PI) * 40;
+                        rY = -Math.sin(p * Math.PI) * 40;
+                        lR = ease * 25;
+                        rR = -ease * 25;
+                    } else if (t < 0.6) {
+                        // Phase 2: Violent Clash
+                        lX = -20 + (Math.random() * 12 - 6);
+                        rX = 20 + (Math.random() * 12 - 6);
+                        lY = (Math.random() * 12 - 6);
+                        rY = (Math.random() * 12 - 6);
+                        lR = (Math.random() * 30 - 15);
+                        rR = (Math.random() * 30 - 15);
+                        clashing = true;
+                    } else {
+                        // Phase 3: Retreat
+                        const p = (t - 0.6) / 0.4;
+                        const ease = 1 - Math.pow(1 - p, 3); // cubic ease out
+                        lX = -20 - ease * 100;
+                        rX = 20 + ease * 100;
+                        lY = -Math.sin(p * Math.PI) * 30;
+                        rY = -Math.sin(p * Math.PI) * 30;
+                        lR = 25 - ease * 25;
+                        rR = -25 + ease * 25;
+                    }
+
+                    setLeftPos({ x: lX, y: lY, r: lR });
+                    setRightPos({ x: rX, y: rY, r: rR });
+                    setClashEffect(clashing);
+
+                    frame = requestAnimationFrame(animate);
+                };
+
+                frame = requestAnimationFrame(animate);
+                return () => cancelAnimationFrame(frame);
+            }, []);
+
+            return (
+                <div className="relative w-full h-full flex items-center justify-center">
+                    {clashEffect && (
+                        <div className="absolute w-32 h-32 bg-yellow-300 rounded-full mix-blend-screen animate-ping opacity-80" style={{ zIndex: 1, filter: 'blur(8px)' }}></div>
+                    )}
+                    <div className="absolute" style={{ transform: `translate(${leftPos.x}px, ${leftPos.y}px) rotate(${leftPos.r}deg)`, zIndex: 2 }}>
+                        <MonsterAvatar attributes={avatars[0]} size={90} />
+                    </div>
+                    <div className="absolute" style={{ transform: `translate(${rightPos.x}px, ${rightPos.y}px) rotate(${rightPos.r}deg)`, zIndex: 2 }}>
+                        <MonsterAvatar attributes={avatars[1]} size={90} />
+                    </div>
                 </div>
             );
         };
@@ -1867,25 +1958,12 @@
                     )}
 					
 					{clientState === 'WAITING_BATTLE' && (
-                        <div className="w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in rainbow-border">
+                        <div className="w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in">
                             <h2 className="text-3xl font-black text-red-500 mb-2 uppercase tracking-widest animate-pulse">Answers In!</h2>
                             <p className="text-lg text-purple-200 font-bold mb-6 text-center">Prepare for absolute carnage...</p>
 
-                            <div className="battle-container w-full h-48 relative overflow-hidden rounded-xl border-4 border-red-700 bg-black/50">
-                                {battleAvatars && (
-                                    <>
-                                        {/* New Epic Animations */}
-                                        <div className="lightning-arc"></div>
-                                        <div className="epic-fireball"></div>
-                                        
-                                        <div className="fighter-left absolute left-4 bottom-4 jump-pound-left">
-                                            <MonsterAvatar attributes={battleAvatars[0]} size={80} />
-                                        </div>
-                                        <div className="fighter-right absolute right-4 bottom-4 jump-pound-right">
-                                            <MonsterAvatar attributes={battleAvatars[1]} size={80} />
-                                        </div>
-                                    </>
-                                )}
+                            <div className="w-full h-48 relative overflow-hidden rounded-xl border-4 border-red-700 bg-black/50">
+                                {battleAvatars && <JSBattleAnimation avatars={battleAvatars} />}
                             </div>
                         </div>
                     )}
@@ -1925,7 +2003,7 @@
                         </div>
                     )}
 					{clientState === 'REVEAL' && voteData && voteData.prompt && (
-                        <div className="w-full text-center mt-4 p-4 glass-panel rounded-3xl border-t-8 border-green-500 scale-in rainbow-border">
+                        <div className="w-full text-center mt-4 p-4 glass-panel rounded-3xl border-t-8 border-green-500 scale-in">
                             <h2 className="text-2xl font-black text-green-400 mb-6 uppercase tracking-widest wobble-anim">Results!</h2>
                             <h3 className="text-xl font-bold mb-6 text-purple-200">{voteData.prompt}</h3>
                             
@@ -1933,24 +2011,31 @@
                                 {voteData.stats.map(stat => {
                                     const maxVotes = Math.max(...voteData.stats.map(s => s.votes));
                                     const isWinner = stat.votes === maxVotes && maxVotes > 0;
-                                    const isLoser = !isWinner && maxVotes > 0; // Ensures tie doesn't trigger shotgun
+                                    const isLoser = !isWinner && maxVotes > 0; // Ensures tie doesn't trigger bomb
                                     
-                                    // Randomized bullet holes
                                     const blastDelay = Math.random() * 0.2 + 0.9;
 
                                     return (
                                         <div key={stat.userId} 
-                                            className={`relative p-4 rounded-xl transition-all ${isWinner ? 'bg-green-900/50 border-2 border-green-400 shadow-[0_0_15px_rgba(74,222,128,0.4)] z-20' : 'bg-black/80 z-10'} ${isLoser ? 'shatter' : ''}`} 
+                                            className={`relative p-4 rounded-xl transition-all ${isWinner ? 'bg-green-900/50 border-2 border-green-400 shadow-[0_0_15px_rgba(74,222,128,0.4)] z-20' : 'bg-black/80 z-10'} ${isLoser ? 'border-2 border-red-900/80 overflow-hidden' : ''}`} 
                                             style={{ animationDelay: isLoser ? '0.9s' : '0s' }}>
                                             
-                                            {/* Shotgun Blast on Loser */}
+                                            {/* Bomb Blast on Loser */}
                                             {isLoser && (
-                                                <>
-                                                    <div className="shotgun-container">🔫</div>
-                                                    <div className="bullet-hole" style={{ top: '15%', left: '20%', animationDelay: `${blastDelay}s` }}></div>
-                                                    <div className="bullet-hole" style={{ top: '65%', left: '75%', animationDelay: `${blastDelay + 0.1}s` }}></div>
-                                                    <div className="bullet-hole" style={{ top: '45%', left: '45%', animationDelay: `${blastDelay + 0.05}s` }}></div>
-                                                </>
+                                                <div className="absolute inset-0 z-50 pointer-events-none rounded-xl">
+                                                    <div className="absolute top-[20%] left-1/2 opacity-0 bomb-anim text-6xl" style={{ animationDelay: `${blastDelay}s` }}>💣</div>
+                                                    
+                                                    {/* Fire Base */}
+                                                    <div className="absolute bottom-[-10px] left-0 w-full h-1/2 bg-gradient-to-t from-orange-600/50 via-red-500/20 to-transparent mix-blend-screen fire-anim opacity-0 pointer-events-none" style={{ animationDelay: `${blastDelay + 0.4}s` }}></div>
+                                                    
+                                                    {/* Fire Emojis */}
+                                                    <div className="absolute bottom-[-5px] left-0 w-full flex justify-around fire-anim opacity-0 text-3xl" style={{ animationDelay: `${blastDelay + 0.4}s` }}>
+                                                        <span className="animate-pulse">🔥</span>
+                                                        <span className="animate-pulse" style={{animationDelay: '0.1s'}}>🔥</span>
+                                                        <span className="animate-pulse" style={{animationDelay: '0.3s'}}>🔥</span>
+                                                        <span className="animate-pulse" style={{animationDelay: '0.2s'}}>🔥</span>
+                                                    </div>
+                                                </div>
                                             )}
 
                                             <p className="text-xl font-bold mb-2 relative z-10">"{stat.answer}"</p>
