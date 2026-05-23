@@ -425,6 +425,26 @@
             { text: "The secret, mildly concerning ingredient in fairy dust.", family: true },
             { text: "What the ants at the picnic are actually saying about your sandwich.", family: true },
 			{ text: "The worst body part to have showing in the African jungles near a comedian.", family: true },
+            { text: "What Mario actually says when he falls into the lava.", family: true },
+            { text: "A rejected useless item for the next Legend of Zelda game.", family: true },
+            { text: "The real reason the Cocomelon baby never blinks.", family: true },
+            { text: "What Bowser writes in his secret diary.", family: true },
+            { text: "What SpongeBob and Patrick do when the cameras stop rolling.", family: true },
+            { text: "A terrible new crossover event for Fortnite.", family: true },
+            { text: "What Batman secretly keeps in his utility belt for emergencies.", family: true },
+            { text: "A rejected Roblox mini-game that was way too boring.", family: true },
+            { text: "What Steve from Minecraft dreams about when you place a bed.", family: true },
+            { text: "The most embarrassing thing to happen to Spider-Man while swinging.", family: true },
+            { text: "Why Squidward is actually always in a bad mood.", family: true },
+            { text: "A terrible superpower for a new Marvel hero.", family: true },
+            { text: "What Elsa does with her ice powers during the summer.", family: true },
+            { text: "The worst animal to add as a Pokémon.", family: true },
+            { text: "A rejected song title for the next Cocomelon episode.", family: true },
+            { text: "What Sonic the Hedgehog does when he's stuck in traffic.", family: true },
+            { text: "The real reason the Among Us impostor is so angry.", family: true },
+            { text: "A terrible gadget Iron Man tried to build but failed.", family: true },
+            { text: "What Mr. Krabs would do for exactly one penny.", family: true },
+            { text: "The worst thing to hear over your headset in a Call of Duty lobby.", family: true },
             
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
@@ -555,6 +575,11 @@
             { text: "What your physical examiner is actually thinking about during the exam.", family: false },
             { text: "The absolute worst shape for a mouth guard.", family: false },
 			{ text: "The only thing you aren't allowed to ride at your friend's house.", family: true },
+            { text: "What really goes on inside the Grand Theft Auto hospitals.", family: false },
+            { text: "A totally inappropriate DLC package for The Sims.", family: false },
+            { text: "What Deadpool actually said that got censored in the comic.", family: false },
+            { text: "The real, disturbing reason Pac-Man eats all those pills.", family: false },
+            { text: "What Mario's red mushrooms are actually doing to him.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -693,59 +718,87 @@
         };
 		
 		// ==========================================
-        // JS BATTLE ANIMATION COMPONENT
+        // JS BATTLE ANIMATION COMPONENT (EPIC UPGRADE)
         // ==========================================
         const JSBattleAnimation = ({ avatars }) => {
-            const [leftPos, setLeftPos] = useState({ x: -150, y: 0, r: 0 });
-            const [rightPos, setRightPos] = useState({ x: 150, y: 0, r: 0 });
+            const [leftPos, setLeftPos] = useState({ x: -150, y: 0, r: 0, s: 1 });
+            const [rightPos, setRightPos] = useState({ x: 150, y: 0, r: 0, s: 1 });
+            const [fireballs, setFireballs] = useState([]);
             const [clashEffect, setClashEffect] = useState(false);
 
             useEffect(() => {
                 let frame;
                 let startTime = performance.now();
-                const cycleDuration = 1800; // 1.8 seconds per clash cycle
+                const cycleDuration = 4000; // 4 seconds full choreography
 
                 const animate = (time) => {
                     const elapsed = time - startTime;
                     const t = (elapsed % cycleDuration) / cycleDuration;
                     
-                    let lX = -120, lY = 0, lR = 0;
-                    let rX = 120, rY = 0, rR = 0;
+                    let lX = -120, lY = 0, lR = 0, lS = 1;
+                    let rX = 120, rY = 0, rR = 0, rS = 1;
                     let clashing = false;
+                    let activeFireballs = [];
 
-                    if (t < 0.4) {
-                        // Phase 1: Charge
-                        const p = t / 0.4;
-                        const ease = p * p * (3 - 2 * p); // smooth step
-                        lX = -120 + ease * 90;
-                        rX = 120 - ease * 90;
-                        lY = -Math.sin(p * Math.PI) * 40;
-                        rY = -Math.sin(p * Math.PI) * 40;
-                        lR = ease * 25;
-                        rR = -ease * 25;
-                    } else if (t < 0.6) {
-                        // Phase 2: Violent Clash
-                        lX = -20 + (Math.random() * 12 - 6);
-                        rX = 20 + (Math.random() * 12 - 6);
-                        lY = (Math.random() * 12 - 6);
-                        rY = (Math.random() * 12 - 6);
-                        lR = (Math.random() * 30 - 15);
-                        rR = (Math.random() * 30 - 15);
-                        clashing = true;
+                    if (t < 0.25) {
+                        // PHASE 1: FIREBALL EXCHANGE (0-1s)
+                        const p = t / 0.25;
+                        lX = -120; rX = 120;
+                        // Bobbing slightly
+                        lY = Math.sin(p * Math.PI * 4) * 10;
+                        rY = Math.cos(p * Math.PI * 4) * 10;
+                        
+                        // Emit fireballs
+                        if (p > 0.2 && p < 0.8) {
+                            activeFireballs.push({ x: -100 + (p * 200), y: lY, dir: 'right' });
+                            activeFireballs.push({ x: 100 - ((p-0.1) * 200), y: rY, dir: 'left' });
+                        }
+
+                    } else if (t < 0.5) {
+                        // PHASE 2: TORNADO SPIN APPROACH (1-2s)
+                        const p = (t - 0.25) / 0.25;
+                        lX = -120 + (p * 80); // Move inward
+                        rX = 120 - (p * 80);
+                        lR = p * 1080; // Triple spin
+                        rR = -(p * 1080);
+                        
+                    } else if (t < 0.7) {
+                        // PHASE 3: HAYMAKERS (2-2.8s)
+                        const p = (t - 0.5) / 0.2;
+                        lX = -40; rX = 40;
+                        
+                        // Wild swings (oscillating rotation and zoom)
+                        lR = Math.sin(p * Math.PI * 8) * 45;
+                        rR = Math.cos(p * Math.PI * 8) * 45;
+                        lS = 1 + Math.sin(p * Math.PI * 4) * 0.2;
+                        rS = 1 + Math.cos(p * Math.PI * 4) * 0.2;
+                        
+                        if (p > 0.1 && p < 0.9) clashing = true;
+
                     } else {
-                        // Phase 3: Retreat
-                        const p = (t - 0.6) / 0.4;
-                        const ease = 1 - Math.pow(1 - p, 3); // cubic ease out
-                        lX = -20 - ease * 100;
-                        rX = 20 + ease * 100;
-                        lY = -Math.sin(p * Math.PI) * 30;
-                        rY = -Math.sin(p * Math.PI) * 30;
-                        lR = 25 - ease * 25;
-                        rR = -25 + ease * 25;
+                        // PHASE 4: THE BEATDOWN (2.8-4s)
+                        // Left wins this cycle, Right is dizzy
+                        const p = (t - 0.7) / 0.3;
+                        
+                        // Right player (dizzy & beaten)
+                        rX = 50 + Math.random() * 10 - 5;
+                        rY = Math.random() * 10 - 5;
+                        rR = p * 360; // Slow dizzy spin
+                        rS = 0.8; // Squished
+                        
+                        // Left player (Rapid Jabs)
+                        const jabPhase = (p * 20) % 1; // Fast rapid jabs
+                        lX = jabPhase < 0.5 ? -20 : 10; // Lunge forward
+                        lR = jabPhase < 0.5 ? -10 : 20;
+                        lY = 0;
+                        
+                        // Impact sparks
+                        if (jabPhase > 0.4 && jabPhase < 0.6) clashing = true;
                     }
 
-                    setLeftPos({ x: lX, y: lY, r: lR });
-                    setRightPos({ x: rX, y: rY, r: rR });
+                    setLeftPos({ x: lX, y: lY, r: lR, s: lS });
+                    setRightPos({ x: rX, y: rY, r: rR, s: rS });
+                    setFireballs(activeFireballs);
                     setClashEffect(clashing);
 
                     frame = requestAnimationFrame(animate);
@@ -756,15 +809,29 @@
             }, []);
 
             return (
-                <div className="relative w-full h-full flex items-center justify-center">
+                <div className="relative w-full h-full flex items-center justify-center bg-gray-900/50 rounded-xl overflow-hidden shadow-inner">
+                    {/* Fireball Renders */}
+                    {fireballs.map((fb, i) => (
+                        <div key={i} className="absolute w-6 h-6 rounded-full bg-gradient-to-r from-yellow-300 to-red-500 shadow-[0_0_15px_#ff0000]" style={{ transform: `translate(${fb.x}px, ${fb.y}px)`, zIndex: 1 }}></div>
+                    ))}
+
+                    {/* Impact Flashes */}
                     {clashEffect && (
-                        <div className="absolute w-32 h-32 bg-yellow-300 rounded-full mix-blend-screen animate-ping opacity-80" style={{ zIndex: 1, filter: 'blur(8px)' }}></div>
+                        <div className="absolute w-40 h-40 bg-white rounded-full mix-blend-overlay animate-ping opacity-70" style={{ zIndex: 1, filter: 'blur(4px)' }}></div>
                     )}
-                    <div className="absolute" style={{ transform: `translate(${leftPos.x}px, ${leftPos.y}px) rotate(${leftPos.r}deg)`, zIndex: 2 }}>
+                    
+                    {/* Fighter Left */}
+                    <div className="absolute transition-transform" style={{ transform: `translate(${leftPos.x}px, ${leftPos.y}px) rotate(${leftPos.r}deg) scale(${leftPos.s})`, zIndex: 2 }}>
                         <MonsterAvatar attributes={avatars[0]} size={90} />
                     </div>
-                    <div className="absolute" style={{ transform: `translate(${rightPos.x}px, ${rightPos.y}px) rotate(${rightPos.r}deg)`, zIndex: 2 }}>
+                    
+                    {/* Fighter Right */}
+                    <div className="absolute transition-transform" style={{ transform: `translate(${rightPos.x}px, ${rightPos.y}px) rotate(${rightPos.r}deg) scale(${rightPos.s})`, zIndex: 2 }}>
                         <MonsterAvatar attributes={avatars[1]} size={90} />
+                        {/* Dizzy stars for phase 4 */}
+                        {rightPos.s < 1 && (
+                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-full text-center text-xl animate-spin z-10">💫</div>
+                        )}
                     </div>
                 </div>
             );
