@@ -618,6 +618,181 @@
         const generateUUID = () => crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
         const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
 
+        // ==========================================
+        // INDEXEDDB HISTORY LOGIC & UI
+        // ==========================================
+        const DB_NAME = 'BlersjdaDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'GameHistory';
+
+        const initDB = () => new Promise((resolve, reject) => {
+            const req = indexedDB.open(DB_NAME, DB_VERSION);
+            req.onupgradeneeded = e => {
+                if(!e.target.result.objectStoreNames.contains(STORE_NAME)) {
+                    e.target.result.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                }
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+
+        const saveGameHistory = async (gameData) => {
+            try {
+                const db = await initDB();
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                tx.objectStore(STORE_NAME).put({ id: Date.now(), ...gameData });
+            } catch(e) { console.error("Failed to save history:", e); }
+        };
+
+        const getGameHistory = async () => {
+            try {
+                const db = await initDB();
+                return new Promise((resolve) => {
+                    const req = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).getAll();
+                    req.onsuccess = () => resolve(req.result.sort((a,b)=>b.id-a.id));
+                });
+            } catch(e) { console.error("Failed to load history:", e); return []; }
+        };
+
+        const deleteHistoryItem = async (id) => {
+            try {
+                const db = await initDB();
+                db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).delete(id);
+            } catch(e) { console.error("Failed to delete history item:", e); }
+        };
+
+        const clearAllHistory = async () => {
+            try {
+                const db = await initDB();
+                db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).clear();
+            } catch(e) { console.error("Failed to clear history:", e); }
+        };
+
+        const HistoryViewer = ({ goBack }) => {
+            const [history, setHistory] = useState([]);
+            const [selectedGame, setSelectedGame] = useState(null);
+
+            useEffect(() => { getGameHistory().then(setHistory); }, []);
+
+            const handleDelete = async (e, id) => {
+                e.stopPropagation();
+                if(confirm("Delete this game record?")) {
+                    await deleteHistoryItem(id);
+                    setHistory(prev => prev.filter(h => h.id !== id));
+                    if(selectedGame?.id === id) setSelectedGame(null);
+                }
+            };
+
+            const handleDeleteAll = async () => {
+                if(confirm("Are you sure you want to completely eradicate ALL match history?")) {
+                    await clearAllHistory();
+                    setHistory([]);
+                    setSelectedGame(null);
+                }
+            };
+
+            if (selectedGame) {
+                return (
+                    <div className="w-full max-w-5xl flex flex-col items-center fade-in text-center relative z-10 pb-20 mt-10">
+                        <div className="w-full flex justify-between items-center mb-8">
+                            <Button onClick={() => setSelectedGame(null)} color="blue" className="w-auto px-6 py-2 text-sm">← Back to List</Button>
+                            <h2 className="text-4xl md:text-5xl font-black text-pink-400 uppercase tracking-widest sweep-text drop-shadow-md">Match Archive</h2>
+                            <button onClick={(e) => handleDelete(e, selectedGame.id)} className="bg-red-600 hover:bg-red-500 p-3 rounded-xl text-white font-bold transition-all shadow-lg border-b-4 border-red-800 active:border-b-0 active:translate-y-1">🗑️ Delete</button>
+                        </div>
+
+                        <p className="text-2xl text-cyan-300 font-bold mb-10 bg-black/40 px-6 py-2 rounded-full border border-cyan-500/30">
+                            {new Date(selectedGame.id).toLocaleString()}
+                        </p>
+
+                        <div className="glass-panel p-8 rounded-3xl w-full mb-12 border-t-8 border-yellow-400">
+                            <h3 className="text-3xl font-black text-yellow-400 uppercase mb-8 tracking-widest">Final Leaderboard</h3>
+                            <div className="flex flex-wrap justify-center gap-8">
+                                {selectedGame.players.map((p, i) => (
+                                    <div key={p.userId} className={`flex flex-col items-center bg-black/50 p-6 rounded-2xl w-48 ${i===0 ? 'ring-2 ring-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.3)]' : ''}`}>
+                                        <div className="relative">
+                                            {i === 0 && <span className="absolute -top-6 -left-6 text-4xl z-10 bouncing-win">👑</span>}
+                                            <MonsterAvatar attributes={p.avatar} size={80} />
+                                        </div>
+                                        <span className="font-bold text-pink-300 mt-4 truncate w-full text-xl">{p.name}</span>
+                                        <span className="text-cyan-400 font-mono text-2xl font-black bg-cyan-900/30 px-3 py-1 rounded-lg mt-2">{p.score} pts</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="w-full space-y-12">
+                            {selectedGame.rounds.map(r => (
+                                <div key={r.round} className="w-full">
+                                    <h3 className="text-4xl font-black text-purple-300 uppercase mb-6 border-b-2 border-purple-500/50 pb-2 text-left">Round {r.round}</h3>
+                                    <div className="space-y-6">
+                                        {r.clashes.map((c, idx) => (
+                                            <div key={idx} className="glass-panel p-8 rounded-3xl border-l-8 border-pink-500 text-left relative overflow-hidden">
+                                                <h4 className="text-3xl font-bold text-white mb-8 drop-shadow-md z-10 relative">"{c.prompt}"</h4>
+                                                <div className="grid gap-6 md:grid-cols-2">
+                                                    {c.revealData?.playerStats?.map(stat => {
+                                                        const isWinner = c.revealData.winners.some(w => w.userId === stat.userId);
+                                                        return (
+                                                            <div key={stat.userId} className={`p-6 rounded-2xl relative transition-all ${isWinner ? 'bg-green-900/40 border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-purple-950/60 border border-purple-800'}`}>
+                                                                <div className="flex items-center gap-4 mb-4">
+                                                                    <MonsterAvatar attributes={stat.avatar} size={50} />
+                                                                    <span className="font-bold text-pink-300 text-xl">{stat.name}</span>
+                                                                </div>
+                                                                <p className="text-2xl font-bold text-gray-100 mb-4 break-words bg-black/40 p-4 rounded-xl italic leading-relaxed">"{stat.answer}"</p>
+                                                                <div className="flex justify-between items-center text-sm mb-3">
+                                                                    <span className="bg-cyan-900 text-cyan-300 px-3 py-1.5 rounded-lg font-mono font-bold text-lg">{stat.votes} Votes</span>
+                                                                    {isWinner && <span className="bg-yellow-600 text-yellow-100 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider text-sm">+ Points</span>}
+                                                                </div>
+                                                                {stat.voters && stat.voters.length > 0 && (
+                                                                    <p className="text-sm text-gray-400 mt-4 pt-3 border-t border-white/10"><strong className="text-purple-300 uppercase text-xs tracking-widest mr-2">Voted By:</strong> {stat.voters.join(', ')}</p>
+                                                                )}
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="w-full max-w-4xl flex flex-col items-center fade-in text-center relative z-10 pb-10 mt-10">
+                    <div className="w-full flex justify-between items-center mb-12">
+                        <Button onClick={goBack} color="blue" className="w-auto px-6 py-2 text-sm">← Main Menu</Button>
+                        <h2 className="text-5xl font-black text-pink-400 uppercase tracking-widest sweep-text drop-shadow-lg">Match History</h2>
+                        <button onClick={handleDeleteAll} disabled={history.length === 0} className={`p-3 px-6 rounded-xl text-white font-bold tracking-wider uppercase transition-all shadow-lg ${history.length === 0 ? 'bg-gray-600 opacity-50 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500 border-b-4 border-red-800 active:border-b-0 active:translate-y-1'}`}>🗑️ Delete All</button>
+                    </div>
+
+                    {history.length === 0 ? (
+                        <div className="glass-panel p-12 rounded-3xl w-full flex flex-col items-center justify-center border border-dashed border-purple-500/50">
+                            <p className="text-3xl text-purple-300 font-bold uppercase tracking-widest mb-4">No history recorded yet.</p>
+                            <p className="text-gray-400 text-lg">Play some matches, and they will be archived here.</p>
+                        </div>
+                    ) : (
+                        <div className="w-full space-y-4">
+                            {history.map(game => (
+                                <div key={game.id} onClick={() => setSelectedGame(game)} className="glass-panel p-6 rounded-2xl w-full flex justify-between items-center cursor-pointer hover:bg-purple-900/40 transition-all border-2 border-transparent hover:border-pink-500/50 transform hover:scale-[1.01]">
+                                    <div className="text-left">
+                                        <p className="text-2xl font-bold text-cyan-300 mb-2">{new Date(game.id).toLocaleString()}</p>
+                                        <div className="flex gap-4 items-center text-md text-gray-300 font-bold bg-black/30 inline-flex px-4 py-1.5 rounded-full">
+                                            <span className="text-yellow-400">👑 {game.players[0]?.name}</span>
+                                            <span className="text-purple-500/50">•</span>
+                                            <span>{game.players.length} Players</span>
+                                        </div>
+                                    </div>
+                                    <button onClick={(e) => handleDelete(e, game.id)} className="bg-red-600/80 hover:bg-red-500 p-4 rounded-xl text-white transition-all shadow-lg z-20 hover:scale-110">🗑️</button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         const speakText = (text, enabled) => {
             if (!enabled || !('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
@@ -887,12 +1062,29 @@
         // ==========================================
         const App = () => {
             const [view, setView] = useState('MENU');
+
+            // Secret Keycombo Listener
+            useEffect(() => {
+                let keyBuffer = '';
+                const handleKeyDown = (e) => {
+                    if (e.key.length !== 1) return; // Ignore Shift/Ctrl
+                    keyBuffer = (keyBuffer + e.key).toUpperCase().slice(-7);
+                    if (keyBuffer === 'HISTORY') {
+                        setView(prev => prev === 'MENU' ? 'HISTORY' : prev);
+                        keyBuffer = '';
+                    }
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, []);
+
             return (
                 <div className="min-h-screen flex flex-col items-center justify-center p-4 relative z-10">
-                    <div className="sparkle-bg"></div> {/* NEW SPARKLE LAYER */}
+                    <div className="sparkle-bg"></div>
                     {view === 'MENU' && <MainMenu setView={setView} />}
                     {view === 'HOST' && <OnlineHost goBack={() => setView('MENU')} />}
                     {view === 'JOIN' && <OnlineClient goBack={() => setView('MENU')} />}
+                    {view === 'HISTORY' && <HistoryViewer goBack={() => setView('MENU')} />}
                 </div>
             );
         };
@@ -1091,6 +1283,7 @@
 
             const connectionsRef = useRef({});
             const stateRef = useRef();
+            const allRoundsHistory = useRef([]);
 			
 			// Audio ref for background music
             const audioRef = useRef(typeof Audio !== "undefined" ? new Audio('music.wav') : null);
@@ -1301,14 +1494,13 @@
                             setTimeout(() => syncPlayerState(userId, true), 500);
                         }
                     }
+                }
 
-                    if(data.type === 'UPDATE_AVATAR') {
-                        setPlayers(prev => prev.map(p => 
-                            p.userId === data.userId ? { ...p, avatar: data.avatar } : p
-                        ));
-                        // Acknowledge update to client
-                        sendToClient(data.userId, 'AVATAR_UPDATED', { avatar: data.avatar });
-                    }
+                if(data.type === 'UPDATE_AVATAR') {
+                    setPlayers(prev => prev.map(p => 
+                        p.userId === data.userId ? { ...p, avatar: data.avatar } : p
+                    ));
+                    sendToClient(data.userId, 'AVATAR_UPDATED', { avatar: data.avatar });
                 }
                 
                 if(data.type === 'SUBMIT_ANSWER') {
@@ -1337,6 +1529,7 @@
             const startGame = () => {
                 if(players.length < 4) return;
                 setRound(1);
+                allRoundsHistory.current = [];
                 startRound(1, players, usedPrompts); // Changed from [] to usedPrompts
             };
 
@@ -1601,15 +1794,27 @@
         };
 
             const nextRoundOrEnd = () => {
+                // Save current round data safely
+                allRoundsHistory.current.push({
+                    round,
+                    clashes: JSON.parse(JSON.stringify(clashes)) // Deep copy so object changes don't overwrite
+                });
+
                 if(round >= 3) {
                     setGameState('GAME_END');
                     speakText("The game is over! Let's see who mastered the madness!", settings.tts);
                     
-                    // Play victory sound for the winner reveal
                     try { new Audio('victory.wav').play(); } catch(e){ console.log("Audio play prevented"); }
                     
                     const sortedPlayers = [...players].sort((a,b) => b.score - a.score);
                     broadcast('STATE_LEADERBOARD', { players: sortedPlayers, isFinal: true });
+
+                    // Save completed game to the indexedDB archive
+                    saveGameHistory({
+                        date: new Date().toISOString(),
+                        players: sortedPlayers,
+                        rounds: allRoundsHistory.current
+                    });
                 } else {
                     startRound(round + 1, players, usedPrompts);
                 }
@@ -2142,13 +2347,13 @@
                             <div className="relative mb-4">
                                 <textarea 
                                     value={answerInput}
-                                    maxLength={75}
+                                    maxLength={100}
                                     onChange={e => setAnswerInput(e.target.value)}
                                     placeholder="Type your brilliant answer..."
-                                    className={`w-full p-5 rounded-2xl bg-purple-950 border-2 text-2xl font-bold outline-none focus:ring-2 focus:ring-cyan-500/50 h-40 resize-none shadow-inner transition-colors ${answerInput.length >= 65 ? 'border-red-500' : 'border-pink-500 focus:border-cyan-400'}`}
+                                    className={`w-full p-5 rounded-2xl bg-purple-950 border-2 text-2xl font-bold outline-none focus:ring-2 focus:ring-cyan-500/50 h-40 resize-none shadow-inner transition-colors ${answerInput.length >= 90 ? 'border-red-500' : 'border-pink-500 focus:border-cyan-400'}`}
                                 />
-                                <span className={`absolute bottom-4 right-4 font-mono font-bold text-sm px-2 py-1 rounded bg-black/50 ${answerInput.length >= 65 ? 'text-red-400 animate-pulse' : 'text-purple-400'}`}>
-                                    {answerInput.length}/75
+                                <span className={`absolute bottom-4 right-4 font-mono font-bold text-sm px-2 py-1 rounded bg-black/50 ${answerInput.length >= 90 ? 'text-red-400 animate-pulse' : 'text-purple-400'}`}>
+                                    {answerInput.length}/100
                                 </span>
                             </div>
                             <Button onClick={submitAnswer} color="pink" disabled={!answerInput.trim()} className="h-16">Submit Answer</Button>
