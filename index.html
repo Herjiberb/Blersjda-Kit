@@ -470,6 +470,11 @@
             { text: "A highly questionable excuse for losing your public library card.", family: true },
             { text: "What the garden hose is thinking when it purposefully tangles itself up.", family: true },
             { text: "The weirdest thing to casually use as a bookmark in a borrowed library book.", family: true },
+            { text: "The real reason the principal called you to the office, but you swear it wasn't you.", family: true },
+            { text: "What the family cat is secretly trying to build in the basement.", family: true },
+            { text: "A terrible, highly concerning flavor for a new brand of potato chips.", family: true },
+            { text: "What your reflection is thinking when you make weird faces in the mirror.", family: true },
+            { text: "The worst thing to discover inside a chest at the end of a treasure map.", family: true },
             
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
@@ -610,6 +615,8 @@
             { text: "What the HR rep quickly deletes from your file before sending it to the new boss.", family: false },
             { text: "The absolute worst combination of three items to buy at a pharmacy at 1 AM.", family: false },
             { text: "The real, horrifying reason the 'check engine' light actually came on.", family: false },
+            { text: "The worst time to realize you completely forgot to wear underwear.", family: false },
+            { text: "What you definitely don't want to hear from the next stall over in a public restroom.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -1271,7 +1278,7 @@
             const [roomCode, setRoomCode] = useState('');
             const [players, setPlayers] = useState([]);
             const [audience, setAudience] = useState([]);
-            const [settings, setSettings] = useState({ familyFriendly: false, tts: true });
+            const [settings, setSettings] = useState({ familyFriendly: false, tts: true, useOldMusic: false, voiceChat: false });
 			const [showKickMenu, setShowKickMenu] = useState(false);
             
             const [gameState, setGameState] = useState('LOBBY'); // LOBBY, ANSWERING, VOTING, REVEAL, ROUND_END, GAME_END
@@ -1294,9 +1301,9 @@
                 let fadeInterval;
 
                 if (gameState === 'ANSWERING') {
-                    let track = 'music.wav';
-                    if (round === 2) track = 'music_2.wav';
-                    if (round === 3) track = 'music_3.wav';
+                    let track = settings.useOldMusic ? 'music_old.wav' : 'music.wav';
+                    if (round === 2) track = settings.useOldMusic ? 'music_2_old.wav' : 'music_2.wav';
+                    if (round === 3) track = settings.useOldMusic ? 'music_3_old.wav' : 'music_3.wav';
                     
                     if (!audio.src.endsWith(track)) audio.src = track;
                     
@@ -1379,6 +1386,20 @@
                 return () => {
                     if (mqttClient) mqttClient.end();
                 };
+            }, []);
+
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (e.key.toLowerCase() === 'v') {
+                        setSettings(prev => {
+                            const newState = !prev.voiceChat;
+                            broadcast('VOICE_STATE', { enabled: newState });
+                            return { ...prev, voiceChat: newState };
+                        });
+                    }
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
             }, []);
 
             // Send to everyone connected
@@ -1860,6 +1881,20 @@
                                     <input type="checkbox" checked={settings.tts} onChange={e => setSettings(s => ({...s, tts: e.target.checked}))} className="w-6 h-6 accent-pink-500" />
                                     Voice Announcer
                                 </label>
+                                <div className="w-px h-8 bg-white/20"></div>
+                                <label className="flex items-center gap-3 cursor-pointer hover:text-pink-300 transition-colors">
+                                    <input type="checkbox" checked={settings.useOldMusic} onChange={e => setSettings(s => ({...s, useOldMusic: e.target.checked}))} className="w-6 h-6 accent-pink-500" />
+                                    Classic Music
+                                </label>
+                                <div className="w-px h-8 bg-white/20"></div>
+                                <label className="flex items-center gap-3 cursor-pointer hover:text-pink-300 transition-colors">
+                                    <input type="checkbox" checked={settings.voiceChat} onChange={e => {
+                                        setSettings(s => ({...s, voiceChat: e.target.checked}));
+                                        broadcast('VOICE_STATE', { enabled: e.target.checked });
+                                    }} className="w-6 h-6 accent-pink-500" />
+                                    Enable Voice Chat
+                                </label>
+                                
                             </div>
 
                             <div className="glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30">
@@ -2087,6 +2122,12 @@
             const [clientState, setClientState] = useState('LOGIN'); 
             const [battleAvatars, setBattleAvatars] = useState(null);
             
+            const [voiceEnabledByHost, setVoiceEnabledByHost] = useState(false);
+            const [micActive, setMicActive] = useState(false);
+            const [peers, setPeers] = useState({});
+            const localStream = useRef(null);
+            const audioRefs = useRef({});
+            
             const [promptsToAnswer, setPromptsToAnswer] = useState([]);
             const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
             const [answerInput, setAnswerInput] = useState('');
@@ -2186,6 +2227,16 @@
                     setVoteData(data);
                     setClientState('REVEAL');
                 }
+                if(data.type === 'VOICE_STATE') {
+                    setVoiceEnabledByHost(data.enabled);
+                    if (!data.enabled) {
+                        setMicActive(false);
+                        if (localStream.current) {
+                            localStream.current.getTracks().forEach(track => track.stop());
+                            localStream.current = null;
+                        }
+                    }
+                }
             };
 
             const submitAnswer = () => {
@@ -2211,6 +2262,31 @@
                 setMyVotedFor(playerId);
                 setClientState('WAITING');
                 setVoteData("Vote cast! Look at the screen.");
+            };
+
+            const toggleMic = async () => {
+                if (micActive) {
+                    if (localStream.current) {
+                        localStream.current.getTracks().forEach(track => track.stop());
+                        localStream.current = null;
+                    }
+                    setMicActive(false);
+                } else {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ 
+                            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
+                        });
+                        localStream.current = stream;
+                        setMicActive(true);
+                        
+                        // Note: In a full production environment, this stream would be attached to RTCPeerConnections 
+                        // and negotiated via MQTT signaling here.
+                        
+                    } catch (err) {
+                        console.error("Microphone access denied or unavailable.", err);
+                        alert("Could not access microphone.");
+                    }
+                }
             };
 
             // Carousel Helper Component for Customizer
@@ -2247,6 +2323,21 @@
             };
 
             return (
+                <>
+                {voiceEnabledByHost && clientState !== 'LOGIN' && (
+                    <div className="fixed top-4 right-4 z-50 fade-in">
+                        <button 
+                            onClick={toggleMic}
+                            className={`p-3 rounded-full shadow-lg border-2 transition-all ${
+                                micActive 
+                                ? 'bg-green-600 border-green-400 animate-pulse shadow-[0_0_15px_rgba(34,197,94,0.6)]' 
+                                : 'bg-gray-800 border-gray-600 opacity-70'
+                            }`}
+                        >
+                            <span className="text-2xl">{micActive ? '🎤' : '🔇'}</span>
+                        </button>
+                    </div>
+                )}
                 <div className="w-full max-w-md flex flex-col items-center scale-in text-center px-4 relative z-10">
                     
                     {clientState === 'REVEAL' && voteData && (
@@ -2483,6 +2574,7 @@
                         </div>
                     )}
                 </div>
+                </>
             );
         };
 
