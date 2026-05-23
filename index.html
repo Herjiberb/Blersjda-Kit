@@ -445,6 +445,31 @@
             { text: "A terrible gadget Iron Man tried to build but failed.", family: true },
             { text: "What Mr. Krabs would do for exactly one penny.", family: true },
             { text: "The worst thing to hear over your headset in a Call of Duty lobby.", family: true },
+            { text: "What the decorative soaps in the guest bathroom are secretly plotting.", family: true },
+            { text: "A terrible new flavor for a scratch-and-sniff sticker.", family: true },
+            { text: "The real reason your dog circles three times before lying down.", family: true },
+            { text: "What a snowman wishes for right before it melts.", family: true },
+            { text: "A horrible theme for a family restaurant.", family: true },
+            { text: "The most dramatic way to exit a zoom call.", family: true },
+            { text: "What the crumbs in your keyboard are currently building.", family: true },
+            { text: "The absolute worst shape for a steering wheel.", family: true },
+            { text: "A rejected spell from Hogwarts that was too embarrassing to teach.", family: true },
+            { text: "What pigeons are actually looking for when they violently bob their heads.", family: true },
+            { text: "The most suspicious thing to find packed inside a child’s lunchbox.", family: true },
+            { text: "A terrible superpower that is only activated by sneezing.", family: true },
+            { text: "The real reason the washing machine vibrates so violently on the spin cycle.", family: true },
+            { text: "What your car says about you to the other cars in the parking lot.", family: true },
+            { text: "The worst possible noise to wake up to while camping in a dark tent.", family: true },
+            { text: "What the little plastic table inside the pizza box is really used for.", family: true },
+            { text: "A terrible name for a brand of children's chewable vitamins.", family: true },
+            { text: "The most awkward thing to happen in the middle of a staring contest.", family: true },
+            { text: "What the tooth fairy's secret weekend side hustle is.", family: true },
+            { text: "A weird item to enthusiastically bid all your money on at a charity auction.", family: true },
+            { text: "The real reason the moon is completely covered in craters.", family: true },
+            { text: "What the recycling bin brags about to the normal trash can.", family: true },
+            { text: "A highly questionable excuse for losing your public library card.", family: true },
+            { text: "What the garden hose is thinking when it purposefully tangles itself up.", family: true },
+            { text: "The weirdest thing to casually use as a bookmark in a borrowed library book.", family: true },
             
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
@@ -580,6 +605,11 @@
             { text: "What Deadpool actually said that got censored in the comic.", family: false },
             { text: "The real, disturbing reason Pac-Man eats all those pills.", family: false },
             { text: "What Mario's red mushrooms are actually doing to him.", family: false },
+            { text: "The most concerning thing to hear the anesthesiologist whisper before you pass out.", family: false },
+            { text: "A terrible realization to have halfway through a couples massage.", family: false },
+            { text: "What the HR rep quickly deletes from your file before sending it to the new boss.", family: false },
+            { text: "The absolute worst combination of three items to buy at a pharmacy at 1 AM.", family: false },
+            { text: "The real, horrifying reason the 'check engine' light actually came on.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -600,10 +630,11 @@
         // ==========================================
         // MONSTER AVATAR COMPONENT
         // ==========================================
-        const AVATAR_COLORS = ['#ec4899', '#22c55e', '#06b6d4', '#f97316', '#eab308', '#ef4444', '#a855f7', '#bef264'];
-        const AVATAR_BODIES = ['blob', 'square', 'triangle', 'circle'];
-        const AVATAR_EYES = ['one', 'two', 'three', 'four'];
-        const AVATAR_MOUTHS = ['smile', 'fangs', 'flat'];
+        const AVATAR_COLORS = ['#ec4899', '#22c55e', '#06b6d4', '#f97316', '#eab308', '#ef4444', '#a855f7', '#bef264', '#f87171', '#34d399'];
+        const AVATAR_BODIES = ['blob', 'square', 'triangle', 'circle', 'egg'];
+        const AVATAR_EYES = ['one', 'two', 'three', 'four', 'shades'];
+        const AVATAR_MOUTHS = ['smile', 'fangs', 'flat', 'surprised'];
+        const AVATAR_ACCESSORIES = ['none', 'crown', 'horns', 'halo', 'partyhat'];
 
         const generateAvatar = (existingAvatars = []) => {
             let att, isUnique;
@@ -614,8 +645,9 @@
                     body: AVATAR_BODIES[Math.floor(Math.random() * AVATAR_BODIES.length)],
                     eyes: AVATAR_EYES[Math.floor(Math.random() * AVATAR_EYES.length)],
                     mouth: AVATAR_MOUTHS[Math.floor(Math.random() * AVATAR_MOUTHS.length)],
+                    accessory: AVATAR_ACCESSORIES[Math.floor(Math.random() * AVATAR_ACCESSORIES.length)],
                 };
-                isUnique = !existingAvatars.some(a => a.color === att.color && a.body === att.body && a.eyes === att.eyes && a.mouth === att.mouth);
+                isUnique = !existingAvatars.some(a => a.color === att.color && a.body === att.body && a.eyes === att.eyes && a.mouth === att.mouth && a.accessory === att.accessory);
                 attempts++;
             } while (!isUnique && attempts < 100);
             return att;
@@ -623,23 +655,24 @@
 
         const MonsterAvatar = ({ attributes, size = 60, className = "" }) => {
             if(!attributes) return null;
-            const { color, body, eyes, mouth } = attributes;
+            const { color, body, eyes, mouth, accessory } = attributes;
 
             const renderBody = () => {
                 switch(body) {
                     case 'square': return <rect x="15" y="20" width="70" height="70" rx="15" fill={color} />;
                     case 'triangle': return <path d="M50 15 L85 85 L15 85 Z" fill={color} strokeLinejoin="round" strokeWidth="5" stroke={color}/>;
                     case 'circle': return <circle cx="50" cy="55" r="35" fill={color} />;
+                    case 'egg': return <ellipse cx="50" cy="55" rx="30" ry="40" fill={color} />;
                     case 'blob': default: return <path d="M20 50 Q20 20 50 20 T80 50 T50 85 T20 50 Z" fill={color} />;
                 }
             };
 
             const renderEyes = () => {
-                // Wrapped in g.blinking-eyes to enable the blink animation
                 switch(eyes) {
                     case 'one': return <g className="blinking-eyes"><circle cx="50" cy="45" r="12" fill="white"/><circle cx="50" cy="45" r="5" fill="#0f0a29"/></g>;
                     case 'three': return <g className="blinking-eyes"><circle cx="50" cy="32" r="8" fill="white"/><circle cx="50" cy="32" r="3" fill="#0f0a29"/><circle cx="32" cy="45" r="10" fill="white"/><circle cx="32" cy="45" r="4" fill="#0f0a29"/><circle cx="68" cy="45" r="10" fill="white"/><circle cx="68" cy="45" r="4" fill="#0f0a29"/></g>;
                     case 'four': return <g className="blinking-eyes"><circle cx="35" cy="38" r="7" fill="white"/><circle cx="35" cy="38" r="3" fill="#0f0a29"/><circle cx="65" cy="38" r="7" fill="white"/><circle cx="65" cy="38" r="3" fill="#0f0a29"/><circle cx="42" cy="52" r="6" fill="white"/><circle cx="42" cy="52" r="2" fill="#0f0a29"/><circle cx="58" cy="52" r="6" fill="white"/><circle cx="58" cy="52" r="2" fill="#0f0a29"/></g>;
+                    case 'shades': return <g><rect x="25" y="38" width="50" height="15" rx="4" fill="#000" /><path d="M45 45 L55 45" stroke="#fff" strokeWidth="2" /></g>;
                     case 'two': default: return <g className="blinking-eyes"><circle cx="35" cy="45" r="10" fill="white"/><circle cx="35" cy="45" r="4" fill="#0f0a29"/><circle cx="65" cy="45" r="10" fill="white"/><circle cx="65" cy="45" r="4" fill="#0f0a29"/></g>;
                 }
             };
@@ -648,12 +681,24 @@
                 switch(mouth) {
                     case 'fangs': return <path d="M35 65 L65 65 L60 75 L55 65 L45 65 L40 75 Z" fill="white" />;
                     case 'flat': return <line x1="40" y1="68" x2="60" y2="68" stroke="#0f0a29" strokeWidth="4" strokeLinecap="round" />;
+                    case 'surprised': return <circle cx="50" cy="70" r="8" fill="#0f0a29" />;
                     case 'smile': default: return <path d="M35 65 Q50 80 65 65" fill="none" stroke="#0f0a29" strokeWidth="4" strokeLinecap="round" />;
                 }
             };
 
+            const renderAccessory = () => {
+                switch(accessory) {
+                    case 'crown': return <path d="M30 20 L40 5 L50 15 L60 5 L70 20 Z" fill="#fbbf24" stroke="#d97706" strokeWidth="2" />;
+                    case 'horns': return <g><path d="M25 25 Q15 10 30 5" fill="none" stroke="#dc2626" strokeWidth="5" strokeLinecap="round"/><path d="M75 25 Q85 10 70 5" fill="none" stroke="#dc2626" strokeWidth="5" strokeLinecap="round"/></g>;
+                    case 'halo': return <ellipse cx="50" cy="10" rx="20" ry="6" fill="none" stroke="#fef08a" strokeWidth="4" className="pulse-glow" />;
+                    case 'partyhat': return <g><path d="M35 25 L50 -5 L65 25 Z" fill="#ec4899" /><circle cx="50" cy="-5" r="5" fill="#38bdf8" /></g>;
+                    case 'none': default: return null;
+                }
+            };
+
             return (
-                <svg width={size} height={size} viewBox="0 0 100 100" className={`drop-shadow-lg ${className}`}>
+                <svg width={size} height={size} viewBox="0 0 100 100" className={`drop-shadow-lg ${className} select-none`}>
+                    {renderAccessory()}
                     {renderBody()}
                     {renderEyes()}
                     {renderMouth()}
@@ -1000,23 +1045,32 @@
         // MAIN MENU
         // ==========================================
         const MainMenu = ({ setView }) => (
-			<div className="max-w-md w-full flex flex-col items-center gap-6 scale-in text-center">
-				{/* Swapped out logo-box with the lightning component */}
-				<LightningLogo />
-				
-				<p className="text-xl mb-6 text-cyan-300 font-bold tracking-widest uppercase wobble-anim">The Ultimate Party Game</p>
-				
-				<div className="w-full space-y-4 relative z-10">
-					<Button color="pink" onClick={() => setView('HOST')} className="h-20 text-2xl transition-transform hover:scale-105">📺 Host Game</Button>
-					<Button color="blue" onClick={() => setView('JOIN')} className="h-20 text-2xl transition-transform hover:scale-105">📱 Join Game</Button>
-				</div>
-				
-				<div className="mt-8 text-sm text-purple-200 glass-panel p-5 rounded-2xl w-full slide-up-fade">
-					<p className="mb-2"><strong>How to play:</strong> Host puts this on a big screen or TV. Everyone else joins using their phones!</p>
-					<p className="text-pink-300 font-bold">4+ Players Required.</p>
-				</div>
-			</div>
-		);
+            <div className="max-w-md w-full flex flex-col items-center gap-4 scale-in text-center">
+                <LightningLogo />
+                
+                <p className="text-xl mb-10 text-cyan-300 font-bold tracking-widest uppercase wobble-anim">The Ultimate Party Game</p>
+                
+                <div className="w-full space-y-8 flex flex-col relative z-10">
+                    <button 
+                        onClick={() => setView('HOST')} 
+                        className="bg-transparent border-none shadow-none text-5xl md:text-6xl font-black text-white transition-all duration-300 hover:text-yellow-400 hover:scale-110 hover:animate-pulse tracking-tight"
+                    >
+                        HOST GAME
+                    </button>
+                    <button 
+                        onClick={() => setView('JOIN')} 
+                        className="bg-transparent border-none shadow-none text-5xl md:text-6xl font-black text-white transition-all duration-300 hover:text-yellow-400 hover:scale-110 hover:animate-pulse tracking-tight"
+                    >
+                        JOIN GAME
+                    </button>
+                </div>
+                
+                <div className="mt-12 text-sm text-purple-200 glass-panel p-5 rounded-2xl w-full slide-up-fade pointer-events-none">
+                    <p className="mb-2"><strong>How to play:</strong> Host puts this on a big screen or TV. Everyone else joins using their phones!</p>
+                    <p className="text-pink-300 font-bold">4+ Players Required.</p>
+                </div>
+            </div>
+        );
 
         // ==========================================
         // ONLINE HOST (THE BIG SCREEN)
@@ -1246,6 +1300,14 @@
                             conn.send({ type: 'LOBBY_JOINED', isAudience: true });
                             setTimeout(() => syncPlayerState(userId, true), 500);
                         }
+                    }
+
+                    if(data.type === 'UPDATE_AVATAR') {
+                        setPlayers(prev => prev.map(p => 
+                            p.userId === data.userId ? { ...p, avatar: data.avatar } : p
+                        ));
+                        // Acknowledge update to client
+                        sendToClient(data.userId, 'AVATAR_UPDATED', { avatar: data.avatar });
                     }
                 }
                 
@@ -1698,33 +1760,38 @@
                                 {clashes[currentClashIndex].prompt}
                             </h2>
                             
-                            <div className={`grid gap-8 mb-10 w-full max-w-6xl mx-auto ${clashes[currentClashIndex].players.length > 2 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                            {/* SMART SCALING GRID FOR HOST */}
+                            <div className={`grid gap-4 md:gap-8 mb-10 w-full max-w-7xl mx-auto ${
+                                clashes[currentClashIndex].players.length >= 5 ? 'grid-cols-2 lg:grid-cols-5' : 
+                                clashes[currentClashIndex].players.length === 4 ? 'grid-cols-2 lg:grid-cols-4' : 
+                                clashes[currentClashIndex].players.length === 3 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'
+                            }`}>
                                 {clashes[currentClashIndex].players.map((player) => {
+                                    const numPlayers = clashes[currentClashIndex].players.length;
                                     const answer = clashes[currentClashIndex].answers[player.userId];
                                     const stat = gameState === 'REVEAL' ? clashes[currentClashIndex].revealData?.playerStats.find(s => s.userId === player.userId) : null;
                                     const isWinner = gameState === 'REVEAL' && clashes[currentClashIndex].revealData?.winners.some(w => w.userId === player.userId);
                                     const isLoser = gameState === 'REVEAL' && !isWinner;
 
+                                    // Dynamic text and padding sizing
+                                    const textClass = numPlayers >= 5 ? 'text-xl' : numPlayers === 4 ? 'text-2xl' : 'text-4xl';
+                                    const paddingClass = numPlayers >= 4 ? 'p-6' : 'p-10';
+
                                     return (
-                                        <div key={player.userId} className={`glass-panel p-10 rounded-3xl relative transition-all duration-500 ${isWinner ? 'border-4 border-green-400 bg-green-900/30 shadow-[0_0_50px_rgba(74,222,128,0.3)]' : ''} ${isLoser ? 'opacity-50' : ''}`}>
-                                            <p className="text-4xl font-bold mb-12 break-words">"{answer}"</p>
+                                        <div key={player.userId} className={`glass-panel ${paddingClass} rounded-3xl relative transition-all duration-500 flex flex-col ${isWinner ? 'border-4 border-green-400 bg-green-900/30 shadow-[0_0_50px_rgba(74,222,128,0.3)]' : ''} ${isLoser ? 'opacity-50' : ''}`}>
+                                            <p className={`${textClass} font-bold mb-20 break-words flex-grow`}>"{answer}"</p>
                                             
                                             {gameState === 'REVEAL' && stat && (
-                                                <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+                                                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
                                                     <div className={isWinner ? 'bouncing-win' : ''}>
-                                                        <MonsterAvatar attributes={player.avatar} size={100} />
+                                                        <MonsterAvatar attributes={player.avatar} size={numPlayers >= 4 ? 70 : 100} />
                                                     </div>
-                                                    <div className={`px-6 py-2 rounded-full text-xl font-black shadow-lg mt-2 border-2 border-white/20 whitespace-nowrap ${isWinner ? 'bg-green-600' : 'bg-pink-600'}`}>
+                                                    <div className={`px-4 py-1 rounded-full ${numPlayers >= 4 ? 'text-sm' : 'text-xl'} font-black shadow-lg mt-1 border-2 border-white/20 whitespace-nowrap ${isWinner ? 'bg-green-600' : 'bg-pink-600'}`}>
                                                         {player.name}
                                                     </div>
-                                                    <div className="mt-2 text-3xl font-black text-cyan-300 bg-black/50 px-4 py-1 rounded-xl">
+                                                    <div className={`mt-1 ${numPlayers >= 4 ? 'text-xl' : 'text-3xl'} font-black text-cyan-300 bg-black/50 px-3 py-1 rounded-xl`}>
                                                         {stat.votes} Votes
                                                     </div>
-                                                    {stat.voters?.length > 0 && (
-                                                        <div className="mt-3 text-lg text-purple-200 font-bold bg-black/40 px-4 py-2 rounded-xl max-w-full text-center">
-                                                            Voted: {stat.voters.join(', ')}
-                                                        </div>
-                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -1806,6 +1873,7 @@
         // ONLINE CLIENT (THE PHONE)
         // ==========================================
         const OnlineClient = ({ goBack }) => {
+            const [isEditingAvatar, setIsEditingAvatar] = useState(false);
             const [myAvatar, setMyAvatar] = useState(null);
             const [myVotedFor, setMyVotedFor] = useState(null);
             const [conn, setConn] = useState(null);
@@ -1940,6 +2008,39 @@
                 setVoteData("Vote cast! Look at the screen.");
             };
 
+            // Carousel Helper Component for Customizer
+            const AttributeCarousel = ({ label, options, currentVal, attrKey }) => {
+                const currentIndex = options.indexOf(currentVal) === -1 ? 0 : options.indexOf(currentVal);
+                const prevIndex = (currentIndex - 1 + options.length) % options.length;
+                const nextIndex = (currentIndex + 1) % options.length;
+
+                const handleSwap = (newVal) => {
+                    const updated = { ...myAvatar, [attrKey]: newVal };
+                    setMyAvatar(updated);
+                    if(conn && conn.open) conn.send({ type: 'UPDATE_AVATAR', userId, avatar: updated });
+                };
+
+                return (
+                    <div className="mb-6 w-full flex flex-col items-center">
+                        <div className="text-cyan-300 font-bold uppercase tracking-widest text-xs mb-2">{label}</div>
+                        <div className="flex items-center justify-center gap-6 w-full px-4">
+                            {/* Previous */}
+                            <button onClick={() => handleSwap(options[prevIndex])} className="opacity-40 hover:opacity-100 transition-all scale-75 hover:scale-90 touch-manipulation">
+                                <MonsterAvatar attributes={{...myAvatar, [attrKey]: options[prevIndex]}} size={60} />
+                            </button>
+                            {/* Current / Active */}
+                            <div className="scale-125 z-10 border-b-4 border-pink-500 rounded-3xl p-2 bg-purple-900/50 shadow-[0_0_15px_rgba(236,72,153,0.4)] transition-transform touch-manipulation">
+                                <MonsterAvatar attributes={myAvatar} size={80} />
+                            </div>
+                            {/* Next */}
+                            <button onClick={() => handleSwap(options[nextIndex])} className="opacity-40 hover:opacity-100 transition-all scale-75 hover:scale-90 touch-manipulation">
+                                <MonsterAvatar attributes={{...myAvatar, [attrKey]: options[nextIndex]}} size={60} />
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
             return (
                 <div className="w-full max-w-md flex flex-col items-center scale-in text-center px-4 relative z-10">
                     
@@ -1984,11 +2085,39 @@
                         </div>
                     )}
 
-                    {clientState === 'WAITING_LOBBY' && (
-                        <div className="w-full flex flex-col items-center mt-20 p-8 glass-panel rounded-3xl">
-                            <div className="spinner mb-8 w-16 h-16 border-8 border-pink-500 border-l-cyan-400"></div>
+                    {clientState === 'WAITING_LOBBY' && !isEditingAvatar && (
+                        <div className="w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in">
                             <h2 className="text-4xl font-black text-pink-400 uppercase tracking-widest mb-4">You're In!</h2>
-                            <p className="text-2xl text-cyan-200 font-bold">{voteData}</p>
+                            <p className="text-2xl text-cyan-200 font-bold mb-8">{voteData}</p>
+                            
+                            {myAvatar && !voteData.includes("Audience") && (
+                                <div className="flex flex-col items-center w-full mt-4">
+                                    <div className="mb-6 animate-bounce" style={{animationDuration: '2s'}}>
+                                        <MonsterAvatar attributes={myAvatar} size={120} />
+                                    </div>
+                                    <Button onClick={() => setIsEditingAvatar(true)} color="blue" className="text-lg py-3">
+                                        🎨 Customize Avatar
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {clientState === 'WAITING_LOBBY' && isEditingAvatar && myAvatar && (
+                        <div className="w-full flex flex-col items-center mt-4 p-6 glass-panel rounded-3xl scale-in">
+                            <h2 className="text-2xl font-black text-pink-400 uppercase tracking-widest mb-6">Pimp Your Critter</h2>
+                            
+                            <div className="w-full max-h-[50vh] overflow-y-auto overflow-x-hidden scrollbar-hide">
+                                <AttributeCarousel label="Color" options={AVATAR_COLORS} currentVal={myAvatar.color} attrKey="color" />
+                                <AttributeCarousel label="Body Shape" options={AVATAR_BODIES} currentVal={myAvatar.body} attrKey="body" />
+                                <AttributeCarousel label="Eyes" options={AVATAR_EYES} currentVal={myAvatar.eyes} attrKey="eyes" />
+                                <AttributeCarousel label="Mouth" options={AVATAR_MOUTHS} currentVal={myAvatar.mouth} attrKey="mouth" />
+                                <AttributeCarousel label="Accessory" options={AVATAR_ACCESSORIES} currentVal={myAvatar.accessory} attrKey="accessory" />
+                            </div>
+
+                            <Button onClick={() => setIsEditingAvatar(false)} color="green" className="mt-6 text-lg py-3">
+                                ✓ Looking Good
+                            </Button>
                         </div>
                     )}
 
@@ -2048,17 +2177,21 @@
                                 <p className="text-pink-400 font-bold mb-4">{voteData.msg}</p>
                             )}
                     
-                            <div className="flex flex-col gap-6">
-                                {shuffle([...voteData.answers]).map((ans, idx) => (
-                                    <button 
-                                        key={ans.id}
-                                        onClick={() => !voteData.readOnly && submitVote(ans.id)}
-                                        disabled={voteData.readOnly}
-                                        className={`w-full p-6 ${idx%2===0 ? 'bg-pink-700 border-pink-900' : 'bg-blue-700 border-blue-900'} rounded-2xl text-2xl font-black break-words leading-tight transition-all ${!voteData.readOnly ? 'hover:bg-opacity-80 shadow-[0_8px_0_rgba(0,0,0,0.3)] border-b-8 active:border-b-0 active:translate-y-2' : 'opacity-75 cursor-default border-2'}`}
-                                    >
-                                        "{ans.text}"
-                                    </button>
-                                ))}
+                            {/* SMART SCALING LIST FOR CLIENT */}
+                            <div className="flex flex-col gap-4 max-h-[50vh] overflow-y-auto px-2 pb-4 scrollbar-hide">
+                                {shuffle([...voteData.answers]).map((ans, idx) => {
+                                    const isCompact = voteData.answers.length >= 4;
+                                    return (
+                                        <button 
+                                            key={ans.id}
+                                            onClick={() => !voteData.readOnly && submitVote(ans.id)}
+                                            disabled={voteData.readOnly}
+                                            className={`w-full ${isCompact ? 'p-4 text-xl' : 'p-6 text-2xl'} ${idx%2===0 ? 'bg-pink-700 border-pink-900' : 'bg-blue-700 border-blue-900'} rounded-2xl font-black break-words leading-tight transition-all ${!voteData.readOnly ? 'hover:bg-opacity-80 shadow-[0_6px_0_rgba(0,0,0,0.3)] border-b-8 active:border-b-0 active:translate-y-2' : 'opacity-75 cursor-default border-2'}`}
+                                        >
+                                            "{ans.text}"
+                                        </button>
+                                    );
+                                })}
                             </div>
                             
                             {voteData.allowPass && !voteData.readOnly && (
