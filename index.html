@@ -475,6 +475,31 @@
             { text: "A terrible, highly concerning flavor for a new brand of potato chips.", family: true },
             { text: "What your reflection is thinking when you make weird faces in the mirror.", family: true },
             { text: "The worst thing to discover inside a chest at the end of a treasure map.", family: true },
+            { text: "A rejected flavor for Skittles that completely ruins the rainbow.", family: true },
+            { text: "What the Pringles guy is hiding behind that massive mustache.", family: true },
+            { text: "The real reason the M&M characters are so terrified of humans.", family: true },
+            { text: "A terrible new instrument to add to a rock band.", family: true },
+            { text: "What the Pillsbury Doughboy does when no one is poking his stomach.", family: true },
+            { text: "The worst song to play during a high-speed car chase.", family: true },
+            { text: "A highly questionable new mascot for Doritos.", family: true },
+            { text: "What Beethoven was actually thinking when he wrote his 5th Symphony.", family: true },
+            { text: "A completely useless feature on a modern electric guitar.", family: true },
+            { text: "The secret ingredient that makes Sour Patch Kids so angry.", family: true },
+            { text: "What really happens in your stomach when you mix Pop-Rocks and soda.", family: true },
+            { text: "A terrible name for a cover band consisting only of dads.", family: true },
+            { text: "The absolute worst food to eat while riding a roller coaster.", family: true },
+            { text: "What Tony the Tiger actually eats for breakfast when the cameras are off.", family: true },
+            { text: "A weird, unsettling message to find written inside a Twix wrapper.", family: true },
+            { text: "The real reason why McDonald's Sprite tastes incredibly spicy.", family: true },
+            { text: "What the Kool-Aid Man has to do to repair all the walls he breaks.", family: true },
+            { text: "The worst instrument to bring to a quiet, relaxing campfire.", family: true },
+            { text: "A rejected pop song title about eating entirely too much cheese.", family: true },
+            { text: "The real reason Swedish Fish taste absolutely nothing like fish.", family: true },
+            { text: "What the green gummy bear is secretly plotting against the red ones.", family: true },
+            { text: "A terrible theme song to walk out to as a professional wrestler.", family: true },
+            { text: "What Mozart would say if he heard modern electronic dance music.", family: true },
+            { text: "A bizarre, very inconvenient new shape for a Cheez-It.", family: true },
+            { text: "The most awkward moment possible during a marching band halftime show.", family: true },
             
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
@@ -1294,6 +1319,15 @@
 			
 			// Audio ref for background music
             const audioRef = useRef(typeof Audio !== "undefined" ? new Audio('music.wav') : null);
+
+            useEffect(() => {
+                const handleBeforeUnload = (e) => {
+                    e.preventDefault();
+                    e.returnValue = "Are you sure you want to leave? This will destroy the current game!";
+                };
+                window.addEventListener('beforeunload', handleBeforeUnload);
+                return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+            }, []);
             
             useEffect(() => {
                 const audio = audioRef.current;
@@ -2321,8 +2355,9 @@
                         </div>
                     )}
 
-                    {clientState === 'WAITING_LOBBY' && isEditingAvatar && myAvatar && (
-                        <div className="w-full flex flex-col items-center mt-4 p-6 glass-panel rounded-3xl scale-in">
+                    {/* The Avatar Customizer - Now available in both Lobby and Waiting states */}
+                    {(clientState === 'WAITING_LOBBY' || clientState === 'WAITING') && isEditingAvatar && myAvatar && (
+                        <div className="w-full flex flex-col items-center mt-4 p-6 glass-panel rounded-3xl scale-in z-20 relative">
                             <h2 className="text-2xl font-black text-pink-400 uppercase tracking-widest mb-6">Pimp Your Critter</h2>
                             
                             <div className="w-full max-h-[50vh] overflow-y-auto overflow-x-hidden scrollbar-hide">
@@ -2339,10 +2374,23 @@
                         </div>
                     )}
 
-                    {clientState === 'WAITING' && (
-                        <div className="w-full flex flex-col items-center mt-20 p-8 glass-panel rounded-3xl">
+                    {/* Standard WAITING state with Avatar Button Added */}
+                    {clientState === 'WAITING' && !isEditingAvatar && (
+                        <div className="w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in">
                             <h2 className="text-4xl font-black text-cyan-400 mb-6 uppercase tracking-widest">Hold tight.</h2>
                             <p className="text-2xl text-purple-200 font-bold leading-relaxed">{typeof voteData === 'string' ? voteData : 'Look at the main screen.'}</p>
+                            
+                            {/* NEW: Avatar and customize button while waiting between rounds */}
+                            {myAvatar && !String(voteData).includes("Audience") && (
+                                <div className="flex flex-col items-center w-full mt-8">
+                                    <div className="mb-6">
+                                        <MonsterAvatar attributes={myAvatar} size={100} />
+                                    </div>
+                                    <Button onClick={() => setIsEditingAvatar(true)} color="blue" className="text-lg py-3">
+                                        🎨 Customize Avatar
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     )}
 
