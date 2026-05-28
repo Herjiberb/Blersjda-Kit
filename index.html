@@ -990,14 +990,16 @@
         const AVATAR_COLORS = [
             '#ec4899', '#22c55e', '#06b6d4', '#f97316', '#eab308', 
             '#ef4444', '#a855f7', '#bef264', '#f87171', '#34d399',
-            // 10 NEW COLORS
             '#ff1493', '#00ff00', '#ff4500', '#1e90ff', '#ffd700', 
-            '#8a2be2', '#ff69b4', '#00ced1', '#ff8c00', '#9400d3'
+            '#8a2be2', '#ff69b4', '#00ced1', '#ff8c00', '#9400d3',
+            // 10 EPIC NEW COLORS
+            '#39ff14', '#00ffff', '#ffcf00', '#ff3131', '#bc13fe', 
+            '#1f51ff', '#7fff00', '#ff00ff', '#ffffff', '#222222' 
         ];
-        const AVATAR_BODIES = ['blob', 'square', 'triangle', 'circle', 'egg', 'star', 'diamond', 'hexagon', 'cloud', 'ghost'];
-        const AVATAR_EYES = ['one', 'two', 'three', 'four', 'shades', 'hypno', 'cute', 'angry', 'alien', 'laser'];
-        const AVATAR_MOUTHS = ['smile', 'fangs', 'flat', 'surprised', 'zipper', 'drool', 'mustache', 'buckteeth', 'stitch'];
-        const AVATAR_ACCESSORIES = ['none', 'crown', 'horns', 'halo', 'partyhat', 'cap', 'eyepatch', 'bowtie', 'headphones', 'wizard'];
+        const AVATAR_BODIES = ['blob', 'square', 'triangle', 'circle', 'egg', 'star', 'diamond', 'hexagon', 'cloud'/*, 'ghost'*/];
+        const AVATAR_EYES = ['one', 'two', 'three', 'four', 'shades', 'hypno', 'cute', 'angry', 'alien', 'laser', 'cyborg', 'flames', 'stars', 'hearts', 'x', 'cyclops', 'void', 'goggles', 'spider', 'money'];
+        const AVATAR_MOUTHS = ['smile', 'fangs', 'flat', 'surprised', 'zipper', 'drool', 'mustache', 'buckteeth', 'stitch', 'braces', 'tongue', 'robot', 'skull', 'whistle', 'puckered', 'mask', 'beard', 'bubbles', 'stitches-cross'];
+        const AVATAR_ACCESSORIES = ['none', 'crown', 'horns', 'halo', 'partyhat', 'cap', 'eyepatch', 'bowtie', 'headphones', 'wizard', 'ninja', 'tophat', 'catears', 'vr', 'mohawk', 'spikes', 'flower', 'pirate', 'monocle', 'antennae'];
         
         const generateAvatar = (existingAvatars = []) => {
             let att, isUnique;
@@ -1030,7 +1032,7 @@
                     case 'diamond': return <polygon points="50,10 85,50 50,90 15,50" fill={color} />;
                     case 'hexagon': return <polygon points="30,15 70,15 90,50 70,85 30,85 10,50" fill={color} />;
                     case 'cloud': return <path d="M30 60 a15 15 0 0 1 0 -30 a20 20 0 0 1 40 0 a15 15 0 0 1 0 30 z" fill={color} />;
-                    case 'ghost': return <path d="M20 85 L20 40 Q50 -10 80 40 L80 85 L65 75 L50 85 L35 75 Z" fill={color} />;
+                    //case 'ghost': return <path d="M20 85 L20 40 Q50 -10 80 40 L80 85 L65 75 L50 85 L35 75 Z" fill={color} />;
                     case 'blob': default: return <path d="M20 50 Q20 20 50 20 T80 50 T50 85 T20 50 Z" fill={color} />;
                 }
             };
@@ -1047,6 +1049,16 @@
                     case 'alien': return <g className="blinking-eyes"><ellipse cx="30" cy="45" rx="12" ry="18" fill="#0f0a29" transform="rotate(-20 30 45)"/><ellipse cx="70" cy="45" rx="12" ry="18" fill="#0f0a29" transform="rotate(20 70 45)"/></g>;
                     case 'laser': return <g><circle cx="35" cy="45" r="8" fill="#ff0000" className="pulse-glow"/><line x1="35" y1="45" x2="-20" y2="45" stroke="#ff0000" strokeWidth="4"/><circle cx="65" cy="45" r="8" fill="#ff0000" className="pulse-glow"/><line x1="65" y1="45" x2="120" y2="45" stroke="#ff0000" strokeWidth="4"/></g>;
                     case 'two': default: return <g className="blinking-eyes"><circle cx="35" cy="45" r="10" fill="white"/><circle cx="35" cy="45" r="4" fill="#0f0a29"/><circle cx="65" cy="45" r="10" fill="white"/><circle cx="65" cy="45" r="4" fill="#0f0a29"/></g>;
+                    case 'cyborg': return <g className="blinking-eyes"><circle cx="35" cy="45" r="10" fill="white"/><circle cx="35" cy="45" r="4" fill="#0f0a29"/><circle cx="65" cy="45" r="12" fill="#ff0000" className="pulse-glow"/><circle cx="65" cy="45" r="4" fill="#fff"/></g>;
+                    case 'flames': return <g className="blinking-eyes"><path d="M30 50 Q35 30 40 50 Q35 45 30 50" fill="#f97316"/><path d="M60 50 Q65 30 70 50 Q65 45 60 50" fill="#f97316"/></g>;
+                    case 'stars': return <g className="blinking-eyes"><polygon points="35,35 40,45 50,45 42,52 45,62 35,55 25,62 28,52 20,45 30,45" fill="#facc15"/><polygon points="65,35 70,45 80,45 72,52 75,62 65,55 55,62 58,52 50,45 60,45" fill="#facc15"/></g>;
+                    case 'hearts': return <g className="blinking-eyes"><path d="M25 45 A 5 5 0 0 1 35 35 A 5 5 0 0 1 45 45 Q 35 55 25 45" fill="#ef4444"/><path d="M55 45 A 5 5 0 0 1 65 35 A 5 5 0 0 1 75 45 Q 65 55 55 45" fill="#ef4444"/></g>;
+                    case 'x': return <g><path d="M25 35 L45 55 M25 55 L45 35" stroke="#0f0a29" strokeWidth="4"/><path d="M55 35 L75 55 M55 55 L75 35" stroke="#0f0a29" strokeWidth="4"/></g>;
+                    case 'cyclops': return <g className="blinking-eyes"><circle cx="50" cy="45" r="18" fill="white"/><circle cx="50" cy="45" r="8" fill="#0f0a29"/></g>;
+                    case 'void': return <g className="pulse-glow-blue"><circle cx="35" cy="45" r="14" fill="#000"/><circle cx="65" cy="45" r="14" fill="#000"/></g>;
+                    case 'goggles': return <g><circle cx="35" cy="45" r="15" fill="none" stroke="#d4d4d8" strokeWidth="4"/><circle cx="65" cy="45" r="15" fill="none" stroke="#d4d4d8" strokeWidth="4"/><line x1="50" y1="45" x2="50" y2="45" stroke="#d4d4d8" strokeWidth="4"/></g>;
+                    case 'spider': return <g><circle cx="30" cy="40" r="5" fill="#0f0a29"/><circle cx="70" cy="40" r="5" fill="#0f0a29"/><circle cx="40" cy="35" r="4" fill="#0f0a29"/><circle cx="60" cy="35" r="4" fill="#0f0a29"/><circle cx="35" cy="50" r="3" fill="#0f0a29"/><circle cx="65" cy="50" r="3" fill="#0f0a29"/><circle cx="45" cy="48" r="2" fill="#0f0a29"/><circle cx="55" cy="48" r="2" fill="#0f0a29"/></g>;
+                    case 'money': return <g><text x="35" y="52" fontSize="20" fill="#22c55e" textAnchor="middle" fontWeight="bold">$</text><text x="65" y="52" fontSize="20" fill="#22c55e" textAnchor="middle" fontWeight="bold">$</text></g>;
                 }
             };
         
@@ -1061,6 +1073,16 @@
                     case 'buckteeth': return <g><path d="M35 65 Q50 75 65 65" fill="none" stroke="#0f0a29" strokeWidth="3"/><rect x="45" y="68" width="10" height="8" fill="white" stroke="#0f0a29" strokeWidth="1"/><line x1="50" y1="68" x2="50" y2="76" stroke="#0f0a29" strokeWidth="1"/></g>;
                     case 'stitch': return <g><line x1="35" y1="65" x2="65" y2="75" stroke="#0f0a29" strokeWidth="3"/><line x1="40" y1="62" x2="45" y2="72" stroke="#0f0a29" strokeWidth="2"/><line x1="50" y1="65" x2="55" y2="75" stroke="#0f0a29" strokeWidth="2"/><line x1="60" y1="68" x2="65" y2="78" stroke="#0f0a29" strokeWidth="2"/></g>;
                     case 'smile': default: return <path d="M35 65 Q50 80 65 65" fill="none" stroke="#0f0a29" strokeWidth="4" strokeLinecap="round" />;
+                    case 'braces': return <g><path d="M30 65 Q50 80 70 65" fill="white" stroke="#0f0a29" strokeWidth="3"/><path d="M35 65 L35 72 M45 68 L45 75 M55 68 L55 75 M65 65 L65 72 M30 70 L70 70" stroke="#94a3b8" strokeWidth="2"/></g>;
+                    case 'tongue': return <g><path d="M35 65 Q50 75 65 65" fill="none" stroke="#0f0a29" strokeWidth="4" strokeLinecap="round"/><path d="M45 68 L45 80 Q50 85 55 80 L55 68 Z" fill="#ef4444" stroke="#0f0a29" strokeWidth="2"/></g>;
+                    case 'robot': return <g><rect x="35" y="65" width="30" height="10" fill="#e2e8f0" stroke="#0f0a29" strokeWidth="2"/><line x1="42" y1="65" x2="42" y2="75" stroke="#0f0a29" strokeWidth="2"/><line x1="50" y1="65" x2="50" y2="75" stroke="#0f0a29" strokeWidth="2"/><line x1="58" y1="65" x2="58" y2="75" stroke="#0f0a29" strokeWidth="2"/></g>;
+                    case 'skull': return <g><line x1="30" y1="68" x2="70" y2="68" stroke="#0f0a29" strokeWidth="3"/><line x1="35" y1="63" x2="35" y2="73" stroke="#0f0a29" strokeWidth="3"/><line x1="45" y1="63" x2="45" y2="73" stroke="#0f0a29" strokeWidth="3"/><line x1="55" y1="63" x2="55" y2="73" stroke="#0f0a29" strokeWidth="3"/><line x1="65" y1="63" x2="65" y2="73" stroke="#0f0a29" strokeWidth="3"/></g>;
+                    case 'whistle': return <g><circle cx="50" cy="70" r="6" fill="none" stroke="#0f0a29" strokeWidth="3"/><path d="M56 70 Q65 60 70 55" stroke="#0f0a29" strokeWidth="2" fill="none"/></g>;
+                    case 'puckered': return <circle cx="50" cy="68" r="4" fill="none" stroke="#0f0a29" strokeWidth="3"/>;
+                    case 'mask': return <path d="M15 60 L85 60 L70 90 L30 90 Z" fill="#111827"/>;
+                    case 'beard': return <path d="M20 60 Q50 100 80 60 Q50 80 20 60 Z" fill="#4b5563"/>;
+                    case 'bubbles': return <g><circle cx="50" cy="70" r="5" fill="#bae6fd"/><circle cx="58" cy="62" r="3" fill="#bae6fd"/><circle cx="65" cy="55" r="4" fill="#bae6fd"/></g>;
+                    case 'stitches-cross': return <g><line x1="30" y1="68" x2="70" y2="68" stroke="#0f0a29" strokeWidth="2"/><path d="M35 63 L45 73 M45 63 L35 73 M55 63 L65 73 M65 63 L55 73" stroke="#0f0a29" strokeWidth="2"/></g>;
                 }
             };
         
@@ -1075,6 +1097,16 @@
                     case 'bowtie': return <path d="M40 85 L30 75 L30 95 Z M60 85 L70 75 L70 95 Z M40 85 L60 85 L50 90 Z" fill="#ef4444"/>;
                     case 'headphones': return <g><path d="M20 40 Q50 0 80 40" fill="none" stroke="#4b5563" strokeWidth="4"/><rect x="15" y="35" width="10" height="20" rx="4" fill="#ef4444"/><rect x="75" y="35" width="10" height="20" rx="4" fill="#ef4444"/></g>;
                     case 'wizard': return <g><path d="M25 25 L50 -10 L75 25 Z" fill="#6b21a8"/><path d="M15 25 L85 25" stroke="#4c1d95" strokeWidth="4" strokeLinecap="round"/><path d="M50 5 Q45 10 55 15" stroke="#facc15" strokeWidth="2" fill="none"/></g>;
+                    case 'ninja': return <g><rect x="15" y="15" width="70" height="12" fill="#ef4444"/><circle cx="85" cy="20" r="5" fill="#ef4444"/><path d="M85 20 L95 10 M85 20 L95 30" stroke="#ef4444" strokeWidth="3"/></g>;
+                    case 'tophat': return <g><rect x="30" y="-15" width="40" height="40" fill="#111827"/><rect x="20" y="25" width="60" height="5" fill="#111827"/><rect x="30" y="15" width="40" height="8" fill="#dc2626"/></g>;
+                    case 'catears': return <g><polygon points="25,25 15,-5 40,15" fill={color} stroke="#0f0a29" strokeWidth="2"/><polygon points="75,25 85,-5 60,15" fill={color} stroke="#0f0a29" strokeWidth="2"/></g>;
+                    case 'vr': return <g><rect x="15" y="30" width="70" height="25" rx="5" fill="#1e293b"/><rect x="25" y="35" width="50" height="15" rx="2" fill="#0ea5e9" className="pulse-glow"/></g>;
+                    case 'mohawk': return <path d="M35 20 L40 -10 L50 15 L60 -10 L65 20 Z" fill="#ec4899"/>;
+                    case 'spikes': return <g><polygon points="15,40 5,30 20,50" fill="#94a3b8"/><polygon points="85,40 95,30 80,50" fill="#94a3b8"/><polygon points="50,15 50,0 55,20" fill="#94a3b8"/></g>;
+                    case 'flower': return <g><circle cx="30" cy="15" r="6" fill="#facc15"/><circle cx="30" cy="5" r="8" fill="#f472b6"/><circle cx="40" cy="15" r="8" fill="#f472b6"/><circle cx="30" cy="25" r="8" fill="#f472b6"/><circle cx="20" cy="15" r="8" fill="#f472b6"/></g>;
+                    case 'pirate': return <g><path d="M10 25 Q50 -10 90 25 Q50 15 10 25 Z" fill="#111827"/><circle cx="50" cy="15" r="3" fill="#fff"/></g>;
+                    case 'monocle': return <g><circle cx="65" cy="45" r="14" fill="none" stroke="#fbbf24" strokeWidth="3"/><path d="M79 45 L90 60" stroke="#fbbf24" strokeWidth="2"/></g>;
+                    case 'antennae': return <g><path d="M35 25 Q20 0 25 -10" fill="none" stroke={color} strokeWidth="3"/><circle cx="25" cy="-10" r="4" fill="#a855f7"/><path d="M65 25 Q80 0 75 -10" fill="none" stroke={color} strokeWidth="3"/><circle cx="75" cy="-10" r="4" fill="#a855f7"/></g>;
                     case 'none': default: return null;
                 }
             };
@@ -1717,6 +1749,9 @@
                     setPlayers(prev => prev.map(p => 
                         p.userId === data.userId ? { ...p, avatar: data.avatar } : p
                     ));
+                    setAudience(prev => prev.map(a => 
+                        a.userId === data.userId ? { ...a, avatar: data.avatar } : a
+                    ));
                     sendToClient(data.userId, 'AVATAR_UPDATED', { avatar: data.avatar });
                 }
                 
@@ -2346,6 +2381,7 @@
                         if (!err) {
                             // Mock connection object so submitAnswer() and submitVote() execute flawlessly
                             const mockConnection = {
+                                open: true, // BUG FIX: Added so if(conn && conn.open) succeeds
                                 send: (payload) => {
                                     mqttClient.publish(`blersjda/${roomCode}/host`, JSON.stringify(payload));
                                 }
@@ -2544,7 +2580,10 @@
                                 <AttributeCarousel label="Accessory" options={AVATAR_ACCESSORIES} currentVal={myAvatar.accessory} attrKey="accessory" />
                             </div>
 
-                            <Button onClick={() => setIsEditingAvatar(false)} color="green" className="mt-6 text-lg py-3">
+                            <Button onClick={() => {
+                                setIsEditingAvatar(false);
+                                if(conn && conn.open) conn.send({ type: 'UPDATE_AVATAR', userId, avatar: myAvatar });
+                            }} color="green" className="mt-6 text-lg py-3">
                                 ✓ Looking Good
                             </Button>
                         </div>
