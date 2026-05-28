@@ -2390,16 +2390,13 @@
             const [answerInput, setAnswerInput] = useState('');
 			const [clientTimeLeft, setClientTimeLeft] = useState(0);
             
-            const [voteData, setVoteData] = useState(null); 
+            const [voteData, setVoteData] = useState(null);
+            const [isFiresword, setIsFiresword] = useState(false);
             const [userId] = useState(() => {
                 let uid = localStorage.getItem('blersjda_uid');
                 if(!uid) { uid = generateUUID(); localStorage.setItem('blersjda_uid', uid); }
                 return uid;
             });
-
-            const [voteData, setVoteData] = useState(null); 
-            const [isFiresword, setIsFiresword] = useState(false); // NEW STATE
-            const [userId] = useState(() => {
 
             // Recover name if exists
             useEffect(() => {
