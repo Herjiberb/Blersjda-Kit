@@ -271,40 +271,6 @@
             0% { transform: rotate(0deg) scale(1); filter: contrast(1); }
             100% { transform: rotate(10deg) scale(0.9) translateY(40px); opacity: 0.4; filter: contrast(2) grayscale(0.8) blur(1px); }
         }
-        /* --- MASSIVE UI UPGRADES & FIRESWORD MODE --- */
-        .fire-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;
-            background: radial-gradient(circle at 50% 100%, #ff4500 0%, #8b0000 40%, #1a0000 80%, #000 100%);
-            background-size: 100% 150%;
-            animation: hellfire 3s ease-in-out infinite alternate;
-            opacity: 0.9;
-        }
-        .fire-bg::after {
-            content: ''; position: absolute; inset: 0;
-            background-image: repeating-linear-gradient(0deg, transparent, rgba(255, 69, 0, 0.1) 2px, transparent 4px);
-            animation: rise 1s linear infinite;
-        }
-        @keyframes hellfire { 0% { background-position: 50% 100%; } 100% { background-position: 50% 80%; } }
-        @keyframes rise { 0% { transform: translateY(0); } 100% { transform: translateY(-4px); } }
-
-        .slash-anim {
-            position: absolute; top: 50%; left: 50%; width: 150%; height: 6px; background: white;
-            box-shadow: 0 0 20px #ff0000, 0 0 40px #ff4500, 0 0 60px #fff;
-            transform: translate(-50%, -50%) rotate(-35deg) scaleX(0); z-index: 100;
-            animation: slashCut 0.4s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-        }
-        @keyframes slashCut { 
-            0% { transform: translate(-50%, -50%) rotate(-35deg) scaleX(0); opacity: 1; } 
-            40% { transform: translate(-50%, -50%) rotate(-35deg) scaleX(1); opacity: 1; filter: brightness(2); } 
-            100% { transform: translate(-50%, -50%) rotate(-35deg) scaleX(1) translateY(40px); opacity: 0; } 
-        }
-
-        /* Mobile Sidebar Sliding Classes */
-        .mobile-sidebar {
-            transition: transform 0.3s ease-in-out;
-        }
-        .sidebar-closed { transform: translateX(-100%); }
-        .sidebar-open { transform: translateX(0); box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
     </style>
 </head>
 <body>
@@ -1513,9 +1479,8 @@
             const [roomCode, setRoomCode] = useState('');
             const [players, setPlayers] = useState([]);
             const [audience, setAudience] = useState([]);
-            const [settings, setSettings] = useState({ familyFriendly: false, tts: true, useOldMusic: false, firesword: false });
-            const [showKickMenu, setShowKickMenu] = useState(false);
-            const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+            const [settings, setSettings] = useState({ familyFriendly: false, tts: true, useOldMusic: false });
+			const [showKickMenu, setShowKickMenu] = useState(false);
             
             const [gameState, setGameState] = useState('LOBBY'); // LOBBY, ANSWERING, VOTING, REVEAL, ROUND_END, GAME_END
             const [round, setRound] = useState(1);
@@ -1633,16 +1598,16 @@
                 };
             }, []);
 
-            // Send to everyone connected (Updated for Firesword Sync)
+            // Send to everyone connected
             const broadcast = (type, payload) => {
                 Object.values(connectionsRef.current).forEach(conn => {
-                    if(conn && conn.open) conn.send({ type, firesword: stateRef.current.settings.firesword, ...payload });
+                    if(conn && conn.open) conn.send({ type, ...payload });
                 });
             };
-            
+
             const sendToClient = (userId, type, payload) => {
                 const conn = connectionsRef.current[userId];
-                if(conn && conn.open) conn.send({ type, firesword: stateRef.current.settings.firesword, ...payload });
+                if(conn && conn.open) conn.send({ type, ...payload });
             };
 
             const handleClientDisconnect = (userId) => {
@@ -1883,8 +1848,7 @@
 
             speakText(r === 3 ? `Welcome to the final round: The Whip of the Blersj!` : `Round ${r} begins. Players, look at your devices!`, settings.tts);
 
-            // FIRESWORD RULE: 30% less time to answer! Panic!
-            let timeLeft = stateRef.current.settings.firesword ? 60 : 90;
+            let timeLeft = 90;
             setTimer(timeLeft);
             broadcast('TIMER_SYNC', { timeLeft });
             
@@ -1993,18 +1957,7 @@
                 const pVoters = Object.keys(clash.votes).filter(uid => clash.votes[uid] === p.userId).map(getVoterName);
                 let score = totalValidVotes > 0 ? Math.floor((pVotesCount/totalValidVotes) * basePoints) : 0;
                 const isSweep = totalValidVotes > 0 && pVotesCount === totalValidVotes;
-                
-                // FIRESWORD GAMEPLAY: Brutal point deductions & massive sweep bonuses
-                if (stateRef.current.settings.firesword) {
-                    if (pVotesCount === 0 && totalValidVotes > 0) {
-                        score = -1500; // Lose massive points for getting zero votes!
-                    }
-                    if (isSweep) {
-                        score += 3000; // Decapitation bonus!
-                    }
-                } else {
-                    if (isSweep) score += 500;
-                }
+                if (isSweep) score += 500;
                 
                 return { userId: p.userId, name: p.name, avatar: p.avatar, answer: clash.answers[p.userId], votes: pVotesCount, voters: pVoters, score, isSweep };
             });
@@ -2094,8 +2047,7 @@
             };
 
             return (
-                    <div className="w-full max-w-md flex flex-col items-center scale-in text-center px-4 relative z-10">
-                        {isFiresword && clientState !== 'LOGIN' && <div className="fire-bg z-[-1]"></div>}
+                <div className="w-full max-w-5xl flex flex-col items-center fade-in text-center relative z-10">
                     <FloatingPopups active={isPlaying} />
 
                     {/* NEW: PERSISTENT ROOM CODE BADGE */}
@@ -2108,81 +2060,54 @@
                     )}
 
                     {gameState === 'LOBBY' && (
-                        <div className="w-full scale-in flex flex-col md:flex-row relative h-[85vh] overflow-hidden">
+                        <div className="w-full scale-in">
+                            <h2 className="text-4xl md:text-5xl font-black mb-4 uppercase tracking-widest text-cyan-400 drop-shadow-md">Join at <span className="text-pink-400">herjiberb.github.io/Blersjda-Kit</span></h2>
+                            <div className="bg-purple-900/50 border-2 border-pink-500 rounded-3xl p-8 mb-8 inline-block shadow-[0_0_40px_rgba(236,72,153,0.3)]">
+                                <p className="text-2xl text-purple-200 mb-2 font-bold uppercase tracking-widest">Room Code</p>
+                                <div className="font-mono bg-white text-black px-8 py-3 rounded-xl text-7xl tracking-[0.2em] font-black">{roomCode || '...'}</div>
+                            </div>
                             
-                            {/* Mobile Hamburger Button */}
-                            <button 
-                                onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-                                className="md:hidden absolute top-0 left-0 z-50 p-4 text-3xl text-pink-400 hover:text-white"
-                            >
-                                ☰
-                            </button>
-                    
-                            {/* SIDEBAR (Responsive) */}
-                            <div className={`mobile-sidebar ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'} md:transform-none absolute md:relative z-40 md:z-auto w-3/4 md:w-1/3 max-w-sm h-full bg-purple-950/95 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none border-r-2 border-pink-500/30 md:border-none p-6 flex flex-col gap-6 items-start text-left`}>
-                                <h3 className="text-2xl font-black text-pink-300 uppercase tracking-widest border-b border-pink-500/30 pb-2 w-full mt-10 md:mt-0">Host Settings</h3>
-                                
-                                <label className="flex items-center gap-4 cursor-pointer hover:bg-white/5 p-3 rounded-xl w-full transition-all">
+                            <div className="flex gap-8 mb-8 glass-panel p-6 rounded-2xl justify-center items-center text-xl font-bold">
+                                <label className="flex items-center gap-3 cursor-pointer hover:text-pink-300 transition-colors">
                                     <input type="checkbox" checked={settings.familyFriendly} onChange={e => setSettings(s => ({...s, familyFriendly: e.target.checked}))} className="w-6 h-6 accent-pink-500" />
-                                    <span className="font-bold text-lg">Family Friendly</span>
+                                    Family Friendly Mode
                                 </label>
-                                <label className="flex items-center gap-4 cursor-pointer hover:bg-white/5 p-3 rounded-xl w-full transition-all">
+                                <div className="w-px h-8 bg-white/20"></div>
+                                <label className="flex items-center gap-3 cursor-pointer hover:text-pink-300 transition-colors">
                                     <input type="checkbox" checked={settings.tts} onChange={e => setSettings(s => ({...s, tts: e.target.checked}))} className="w-6 h-6 accent-pink-500" />
-                                    <span className="font-bold text-lg">Voice Announcer</span>
+                                    Voice Announcer
                                 </label>
-                                <label className="flex items-center gap-4 cursor-pointer hover:bg-white/5 p-3 rounded-xl w-full transition-all">
+                                <div className="w-px h-8 bg-white/20"></div>
+                                <label className="flex items-center gap-3 cursor-pointer hover:text-pink-300 transition-colors">
                                     <input type="checkbox" checked={settings.useOldMusic} onChange={e => setSettings(s => ({...s, useOldMusic: e.target.checked}))} className="w-6 h-6 accent-pink-500" />
-                                    <span className="font-bold text-lg">Classic Music</span>
+                                    Classic Music
                                 </label>
                                 
-                                {/* FIRESWORD TOGGLE */}
-                                <label className="flex items-center gap-4 cursor-pointer bg-red-900/40 border border-red-500 p-4 rounded-xl w-full transition-all hover:bg-red-800/60 shadow-[0_0_15px_rgba(255,0,0,0.3)] mt-4">
-                                    <input type="checkbox" checked={settings.firesword} onChange={e => setSettings(s => ({...s, firesword: e.target.checked}))} className="w-7 h-7 accent-red-600" />
-                                    <div>
-                                        <span className="font-black text-xl text-red-400 uppercase tracking-widest block">🔥 Firesword</span>
-                                        <span className="text-xs text-red-200">Extreme mode. Point deductions. Fast timers. Bloodshed.</span>
-                                    </div>
-                                </label>
-                    
-                                <div className="mt-auto w-full flex flex-col gap-3">
-                                    <button onClick={() => setShowKickMenu(true)} className="bg-purple-800/50 hover:bg-purple-700 p-3 rounded-xl uppercase font-bold text-sm transition-all border border-purple-500/30">Manage Players</button>
-                                    <button onClick={goBack} className="bg-gray-800/50 hover:bg-red-900/50 p-3 rounded-xl uppercase font-bold text-sm transition-all border border-gray-600/30">Close Room</button>
+                            </div>
+
+                            <div className="glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30">
+                                <h3 className="text-2xl mb-6 text-pink-300 font-bold uppercase tracking-widest">Players ({players.length}) - Needs 4+</h3>
+                                <div className="flex flex-wrap gap-6 justify-center">
+                                    {players.map(p => (
+                                        <div key={p.userId} className="flex flex-col items-center animate-bounce" style={{animationDuration: `${Math.random() * 0.5 + 1.5}s`}}>
+                                            <MonsterAvatar attributes={p.avatar} size={80} />
+                                            <div className="mt-2 bg-purple-800/80 px-3 py-1 rounded-full font-bold text-sm">{p.name}</div>
+                                        </div>
+                                    ))}
+                                    {players.length === 0 && (
+                                        <div className="text-gray-400 flex flex-col items-center justify-center w-full mt-4">
+                                            <div className="spinner mb-4"></div>
+                                            <p className="font-bold text-xl uppercase tracking-widest text-purple-300">Waiting for players...</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                    
-                            {/* Overlay for mobile when sidebar is open */}
-                            {isSidebarOpen && <div onClick={() => setIsSidebarOpen(false)} className="md:hidden absolute inset-0 bg-black/50 z-30"></div>}
-                    
-                            {/* MAIN LOBBY AREA */}
-                            <div className="flex-1 flex flex-col items-center justify-center p-4">
-                                <h2 className="text-4xl md:text-5xl font-black mb-6 uppercase tracking-widest text-cyan-400 drop-shadow-md text-center">Join at <br className="md:hidden"/><span className="text-pink-400">herjiberb.github.io/Blersjda-Kit</span></h2>
-                                
-                                <div className={`bg-purple-900/50 border-4 ${settings.firesword ? 'border-red-500 shadow-[0_0_50px_rgba(255,0,0,0.5)]' : 'border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.3)]'} rounded-3xl p-8 mb-8 inline-block transition-all duration-500`}>
-                                    <p className={`text-2xl mb-2 font-bold uppercase tracking-widest ${settings.firesword ? 'text-red-300' : 'text-purple-200'}`}>Room Code</p>
-                                    <div className="font-mono bg-white text-black px-8 py-3 rounded-xl text-7xl tracking-[0.2em] font-black">{roomCode || '...'}</div>
-                                </div>
-                    
-                                <div className="glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full max-w-2xl border border-purple-500/30 relative overflow-hidden">
-                                    {settings.firesword && <div className="fire-bg absolute inset-0 mix-blend-overlay opacity-50 z-0"></div>}
-                                    
-                                    <h3 className="text-2xl mb-6 text-pink-300 font-bold uppercase tracking-widest relative z-10">Players ({players.length}) - Needs 4+</h3>
-                                    <div className="flex flex-wrap gap-6 justify-center relative z-10">
-                                        {players.map(p => (
-                                            <div key={p.userId} className="flex flex-col items-center animate-bounce" style={{animationDuration: `${Math.random() * 0.5 + 1.5}s`}}>
-                                                <MonsterAvatar attributes={p.avatar} size={80} />
-                                                <div className={`mt-2 px-3 py-1 rounded-full font-bold text-sm ${settings.firesword ? 'bg-red-900 text-white' : 'bg-purple-800/80'}`}>{p.name}</div>
-                                            </div>
-                                        ))}
-                                        {players.length === 0 && (
-                                            <div className="text-gray-400 flex flex-col items-center justify-center w-full mt-4">
-                                                <div className="spinner mb-4"></div>
-                                                <p className="font-bold text-xl uppercase tracking-widest text-purple-300">Waiting for players...</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                
-                                <Button onClick={startGame} disabled={players.length < 4} color={settings.firesword ? "red" : "pink"} className="max-w-md text-2xl h-20 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">Start Game</Button>
+                            
+                            <Button onClick={startGame} disabled={players.length < 4} color="pink" className="max-w-md text-2xl h-20">Start Game</Button>
+                            
+                            <div className="flex gap-6 justify-center mt-6">
+                                <button onClick={() => setShowKickMenu(true)} className="text-pink-400 hover:text-white underline uppercase tracking-widest text-sm font-bold transition-colors">Manage Players</button>
+                                <button onClick={goBack} className="text-gray-400 hover:text-white underline uppercase tracking-widest text-sm font-bold transition-colors">Close Room</button>
                             </div>
                         </div>
                     )}
@@ -2390,8 +2315,7 @@
             const [answerInput, setAnswerInput] = useState('');
 			const [clientTimeLeft, setClientTimeLeft] = useState(0);
             
-            const [voteData, setVoteData] = useState(null);
-            const [isFiresword, setIsFiresword] = useState(false);
+            const [voteData, setVoteData] = useState(null); 
             const [userId] = useState(() => {
                 let uid = localStorage.getItem('blersjda_uid');
                 if(!uid) { uid = generateUUID(); localStorage.setItem('blersjda_uid', uid); }
@@ -2449,7 +2373,6 @@
             };
 
             const handleHostMessage = (data) => {
-                if(data.firesword !== undefined) setIsFiresword(data.firesword); // Track firesword
                 if(data.type === 'LOBBY_JOINED') {
                     setClientState('WAITING_LOBBY');
                     if (data.avatar) setMyAvatar(data.avatar);
@@ -2741,21 +2664,10 @@
                                             className={`relative p-4 rounded-xl transition-all ${isWinner ? 'bg-green-900/50 border-2 border-green-400 shadow-[0_0_15px_rgba(74,222,128,0.4)] z-20' : 'bg-black/80 z-10'} ${isLoser ? 'border-2 border-red-900/80 overflow-hidden' : ''}`} 
                                             style={{ animationDelay: isLoser ? '0.9s' : '0s' }}>
                                             
-                                            {/* Bomb or Slash on Loser */}
-                                                {isLoser && (
-                                                    <div className="absolute inset-0 z-50 pointer-events-none rounded-xl overflow-hidden">
-                                                        {isFiresword ? (
-                                                            /* Violent Sword Slash */
-                                                            <div className="slash-anim" style={{ animationDelay: `${blastDelay}s` }}></div>
-                                                        ) : (
-                                                            /* Classic Bomb */
-                                                            <div className="absolute top-[20%] left-1/2 opacity-0 bomb-anim text-6xl" style={{ animationDelay: `${blastDelay}s` }}>💣</div>
-                                                        )}
-                                                        
-                                                        {/* Fire Base */}
-                                                        <div className="absolute bottom-[-10px] left-0 w-full h-1/2 bg-gradient-to-t from-orange-600/50 via-red-500/20 to-transparent mix-blend-screen fire-anim opacity-0 pointer-events-none" style={{ animationDelay: `${blastDelay + 0.4}s` }}></div>
-                                                    </div>
-                                                )}
+                                            {/* Bomb Blast on Loser */}
+                                            {isLoser && (
+                                                <div className="absolute inset-0 z-50 pointer-events-none rounded-xl">
+                                                    <div className="absolute top-[20%] left-1/2 opacity-0 bomb-anim text-6xl" style={{ animationDelay: `${blastDelay}s` }}>💣</div>
                                                     
                                                     {/* Fire Base */}
                                                     <div className="absolute bottom-[-10px] left-0 w-full h-1/2 bg-gradient-to-t from-orange-600/50 via-red-500/20 to-transparent mix-blend-screen fire-anim opacity-0 pointer-events-none" style={{ animationDelay: `${blastDelay + 0.4}s` }}></div>
@@ -2767,6 +2679,8 @@
                                                         <span className="animate-pulse" style={{animationDelay: '0.3s'}}>🔥</span>
                                                         <span className="animate-pulse" style={{animationDelay: '0.2s'}}>🔥</span>
                                                     </div>
+                                                </div>
+                                            )}
 
                                             <p className="text-xl font-bold mb-2 relative z-10">"{stat.answer}"</p>
                                             <p className="text-pink-400 font-black uppercase text-sm mb-2 relative z-10">{stat.name}</p>
