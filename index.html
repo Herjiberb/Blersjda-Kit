@@ -271,6 +271,30 @@
             0% { transform: rotate(0deg) scale(1); filter: contrast(1); }
             100% { transform: rotate(10deg) scale(0.9) translateY(40px); opacity: 0.4; filter: contrast(2) grayscale(0.8) blur(1px); }
         }
+
+        /* Fluid Waterfall Overlays */
+        .waterfall-overlay {
+            position: fixed; inset: 0; z-index: 99999; pointer-events: none;
+            animation: fallDown 2.5s ease-in-out forwards;
+        }
+        @keyframes fallDown {
+            0% { transform: translateY(-100%); }
+            15% { transform: translateY(0); }
+            85% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+        .waterfall-coffee { 
+            background: linear-gradient(to bottom, #3b2313, #1e1109); 
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8); 
+        }
+        .waterfall-lemonade { 
+            background: linear-gradient(to bottom, #fff44f, #ffea00); 
+            box-shadow: inset 0 0 100px rgba(255,200,0,0.6); 
+        }
+        .waterfall-milk { 
+            background: linear-gradient(to bottom, #ffffff, #f0f0f0); 
+            box-shadow: inset 0 0 100px rgba(200,200,200,0.6); 
+        }
     </style>
 </head>
 <body>
@@ -625,6 +649,36 @@
             { text: "A terrible, highly dramatic way to make your exit from a crowded hot air balloon basket.", family: true },
             { text: "The worst possible shape to request when the balloon animal artist asks what you want.", family: true },
             { text: "What the guy waving the glowing orange wands on the airport runway is actually signaling.", family: true },
+            { text: "A spell Harry Potter only uses when he's alone in his room.", family: true },
+            { text: "The worst thing to accidentally glue to your forehead.", family: true },
+            { text: "What the squirrels are actually building up in those trees.", family: true },
+            { text: "The most useless button on a spaceship dashboard.", family: true },
+            { text: "What happens if you microwave a magic wand.", family: true },
+            { text: "The worst flavor imaginable for a lickable wallpaper.", family: true },
+            { text: "A terrible excuse for being late to a superhero battle.", family: true },
+            { text: "The most annoying thing about having an elephant for a roommate.", family: true },
+            { text: "What the tooth fairy actually builds with all those teeth.", family: true },
+            { text: "A highly concerning name for a robot vacuum cleaner.", family: true },
+            { text: "The secret, mildly crunchy ingredient in a wizard's breakfast cereal.", family: true },
+            { text: "What a ghost does when it gets bored of haunting the same hallway.", family: true },
+            { text: "The worst thing to unexpectedly shout out during a silent meditation retreat.", family: true },
+            { text: "A useless superpower that only works on Tuesday afternoons.", family: true },
+            { text: "What your reflection does the exact second you look away.", family: true },
+            { text: "A terrible, highly disappointing prize to find inside a box of cereal.", family: true },
+            { text: "The most awkward moment to occur at a convention for movie monsters.", family: true },
+            { text: "What the aliens chose to abduct first when they visited Earth.", family: true },
+            { text: "A terrible place to hide a highly sought-after secret treasure map.", family: true },
+            { text: "The absolute worst piece of advice a talking dog could give you.", family: true },
+            { text: "What actually happens when you press the forbidden red button in an elevator.", family: true },
+            { text: "A terrible, highly chaotic theme for a high school prom.", family: true },
+            { text: "The most embarrassing thing that could possibly happen in zero gravity.", family: true },
+            { text: "What the garden gnomes get up to when the clock strikes midnight.", family: true },
+            { text: "A completely useless invention to bring to a deserted island.", family: true },
+            { text: "The absolute worst thing to say out loud to a known mind reader.", family: true },
+            { text: "What a snowman genuinely dreams about during the heat of summer.", family: true },
+            { text: "A terrible, highly conspicuous disguise for an undercover secret agent.", family: true },
+            { text: "The most annoying, unhelpful feature of a budget time machine.", family: true },
+            { text: "What the bowling pins are saying right before the ball hits them.", family: true },
             
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
@@ -792,6 +846,31 @@
             { text: "What the overly-friendly neighborhood watch captain is secretly doing with his high-powered binoculars.", family: false },
             { text: "A terrible, wildly inappropriate, and deeply confusing theme for an underground basement fight club.", family: false },
             { text: "The absolute worst, most mood-ruining thing to confidently shout during an armed bank robbery.", family: false },
+            { text: "A deeply disturbing entry mysteriously deleted from the official Pokédex.", family: false },
+            { text: "The worst possible item to accidentally drop into an open casket.", family: false },
+            { text: "A terrible, highly confusing safe word for a routine dental appointment.", family: false },
+            { text: "What the poop inspector found that made him immediately quit his job and move to the woods.", family: false },
+            { text: "The most cursed object currently sitting in your bedside drawer.", family: false },
+            { text: "The most historically inaccurate thing a caveman could bring to a fight.", family: false },
+            { text: "What really caused the collapse of the Mayan empire.", family: false },
+            { text: "A terrible use for a sacred cultural artifact.", family: false },
+            { text: "The worst animal to get a lap dance from.", family: false },
+            { text: "What they actually serve at the Illuminati's annual potluck.", family: false },
+            { text: "A forbidden plant that definitely shouldn't be smoked.", family: false },
+            { text: "The worst thing to discover at the bottom of a bowl of authentic pho.", family: false },
+            { text: "What the ancient Romans really did in the vomitorium.", family: false },
+            { text: "The most offensive dish you could serve at a United Nations summit.", family: false },
+            { text: "A terrible historical event to theme a bouncy castle after.", family: false },
+            { text: "What Marie Antoinette actually did with that cake.", family: false },
+            { text: "The real reason the Library of Alexandria burned down.", family: false },
+            { text: "The most inappropriate animal to sacrifice to the sun god.", family: false },
+            { text: "What Genghis Khan's Tinder profile bio said.", family: false },
+            { text: "A horrible fusion food that should be considered a war crime.", family: false },
+            { text: "The worst cultural tradition to accidentally misinterpret.", family: false },
+            { text: "What the pigeons in New York are secretly feeding on.", family: false },
+            { text: "The most awkward artifact currently sitting in the British Museum.", family: false },
+            { text: "A truly cursed ingredient in a traditional witch's brew.", family: false },
+            { text: "What the Trojan Horse was actually filled with.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -996,7 +1075,7 @@
             '#39ff14', '#00ffff', '#ffcf00', '#ff3131', '#bc13fe', 
             '#1f51ff', '#7fff00', '#ff00ff', '#ffffff', '#222222' 
         ];
-        const AVATAR_BODIES = ['blob', 'square', 'triangle', 'circle', 'egg', 'star', 'diamond', 'hexagon', 'cloud'/*, 'ghost'*/];
+        const AVATAR_BODIES = ['blob', 'square', 'triangle', 'circle', 'egg', 'star', 'diamond', 'hexagon', 'cloud', 'ghost'];
         const AVATAR_EYES = ['one', 'two', 'three', 'four', 'shades', 'hypno', 'cute', 'angry', 'alien', 'laser', 'cyborg', 'flames', 'stars', 'hearts', 'x', 'cyclops', 'void', 'goggles', 'spider', 'money'];
         const AVATAR_MOUTHS = ['smile', 'fangs', 'flat', 'surprised', 'zipper', 'drool', 'mustache', 'buckteeth', 'stitch', 'braces', 'tongue', 'robot', 'skull', 'whistle', 'puckered', 'mask', 'beard', 'bubbles', 'stitches-cross'];
         const AVATAR_ACCESSORIES = ['none', 'crown', 'horns', 'halo', 'partyhat', 'cap', 'eyepatch', 'bowtie', 'headphones', 'wizard', 'ninja', 'tophat', 'catears', 'vr', 'mohawk', 'spikes', 'flower', 'pirate', 'monocle', 'antennae'];
@@ -1032,7 +1111,7 @@
                     case 'diamond': return <polygon points="50,10 85,50 50,90 15,50" fill={color} />;
                     case 'hexagon': return <polygon points="30,15 70,15 90,50 70,85 30,85 10,50" fill={color} />;
                     case 'cloud': return <path d="M30 60 a15 15 0 0 1 0 -30 a20 20 0 0 1 40 0 a15 15 0 0 1 0 30 z" fill={color} />;
-                    //case 'ghost': return <path d="M20 85 L20 40 Q50 -10 80 40 L80 85 L65 75 L50 85 L35 75 Z" fill={color} />;
+                    case 'ghost': return <path d="M20 85 L20 40 Q50 -10 80 40 L80 85 L65 75 L50 85 L35 75 Z" fill={color} />;
                     case 'blob': default: return <path d="M20 50 Q20 20 50 20 T80 50 T50 85 T20 50 Z" fill={color} />;
                 }
             };
@@ -1176,6 +1255,14 @@
                 </div>
             );
         };
+
+        // ==========================================
+        // WATERFALL COMPONENT
+        // ==========================================
+        const WaterfallEffect = ({ type }) => {
+            if (!type) return null;
+            return <div className={`waterfall-overlay waterfall-${type}`}></div>;
+        };
 		
 		// ==========================================
         // JS BATTLE ANIMATION COMPONENT (EPIC UPGRADE)
@@ -1307,10 +1394,19 @@
             useEffect(() => {
                 let keyBuffer = '';
                 const handleKeyDown = (e) => {
-                    if (e.key.length !== 1) return; // Ignore Shift/Ctrl
-                    keyBuffer = (keyBuffer + e.key).toUpperCase().slice(-7);
-                    if (keyBuffer === 'HISTORY') {
+                    if (e.key.length !== 1) return; 
+                    keyBuffer = (keyBuffer + e.key).toUpperCase().slice(-10);
+                    
+                    if (keyBuffer.endsWith('HISTORY')) {
                         setView(prev => prev === 'MENU' ? 'HISTORY' : prev);
+                        keyBuffer = '';
+                    }
+                    if (keyBuffer.endsWith('KICKALL')) {
+                        window.dispatchEvent(new CustomEvent('blersjda-host-cmd', { detail: 'KICKALL' }));
+                        keyBuffer = '';
+                    }
+                    if (keyBuffer.endsWith('DEBUGSTART')) {
+                        window.dispatchEvent(new CustomEvent('blersjda-host-cmd', { detail: 'DEBUGSTART' }));
                         keyBuffer = '';
                     }
                 };
@@ -1628,6 +1724,19 @@
                 return () => {
                     if (mqttClient) mqttClient.end();
                 };
+            }, []);
+
+            useEffect(() => {
+                const handleHostCmd = (e) => {
+                    if (e.detail === 'KICKALL') {
+                        Object.keys(connectionsRef.current).forEach(id => kickUser(id));
+                    }
+                    if (e.detail === 'DEBUGSTART' && stateRef.current.gameState === 'LOBBY') {
+                        startGame(); // Bypasses the 4-player requirement visually
+                    }
+                };
+                window.addEventListener('blersjda-host-cmd', handleHostCmd);
+                return () => window.removeEventListener('blersjda-host-cmd', handleHostCmd);
             }, []);
 
             // Send to everyone connected
@@ -2009,10 +2118,24 @@
                 });
             }
 
+            // --- WATERFALL EASTER EGG LOGIC ---
+            const allAnswersText = clash.players.map(p => clash.answers[p.userId].toLowerCase()).join(" ");
+            let waterfallType = null;
+            if ((allAnswersText.match(/shit/g) || []).length >= 3) waterfallType = 'coffee';
+            else if ((allAnswersText.match(/piss/g) || []).length >= 3) waterfallType = 'lemonade';
+            else if ((allAnswersText.match(/titty/g) || []).length >= 3) waterfallType = 'milk';
+            else if ((allAnswersText.match(/tits/g) || []).length >= 3) waterfallType = 'milk';
+            // ----------------------------------
+            
             broadcast('STATE_REVEAL', { 
                 prompt: clash.prompt,
-                stats: playerStats // Sending dynamic array instead of p1/p2
+                stats: playerStats,
+                waterfallType // Send this to the clients
             });
+            
+            // Update the local state for the host to see the waterfall
+            setGameState('REVEAL');
+            setSettings(prev => ({ ...prev, currentWaterfall: waterfallType }));
 
             // Distribute scores
             setPlayers(prev => prev.map(p => {
@@ -2083,6 +2206,10 @@
 
             return (
                 <div className="w-full max-w-5xl flex flex-col items-center fade-in text-center relative z-10">
+                    {gameState === 'REVEAL' && settings.currentWaterfall && (
+                        <WaterfallEffect type={settings.currentWaterfall} />
+                    )}
+                    
                     <FloatingPopups active={isPlaying} />
 
                     {/* NEW: PERSISTENT ROOM CODE BADGE */}
@@ -2507,6 +2634,10 @@
 
             return (
                 <div className="w-full max-w-md flex flex-col items-center scale-in text-center px-4 relative z-10">
+
+                    {clientState === 'REVEAL' && voteData?.waterfallType && (
+                        <WaterfallEffect type={voteData.waterfallType} />
+                    )}
                     
                     {clientState === 'REVEAL' && voteData && (
 						((voteData.p1Votes > voteData.p2Votes && (userId === voteData.p1.userId || myVotedFor === voteData.p1.userId)) ||
