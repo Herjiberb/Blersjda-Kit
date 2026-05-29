@@ -271,30 +271,6 @@
             0% { transform: rotate(0deg) scale(1); filter: contrast(1); }
             100% { transform: rotate(10deg) scale(0.9) translateY(40px); opacity: 0.4; filter: contrast(2) grayscale(0.8) blur(1px); }
         }
-
-        /* Fluid Waterfall Overlays */
-        .waterfall-overlay {
-            position: fixed; inset: 0; z-index: 99999; pointer-events: none;
-            animation: fallDown 2.5s ease-in-out forwards;
-        }
-        @keyframes fallDown {
-            0% { transform: translateY(-100%); }
-            15% { transform: translateY(0); }
-            85% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(100%); opacity: 0; }
-        }
-        .waterfall-coffee { 
-            background: linear-gradient(to bottom, #3b2313, #1e1109); 
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.8); 
-        }
-        .waterfall-lemonade { 
-            background: linear-gradient(to bottom, #fff44f, #ffea00); 
-            box-shadow: inset 0 0 100px rgba(255,200,0,0.6); 
-        }
-        .waterfall-milk { 
-            background: linear-gradient(to bottom, #ffffff, #f0f0f0); 
-            box-shadow: inset 0 0 100px rgba(200,200,200,0.6); 
-        }
     </style>
 </head>
 <body>
@@ -694,6 +670,11 @@
             { text: "What the garden gnomes immediately do when a thunderstorm rolls in.", family: true },
             { text: "A rejected theme for a highly disappointing local amusement park.", family: true },
             { text: "The most confusing piece of advice a fortune cookie could ever give you.", family: true },
+            { text: "The real reason the head of lettuce was banned from the vegetable orchestra.", family: true },
+            { text: "What the baby spinach leaves gossip about in the crisper drawer.", family: true },
+            { text: "A terrible superpower that only works while you are aggressively eating a raw cabbage.", family: true },
+            { text: "What actually happens when you accidentally plant an enchanted kale seed.", family: true },
+            { text: "The most embarrassing thing a piece of lettuce can do while stuck in your teeth.", family: true },
             
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
@@ -891,6 +872,11 @@
             { text: "A terrible excuse for trying to smuggle a live Goliath beetle in your pants.", family: false },
             { text: "The dung beetle's highly controversial new flavor of rolling ball.", family: false },
             { text: "A truly unfortunate moment to accidentally crush a stink bug in your pocket.", family: false },
+            { text: "A highly questionable, sensual use for a crisp head of iceberg lettuce.", family: false },
+            { text: "The absolute worst sexual euphemism involving heavily wilted spinach.", family: false },
+            { text: "What the dirty cabbage whispered to the eggplant late at night.", family: false },
+            { text: "The most awkward moment to discover a piece of kale stuck to your buttcheek.", family: false },
+            { text: "A terrible reason to bring a cayenne-spiced cucumber and a bag of arugula into the bedroom.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -1277,11 +1263,147 @@
         };
 
         // ==========================================
-        // WATERFALL COMPONENT
+        // WATERFALL COMPONENT (EPIC LIQUID CANVAS)
         // ==========================================
         const WaterfallEffect = ({ type }) => {
+            const canvasRef = useRef(null);
+        
+            useEffect(() => {
+                if (!type) return;
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                let animationId;
+        
+                // Liquid color profiles (Base, Highlight/Sheen, Shadow)
+                const colors = {
+                    coffee: { base: '#3b2313', highlight: '#6b3e21', shadow: '#1a0f08' },
+                    lemonade: { base: '#ffea00', highlight: '#ffffff', shadow: '#cca300' },
+                    milk: { base: '#ffffff', highlight: '#ffffff', shadow: '#d0d0d0' }
+                }[type] || { base: '#ffffff', highlight: '#ffffff', shadow: '#000000' };
+        
+                const resize = () => {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                };
+                resize();
+                window.addEventListener('resize', resize);
+        
+                const drips = [];
+                const numDrips = Math.floor(window.innerWidth / 18); // Dynamic Drip density
+                for (let i = 0; i < numDrips; i++) {
+                    drips.push({
+                        x: i * (window.innerWidth / numDrips) + (Math.random() * 40 - 20),
+                        y: -(Math.random() * 400) - 100, // Start staggered above screen
+                        speed: Math.random() * 14 + 18, // Fast, heavy liquid falling speed
+                        radius: Math.random() * 18 + 10, // Viscosity/Thickness
+                        delay: Math.random() * 10 // Frame delay
+                    });
+                }
+        
+                let frame = 0;
+                let globalAlpha = 1;
+        
+                const render = () => {
+                    frame++;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+                    // Fade out the entire canvas smoothly after ~80 frames (~1.3s)
+                    if (frame > 80) {
+                        globalAlpha -= 0.025;
+                    }
+                    if (globalAlpha <= 0) {
+                        globalAlpha = 0;
+                        return; // End loop
+                    }
+        
+                    ctx.globalAlpha = globalAlpha;
+        
+                    // Track the highest drip to draw a connected liquid sheet above them
+                    let highestY = Math.min(...drips.map(d => d.y));
+        
+                    if (highestY > -100) {
+                        ctx.fillStyle = colors.base;
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        drips.forEach((drip, i) => {
+                            if (i === 0) ctx.lineTo(0, drip.y - drip.radius * 2);
+                            // Connect the sheet to the tail of each drip
+                            ctx.lineTo(drip.x, drip.y - drip.radius * 3);
+                        });
+                        ctx.lineTo(canvas.width, 0);
+                        ctx.fill();
+                    }
+        
+                    // Draw individual heavy drips
+                    drips.forEach(drip => {
+                        if (frame > drip.delay) {
+                            drip.y += drip.speed;
+                            
+                            // 1. Main Drip Body (Thick line)
+                            ctx.beginPath();
+                            ctx.moveTo(drip.x, 0);
+                            ctx.lineTo(drip.x, drip.y);
+                            ctx.lineWidth = drip.radius * 2;
+                            ctx.lineCap = 'round';
+                            ctx.strokeStyle = colors.base;
+                            ctx.stroke();
+        
+                            // 2. Liquid Shadow (Left inner edge)
+                            ctx.beginPath();
+                            ctx.moveTo(drip.x - drip.radius + 3, 0);
+                            ctx.lineTo(drip.x - drip.radius + 3, drip.y);
+                            ctx.lineWidth = 4;
+                            ctx.strokeStyle = colors.shadow;
+                            ctx.stroke();
+        
+                            // 3. Liquid Sheen/Specular Highlight (Right inner edge)
+                            ctx.beginPath();
+                            ctx.moveTo(drip.x + drip.radius - 4, 0);
+                            ctx.lineTo(drip.x + drip.radius - 4, drip.y - drip.radius);
+                            ctx.lineWidth = 3;
+                            ctx.strokeStyle = colors.highlight;
+                            ctx.stroke();
+        
+                            // 4. Bulbous droplet weight at the bottom
+                            ctx.beginPath();
+                            ctx.arc(drip.x, drip.y, drip.radius * 1.15, 0, Math.PI * 2);
+                            ctx.fillStyle = colors.base;
+                            ctx.fill();
+        
+                            // 5. Droplet Shadow
+                            ctx.beginPath();
+                            ctx.arc(drip.x - 2, drip.y + 2, drip.radius * 0.9, 0, Math.PI * 2);
+                            ctx.fillStyle = colors.shadow;
+                            ctx.fill();
+                            
+                            // 6. Droplet Sheen
+                            ctx.beginPath();
+                            ctx.arc(drip.x + drip.radius * 0.35, drip.y - drip.radius * 0.35, drip.radius * 0.25, 0, Math.PI * 2);
+                            ctx.fillStyle = colors.highlight;
+                            ctx.fill();
+                        }
+                    });
+        
+                    animationId = requestAnimationFrame(render);
+                };
+        
+                render();
+        
+                return () => {
+                    window.removeEventListener('resize', resize);
+                    cancelAnimationFrame(animationId);
+                };
+            }, [type]);
+        
             if (!type) return null;
-            return <div className={`waterfall-overlay waterfall-${type}`}></div>;
+        
+            return (
+                <canvas 
+                    ref={canvasRef} 
+                    className="fixed inset-0 w-full h-full pointer-events-none z-[5]"
+                />
+            );
         };
 		
 		// ==========================================
@@ -2056,10 +2178,10 @@
                 // --- NEW WATERFALL EASTER EGG LOGIC (VOTING PHASE) ---
                 const allAnswersText = clash.players.map(p => clash.answers[p.userId].toLowerCase()).join(" ");
                 let waterfallType = null;
-                if ((allAnswersText.match(/coffee/g) || []).length >= 3) waterfallType = 'coffee';
-                else if ((allAnswersText.match(/lemonade/g) || []).length >= 3) waterfallType = 'lemonade';
-                else if ((allAnswersText.match(/milk/g) || []).length >= 3) waterfallType = 'milk';
-                else if ((allAnswersText.match(/ice/g) || []).length >= 3) waterfallType = 'milk';
+                if ((allAnswersText.match(/shit/g) || []).length >= 3) waterfallType = 'coffee';
+                else if ((allAnswersText.match(/piss/g) || []).length >= 3) waterfallType = 'lemonade';
+                else if ((allAnswersText.match(/titty/g) || []).length >= 3) waterfallType = 'milk';
+                else if ((allAnswersText.match(/tits/g) || []).length >= 3) waterfallType = 'milk';
                 
                 setSettings(prev => ({ ...prev, currentWaterfall: waterfallType }));
                 
