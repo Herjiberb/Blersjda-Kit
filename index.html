@@ -679,6 +679,21 @@
             { text: "A terrible, highly conspicuous disguise for an undercover secret agent.", family: true },
             { text: "The most annoying, unhelpful feature of a budget time machine.", family: true },
             { text: "What the bowling pins are saying right before the ball hits them.", family: true },
+            { text: "What the refrigerator light does when it thinks you're asleep.", family: true },
+            { text: "A terrible superpower that only works when you are actively eating a banana.", family: true },
+            { text: "The real reason the library book is 15 years overdue.", family: true },
+            { text: "What the squirrels are aggressively whispering about in the park.", family: true },
+            { text: "A bizarre new flavor of juice box marketed strictly to extremely tired parents.", family: true },
+            { text: "The worst possible replacement for a traditional car steering wheel.", family: true },
+            { text: "What the clouds are actually made of, according to a panicked 5-year-old.", family: true },
+            { text: "A highly questionable item to confidently bring to a neighborhood potluck.", family: true },
+            { text: "The most chaotic thing you could do with a giant pair of safety scissors.", family: true },
+            { text: "What your pet goldfish enthusiastically thinks about all day in its bowl.", family: true },
+            { text: "A terribly impractical design feature for a brand new winter coat.", family: true },
+            { text: "The real, heavily guarded reason the mailman is always running late.", family: true },
+            { text: "What the garden gnomes immediately do when a thunderstorm rolls in.", family: true },
+            { text: "A rejected theme for a highly disappointing local amusement park.", family: true },
+            { text: "The most confusing piece of advice a fortune cookie could ever give you.", family: true },
             
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
@@ -871,6 +886,11 @@
             { text: "The most awkward artifact currently sitting in the British Museum.", family: false },
             { text: "A truly cursed ingredient in a traditional witch's brew.", family: false },
             { text: "What the Trojan Horse was actually filled with.", family: false },
+            { text: "The absolute worst place to unexpectedly discover a mating pair of stag beetles.", family: false },
+            { text: "What the Hercules beetle actually uses its massive horn for on a Saturday night.", family: false },
+            { text: "A terrible excuse for trying to smuggle a live Goliath beetle in your pants.", family: false },
+            { text: "The dung beetle's highly controversial new flavor of rolling ball.", family: false },
+            { text: "A truly unfortunate moment to accidentally crush a stink bug in your pocket.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -2033,6 +2053,24 @@
                 setCurrentClashIndex(clashIndex);
                 const clash = stateRef.current.clashes[clashIndex];
 
+                // --- NEW WATERFALL EASTER EGG LOGIC (VOTING PHASE) ---
+                const allAnswersText = clash.players.map(p => clash.answers[p.userId].toLowerCase()).join(" ");
+                let waterfallType = null;
+                if ((allAnswersText.match(/coffee/g) || []).length >= 3) waterfallType = 'coffee';
+                else if ((allAnswersText.match(/lemonade/g) || []).length >= 3) waterfallType = 'lemonade';
+                else if ((allAnswersText.match(/milk/g) || []).length >= 3) waterfallType = 'milk';
+                else if ((allAnswersText.match(/ice/g) || []).length >= 3) waterfallType = 'milk';
+                
+                setSettings(prev => ({ ...prev, currentWaterfall: waterfallType }));
+                
+                // Clear the waterfall effect after 2.5 seconds so it doesn't get stuck
+                if (waterfallType) {
+                    setTimeout(() => {
+                        setSettings(prev => ({ ...prev, currentWaterfall: null }));
+                    }, 2500);
+                }
+                // -----------------------------------------------------
+
                 speakText(clash.prompt, settings.tts);
 
                 const mappedAnswers = clash.players.map(cp => ({ id: cp.userId, text: clash.answers[cp.userId] }));
@@ -2041,19 +2079,19 @@
                 stateRef.current.players.forEach(p => {
                     if(!clash.players.some(cp => cp.userId === p.userId)) {
                         sendToClient(p.userId, 'STATE_VOTING', { 
-                            prompt: clash.prompt, answers: mappedAnswers, allowPass: false, readOnly: false
+                            prompt: clash.prompt, answers: mappedAnswers, allowPass: false, readOnly: false, waterfallType
                         });
                     } else {
                         sendToClient(p.userId, 'STATE_VOTING', { 
                             prompt: clash.prompt, answers: mappedAnswers, allowPass: false, readOnly: true,
-                            msg: "Your battle! You can't vote, but watch the results."
+                            msg: "Your battle! You can't vote, but watch the results.", waterfallType
                         });
                     }
                 });
 
                 stateRef.current.audience.forEach(a => {
                     sendToClient(a.userId, 'STATE_VOTING', { 
-                        prompt: clash.prompt, answers: mappedAnswers, allowPass: true
+                        prompt: clash.prompt, answers: mappedAnswers, allowPass: true, waterfallType
                     });
                 });
 
@@ -2080,93 +2118,82 @@
             };
 
             const revealWinner = (clashIndex) => {
-            setGameState('REVEAL');
-            
-            const clash = stateRef.current.clashes[clashIndex];
-            const votes = Object.values(clash.votes).filter(v => v !== 'PASS');
-            const totalValidVotes = votes.length;
-
-            const getVoterName = (uid) => {
-                const p = stateRef.current.players.find(x => x.userId === uid);
-                if (p) return p.name;
-                const a = stateRef.current.audience.find(x => x.userId === uid);
-                return a ? a.name : 'Audience';
-            };
-
-            const basePoints = stateRef.current.round === 3 ? 4000 : 1000 * stateRef.current.round;
-            
-            // Calculate stats dynamically for all players in this clash
-            const playerStats = clash.players.map(p => {
-                const pVotesCount = votes.filter(v => v === p.userId).length;
-                const pVoters = Object.keys(clash.votes).filter(uid => clash.votes[uid] === p.userId).map(getVoterName);
-                let score = totalValidVotes > 0 ? Math.floor((pVotesCount/totalValidVotes) * basePoints) : 0;
-                const isSweep = totalValidVotes > 0 && pVotesCount === totalValidVotes;
-                if (isSweep) score += 500;
+                setGameState('REVEAL');
                 
-                return { userId: p.userId, name: p.name, avatar: p.avatar, answer: clash.answers[p.userId], votes: pVotesCount, voters: pVoters, score, isSweep };
-            });
-
-            // Find the maximum votes to award a bonus
-            const maxVotes = Math.max(...playerStats.map(s => s.votes));
-            const winners = playerStats.filter(s => s.votes === maxVotes);
-            
-            // Award bonus to the winner(s)
-            if (maxVotes > 0) {
-                winners.forEach(w => {
-                    const statRef = playerStats.find(s => s.userId === w.userId);
-                    statRef.score += Math.floor(basePoints * 0.2);
+                const clash = stateRef.current.clashes[clashIndex];
+                const votes = Object.values(clash.votes).filter(v => v !== 'PASS');
+                const totalValidVotes = votes.length;
+    
+                const getVoterName = (uid) => {
+                    const p = stateRef.current.players.find(x => x.userId === uid);
+                    if (p) return p.name;
+                    const a = stateRef.current.audience.find(x => x.userId === uid);
+                    return a ? a.name : 'Audience';
+                };
+    
+                const basePoints = stateRef.current.round === 3 ? 4000 : 1000 * stateRef.current.round;
+                
+                // Calculate stats dynamically for all players in this clash
+                const playerStats = clash.players.map(p => {
+                    const pVotesCount = votes.filter(v => v === p.userId).length;
+                    const pVoters = Object.keys(clash.votes).filter(uid => clash.votes[uid] === p.userId).map(getVoterName);
+                    let score = totalValidVotes > 0 ? Math.floor((pVotesCount/totalValidVotes) * basePoints) : 0;
+                    const isSweep = totalValidVotes > 0 && pVotesCount === totalValidVotes;
+                    if (isSweep) score += 500;
+                    
+                    return { userId: p.userId, name: p.name, avatar: p.avatar, answer: clash.answers[p.userId], votes: pVotesCount, voters: pVoters, score, isSweep };
                 });
-            }
-
-            // --- WATERFALL EASTER EGG LOGIC ---
-            const allAnswersText = clash.players.map(p => clash.answers[p.userId].toLowerCase()).join(" ");
-            let waterfallType = null;
-            if ((allAnswersText.match(/shit/g) || []).length >= 3) waterfallType = 'coffee';
-            else if ((allAnswersText.match(/piss/g) || []).length >= 3) waterfallType = 'lemonade';
-            else if ((allAnswersText.match(/titty/g) || []).length >= 3) waterfallType = 'milk';
-            else if ((allAnswersText.match(/tits/g) || []).length >= 3) waterfallType = 'milk';
-            // ----------------------------------
-            
-            broadcast('STATE_REVEAL', { 
-                prompt: clash.prompt,
-                stats: playerStats,
-                waterfallType // Send this to the clients
-            });
-            
-            // Update the local state for the host to see the waterfall
-            setGameState('REVEAL');
-            setSettings(prev => ({ ...prev, currentWaterfall: waterfallType }));
-
-            // Distribute scores
-            setPlayers(prev => prev.map(p => {
-                const clashStat = playerStats.find(s => s.userId === p.userId);
-                if(clashStat) return { ...p, score: p.score + clashStat.score };
-                return p;
-            }));
-
-            setClashes(prev => {
-                const next = [...prev];
-                next[clashIndex].revealData = { playerStats, winners }; 
-                return next;
-            });
-
-            let winnerMsg = "It's a tie!";
-            if (maxVotes > 0 && winners.length === 1) {
-                winnerMsg = winners[0].isSweep ? `Flawless victory for ${winners[0].name}!` : `${winners[0].name} wins!`;
-            }
-            
-            if (winners.length > 1 && totalValidVotes > 0) {
-                try { new Audio('draw.wav').play(); } catch(e){ console.log("Audio play prevented"); }
-            } else if (winners.length === 1 && winners[0].isSweep) {
-                try { new Audio('victory.wav').play(); } catch(e){ console.log("Audio play prevented"); }
-            }
-
-            speakText(winnerMsg, settings.tts);
-
-            setTimeout(() => {
-                startVotingPhase(clashIndex + 1);
-            }, 6000);
-        };
+    
+                // Find the maximum votes to award a bonus
+                const maxVotes = Math.max(...playerStats.map(s => s.votes));
+                const winners = playerStats.filter(s => s.votes === maxVotes);
+                
+                // Award bonus to the winner(s)
+                if (maxVotes > 0) {
+                    winners.forEach(w => {
+                        const statRef = playerStats.find(s => s.userId === w.userId);
+                        statRef.score += Math.floor(basePoints * 0.2);
+                    });
+                }
+                
+                broadcast('STATE_REVEAL', { 
+                    prompt: clash.prompt,
+                    stats: playerStats
+                });
+                
+                // Update the local state for the host to see the waterfall
+                setGameState('REVEAL');
+    
+                // Distribute scores
+                setPlayers(prev => prev.map(p => {
+                    const clashStat = playerStats.find(s => s.userId === p.userId);
+                    if(clashStat) return { ...p, score: p.score + clashStat.score };
+                    return p;
+                }));
+    
+                setClashes(prev => {
+                    const next = [...prev];
+                    next[clashIndex].revealData = { playerStats, winners }; 
+                    return next;
+                });
+    
+                let winnerMsg = "It's a tie!";
+                if (maxVotes > 0 && winners.length === 1) {
+                    winnerMsg = winners[0].isSweep ? `Flawless victory for ${winners[0].name}!` : `${winners[0].name} wins!`;
+                }
+                
+                if (winners.length > 1 && totalValidVotes > 0) {
+                    try { new Audio('draw.wav').play(); } catch(e){ console.log("Audio play prevented"); }
+                } else if (winners.length === 1 && winners[0].isSweep) {
+                    try { new Audio('victory.wav').play(); } catch(e){ console.log("Audio play prevented"); }
+                }
+    
+                speakText(winnerMsg, settings.tts);
+    
+                setTimeout(() => {
+                    startVotingPhase(clashIndex + 1);
+                }, 6000);
+            };
 
             const nextRoundOrEnd = () => {
                 // Save current round data safely
@@ -2206,7 +2233,7 @@
 
             return (
                 <div className="w-full max-w-5xl flex flex-col items-center fade-in text-center relative z-10">
-                    {gameState === 'REVEAL' && settings.currentWaterfall && (
+                    {gameState === 'VOTING' && settings.currentWaterfall && (
                         <WaterfallEffect type={settings.currentWaterfall} />
                     )}
                     
@@ -2635,7 +2662,7 @@
             return (
                 <div className="w-full max-w-md flex flex-col items-center scale-in text-center px-4 relative z-10">
 
-                    {clientState === 'REVEAL' && voteData?.waterfallType && (
+                    {clientState === 'VOTING' && voteData?.waterfallType && (
                         <WaterfallEffect type={voteData.waterfallType} />
                     )}
                     
