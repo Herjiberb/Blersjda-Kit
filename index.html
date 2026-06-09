@@ -731,6 +731,16 @@
             { text: "The worst possible excuse for being late to your own surprise party.", family: true },
             { text: "What a mime is genuinely thinking about while trapped in an invisible box.", family: true },
             { text: "The most embarrassing thing to have fall out of your pockets while doing a backflip.", family: true },
+            { text: "The worst thing to accidentally use as a toothbrush.", family: true },
+            { text: "What your shadow is doing when you turn off the lights.", family: true },
+            { text: "A terrible name for a brand of hot sauce.", family: true },
+            { text: "The real reason the tortoise actually beat the hare.", family: true },
+            { text: "What the ants are carrying when you aren't looking.", family: true },
+            { text: "A completely useless attachment for a vacuum cleaner.", family: true },
+            { text: "The most awkward thing to say immediately after a hug.", family: true },
+            { text: "What the squirrel is really burying in your front yard.", family: true },
+            { text: "The absolute worst time to start juggling.", family: true },
+            { text: "What your alarm clock thinks of you every morning.", family: true },
             
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
@@ -946,6 +956,9 @@
             { text: "The most unhinged thing to aggressively whisper to the person in the bathroom stall next to you.", family: false },
             { text: "What your sleep paralysis demon’s LinkedIn bio definitely says.", family: false },
             { text: "A terrible, deeply existential realization to have while stuck in line at the DMV.", family: false },
+            { text: "The most wildly inappropriate time to ask for a high-five.", family: false },
+            { text: "What the paramedics were definitely trying not to laugh at.", family: false },
+            { text: "The absolute worst message to accidentally hit 'Reply All' to.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -1860,7 +1873,7 @@
             const [roomCode, setRoomCode] = useState('');
             const [players, setPlayers] = useState([]);
             const [audience, setAudience] = useState([]);
-            const [settings, setSettings] = useState({ familyFriendly: false, tts: true, useOldMusic: false, autoProgress: true });
+            const [settings, setSettings] = useState({ familyFriendly: false, tts: true, useOldMusic: false, autoProgress: true, underdogEnabled: {} });
 			const [showKickMenu, setShowKickMenu] = useState(false);
             
             const [gameState, setGameState] = useState('LOBBY'); // LOBBY, ANSWERING, VOTING, REVEAL, ROUND_END, GAME_END
@@ -1873,6 +1886,16 @@
             const connectionsRef = useRef({});
             const stateRef = useRef();
             const allRoundsHistory = useRef([]);
+
+            const prevPlayerCount = useRef(0);
+
+            useEffect(() => {
+                // Play gong when transitioning from 3 to exactly 4 players in the lobby
+                if (players.length === 4 && prevPlayerCount.current === 3 && gameState === 'LOBBY') {
+                    try { new Audio('gong.wav').play(); } catch(e) { console.log("Audio play prevented"); }
+                }
+                prevPlayerCount.current = players.length;
+            }, [players.length, gameState]);
 			
 			// Audio ref for background music
             const audioRef = useRef(typeof Audio !== "undefined" ? new Audio('music.wav') : null);
@@ -2289,6 +2312,10 @@
 
             speakText(r === 3 ? `Welcome to the final round: The Whip of the Blersj!` : `Round ${r} begins. Players, look at your devices!`, settings.tts);
 
+            if (r === 3) {
+                try { new Audio('whip.wav').play(); } catch(e) { console.log("Audio play prevented"); }
+            }
+
             let timeLeft = 90;
             setTimer(timeLeft);
             broadcast('TIMER_SYNC', { timeLeft });
@@ -2409,6 +2436,7 @@
                 };
     
                 const basePoints = stateRef.current.round === 3 ? 4000 : 1000 * stateRef.current.round;
+                const currentMaxScore = stateRef.current.players.length > 0 ? Math.max(...stateRef.current.players.map(p => p.score)) : 0;
                 
                 // Calculate stats dynamically for all players in this clash
                 const playerStats = clash.players.map(p => {
@@ -2417,6 +2445,23 @@
                     let score = totalValidVotes > 0 ? Math.floor((pVotesCount/totalValidVotes) * basePoints) : 0;
                     const isSweep = totalValidVotes > 0 && pVotesCount === totalValidVotes;
                     if (isSweep) score += 500;
+
+                    // Apply Underdog Boost
+                    if (stateRef.current.settings.underdogEnabled && stateRef.current.settings.underdogEnabled[p.userId]) {
+                        const playerRef = stateRef.current.players.find(x => x.userId === p.userId);
+                        const playerScore = playerRef ? playerRef.score : 0;
+                        const diff = currentMaxScore - playerScore;
+                        
+                        let boostPercent = 0;
+                        if (diff >= 3000) boostPercent = 0.20;
+                        else if (diff >= 2000) boostPercent = 0.15;
+                        else if (diff >= 1000) boostPercent = 0.10;
+                        else if (diff > 0) boostPercent = 0.05;
+                    
+                        if (boostPercent > 0 && score > 0) {
+                            score = Math.floor(score * (1 + boostPercent));
+                        }
+                    }
                     
                     return { userId: p.userId, name: p.name, avatar: p.avatar, answer: clash.answers[p.userId], votes: pVotesCount, voters: pVoters, score, isSweep };
                 });
@@ -2606,7 +2651,34 @@
                                         </div>
                                     ))}
                                     {players.length === 0 && <p className="text-gray-400 text-sm">No players yet.</p>}
-                                    
+
+                                    <h4 className="font-bold text-cyan-300 mt-6 mb-2 border-t border-white/10 pt-4">Underdog Boost System</h4>
+                                    <div className="flex gap-4 mb-4">
+                                        <button onClick={() => {
+                                            const allEnabled = {};
+                                            players.forEach(p => allEnabled[p.userId] = true);
+                                            setSettings(s => ({...s, underdogEnabled: allEnabled}));
+                                        }} className="bg-green-600 hover:bg-green-500 px-3 py-2 rounded text-sm font-bold uppercase transition-all">Enable All</button>
+                                        <button onClick={() => setSettings(s => ({...s, underdogEnabled: {}}))} className="bg-red-600 hover:bg-red-500 px-3 py-2 rounded text-sm font-bold uppercase transition-all">Disable All</button>
+                                    </div>
+                                    {players.map(p => (
+                                        <div key={`ud-${p.userId}`} className="flex justify-between items-center bg-purple-900/30 p-2 rounded-lg mb-2 border border-purple-500/20">
+                                            <span className="text-sm font-bold">{p.name}</span>
+                                            <label className="flex items-center gap-2 cursor-pointer hover:text-yellow-300 transition-colors">
+                                                <input type="checkbox" checked={!!settings.underdogEnabled?.[p.userId]} onChange={e => {
+                                                    setSettings(s => ({
+                                                        ...s,
+                                                        underdogEnabled: {
+                                                            ...s.underdogEnabled,
+                                                            [p.userId]: e.target.checked
+                                                        }
+                                                    }));
+                                                }} className="w-5 h-5 accent-yellow-500" />
+                                                <span className="text-xs font-bold text-yellow-400 uppercase tracking-widest">Boost</span>
+                                            </label>
+                                        </div>
+                                    ))}
+        
                                     <h4 className="font-bold text-cyan-300 mt-6">Audience ({audience.length})</h4>
                                     {audience.map(a => (
                                         <div key={a.userId} className="flex justify-between items-center bg-purple-900/50 p-3 rounded-lg">
