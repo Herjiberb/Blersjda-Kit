@@ -1159,6 +1159,21 @@
         const generateUUID = () => crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
         const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
 
+        // NEW: Web Worker Timer to bypass background tab throttling
+        const createWorkerInterval = (callback, ms) => {
+            const blob = new Blob([`
+                let timer;
+                self.onmessage = function(e) {
+                    if (e.data.cmd === 'start') timer = setInterval(() => self.postMessage('tick'), e.data.ms);
+                    if (e.data.cmd === 'stop') clearInterval(timer);
+                };
+            `], { type: 'application/javascript' });
+            const worker = new Worker(URL.createObjectURL(blob));
+            worker.onmessage = callback;
+            worker.postMessage({ cmd: 'start', ms });
+            return { clearInterval: () => worker.postMessage({ cmd: 'stop' }) };
+        };
+
         // ==========================================
         // INDEXEDDB HISTORY LOGIC & UI
         // ==========================================
@@ -1848,6 +1863,34 @@
         const App = () => {
             const [view, setView] = useState('MENU');
 
+            // NEW: Screen Wake Lock API to prevent the screen from turning off
+            useEffect(() => {
+                let wakeLock = null;
+                const requestWakeLock = async () => {
+                    try {
+                        if ('wakeLock' in navigator) {
+                            wakeLock = await navigator.wakeLock.request('screen');
+                        }
+                    } catch (err) {
+                        console.log(`Wake Lock error: ${err.message}`);
+                    }
+                };
+                
+                requestWakeLock();
+                
+                const handleVisibilityChange = () => {
+                    if (wakeLock !== null && document.visibilityState === 'visible') {
+                        requestWakeLock();
+                    }
+                };
+                
+                document.addEventListener('visibilitychange', handleVisibilityChange);
+                return () => {
+                    if (wakeLock !== null) wakeLock.release();
+                    document.removeEventListener('visibilitychange', handleVisibilityChange);
+                };
+            }, []);
+
             // Secret Keycombo Listener
             useEffect(() => {
                 let keyBuffer = '';
@@ -2407,133 +2450,132 @@
             };
 
             const startRound = (r, currentPlayers, prevUsed) => {
-            setRound(r);
-            
-            let available = PROMPTS.filter(p => !prevUsed.includes(p.text));
-            if(settings.familyFriendly) available = available.filter(p => p.family);
-            
-            // Fallback: If we run out of unique prompts, reset the pool
-            if (available.length < currentPlayers.length) {
-                prevUsed = [];
-                available = PROMPTS.filter(p => settings.familyFriendly ? p.family : true);
-            }
-            
-            available = shuffle(available);
-
-            const newClashes = [];
-            const newUsed = [...prevUsed];
-
-            // --- NEW DYNAMIC GROUPING LOGIC ---
-            // Requirement: Exactly 4 prompts, every player answers exactly 2 prompts.
-            const numPrompts = 4;
-            const totalSlots = currentPlayers.length * 2;
-            let sizes = Array(numPrompts).fill(Math.floor(totalSlots / numPrompts));
-            for(let i = 0; i < totalSlots % numPrompts; i++) sizes[i]++;
-            
-            let groups = [];
-            let validGroups = false;
-            let attempts = 0;
-            
-            let playerPool = [];
-            currentPlayers.forEach(p => { playerPool.push(p, p); });
-            
-            while(!validGroups && attempts < 500) {
-                playerPool = shuffle([...playerPool]);
-                groups = Array.from({length: numPrompts}, () => []);
-                let poolIdx = 0;
-                validGroups = true;
+                setRound(r);
                 
-                for(let i=0; i<numPrompts; i++) {
-                    for(let j=0; j<sizes[i]; j++) {
-                        let p = playerPool[poolIdx++];
-                        if(groups[i].some(existing => existing.userId === p.userId)) {
-                            validGroups = false;
-                            break;
-                        }
-                        groups[i].push(p);
-                    }
-                    if(!validGroups) break;
-                }
-                attempts++;
-            }
-
-            // Fallback sequential assignment if randomizer hits a dead end
-            if (!validGroups) {
-                groups = Array.from({length: numPrompts}, () => []);
-                let counts = {};
-                currentPlayers.forEach(p => counts[p.userId] = 0);
-                for(let i=0; i<numPrompts; i++) {
-                    // Sort available by those who need assignments the most
-                    let available = currentPlayers.filter(p => counts[p.userId] < 2).sort((a,b) => counts[a.userId] - counts[b.userId]);
-                    for(let j=0; j<sizes[i]; j++) {
-                        if (available[j]) {
-                            groups[i].push(available[j]);
-                            counts[available[j].userId]++;
-                        }
-                    }
-                }
-            }
-
-            // Assign prompts to the valid groups
-            groups.forEach(group => {
-                const prompt = available.pop() || { text: `Wildcard prompt for a massive brawl!` };
-                newUsed.push(prompt.text);
+                let available = PROMPTS.filter(p => !prevUsed.includes(p.text));
+                if(settings.familyFriendly) available = available.filter(p => p.family);
                 
-                newClashes.push({
-                    prompt: prompt.text,
-                    players: group, 
-                    answers: {}, 
-                    votes: {}   
+                // Fallback: If we run out of unique prompts, reset the pool
+                if (available.length < currentPlayers.length) {
+                    prevUsed = [];
+                    available = PROMPTS.filter(p => settings.familyFriendly ? p.family : true);
+                }
+                
+                available = shuffle(available);
+    
+                const newClashes = [];
+                const newUsed = [...prevUsed];
+    
+                // --- NEW DYNAMIC GROUPING LOGIC ---
+                // Requirement: Exactly 4 prompts, every player answers exactly 2 prompts.
+                const numPrompts = 4;
+                const totalSlots = currentPlayers.length * 2;
+                let sizes = Array(numPrompts).fill(Math.floor(totalSlots / numPrompts));
+                for(let i = 0; i < totalSlots % numPrompts; i++) sizes[i]++;
+                
+                let groups = [];
+                let validGroups = false;
+                let attempts = 0;
+                
+                let playerPool = [];
+                currentPlayers.forEach(p => { playerPool.push(p, p); });
+                
+                while(!validGroups && attempts < 500) {
+                    playerPool = shuffle([...playerPool]);
+                    groups = Array.from({length: numPrompts}, () => []);
+                    let poolIdx = 0;
+                    validGroups = true;
+                    
+                    for(let i=0; i<numPrompts; i++) {
+                        for(let j=0; j<sizes[i]; j++) {
+                            let p = playerPool[poolIdx++];
+                            if(groups[i].some(existing => existing.userId === p.userId)) {
+                                validGroups = false;
+                                break;
+                            }
+                            groups[i].push(p);
+                        }
+                        if(!validGroups) break;
+                    }
+                    attempts++;
+                }
+    
+                // Fallback sequential assignment if randomizer hits a dead end
+                if (!validGroups) {
+                    groups = Array.from({length: numPrompts}, () => []);
+                    let counts = {};
+                    currentPlayers.forEach(p => counts[p.userId] = 0);
+                    for(let i=0; i<numPrompts; i++) {
+                        // Sort available by those who need assignments the most
+                        let available = currentPlayers.filter(p => counts[p.userId] < 2).sort((a,b) => counts[a.userId] - counts[b.userId]);
+                        for(let j=0; j<sizes[i]; j++) {
+                            if (available[j]) {
+                                groups[i].push(available[j]);
+                                counts[available[j].userId]++;
+                            }
+                        }
+                    }
+                }
+    
+                // Assign prompts to the valid groups
+                groups.forEach(group => {
+                    const prompt = available.pop() || { text: `Wildcard prompt for a massive brawl!` };
+                    newUsed.push(prompt.text);
+                    
+                    newClashes.push({
+                        prompt: prompt.text,
+                        players: group, 
+                        answers: {}, 
+                        votes: {}   
+                    });
                 });
-            });
-            // --- END DYNAMIC GROUPING ---
-
-            setUsedPrompts(newUsed);
-            setClashes(newClashes);
-            setGameState('ANSWERING');
-            
-            // Notify players of their prompts
-            currentPlayers.forEach(player => {
-                const myPrompts = newClashes.filter(c => c.players.some(p => p.userId === player.userId));
-                sendToClient(player.userId, 'STATE_ANSWERING', { prompts: myPrompts.map(p => p.prompt) });
-            });
-            
-            stateRef.current.audience.forEach(aud => {
-                sendToClient(aud.userId, 'STATE_WAITING', { msg: "Players are answering prompts..." });
-            });
-
-            speakText(r === 3 ? `Welcome to the final round: The Whip of the Blersj!` : `Round ${r} begins. Players, look at your devices!`, settings.tts);
-
-            /*if (r === 3) {
-                try { new Audio('whip.wav').play(); } catch(e) { console.log("Audio play prevented"); }
-            }*/
-
-            let timeLeft = 90;
-            setTimer(timeLeft);
-            broadcast('TIMER_SYNC', { timeLeft });
-            
-            const int = setInterval(() => {
-                timeLeft--;
+                // --- END DYNAMIC GROUPING ---
+    
+                setUsedPrompts(newUsed);
+                setClashes(newClashes);
+                setGameState('ANSWERING');
+                
+                // Notify players of their prompts
+                currentPlayers.forEach(player => {
+                    const myPrompts = newClashes.filter(c => c.players.some(p => p.userId === player.userId));
+                    sendToClient(player.userId, 'STATE_ANSWERING', { prompts: myPrompts.map(p => p.prompt) });
+                });
+                
+                stateRef.current.audience.forEach(aud => {
+                    sendToClient(aud.userId, 'STATE_WAITING', { msg: "Players are answering prompts..." });
+                });
+    
+                speakText(r === 3 ? `Welcome to the final round: The Whip of the Blersj!` : `Round ${r} begins. Players, look at your devices!`, settings.tts);
+    
+                /*if (r === 3) {
+                    try { new Audio('whip.wav').play(); } catch(e) { console.log("Audio play prevented"); }
+                }*/
+    
+                let timeLeft = 90;
                 setTimer(timeLeft);
                 broadcast('TIMER_SYNC', { timeLeft });
                 
-                // Check if ALL players in ALL clashes have answered
-                const allAnswered = stateRef.current.clashes.every(c => c.players.every(p => c.answers[p.userId]));
-                if(timeLeft <= 0 || allAnswered) {
-                    clearInterval(int);
-                    setClashes(prev => {
-                        const filled = [...prev];
-                        filled.forEach(c => {
-                            c.players.forEach(p => {
-                                if(!c.answers[p.userId]) c.answers[p.userId] = shuffle(DEFAULT_ANSWERS)[0];
+                const workerTimer = createWorkerInterval(() => {
+                    timeLeft--;
+                    setTimer(timeLeft);
+                    broadcast('TIMER_SYNC', { timeLeft });
+                    
+                    const allAnswered = stateRef.current.clashes.every(c => c.players.every(p => c.answers[p.userId]));
+                    if(timeLeft <= 0 || allAnswered) {
+                        workerTimer.clearInterval(); // Use worker clear
+                        setClashes(prev => {
+                            const filled = [...prev];
+                            filled.forEach(c => {
+                                c.players.forEach(p => {
+                                    if(!c.answers[p.userId]) c.answers[p.userId] = shuffle(DEFAULT_ANSWERS)[0];
+                                });
                             });
+                            return filled;
                         });
-                        return filled;
-                    });
-                    setTimeout(() => startVotingPhase(0), 1000);
-                }
-            }, 1000);
-        };
+                        setTimeout(() => startVotingPhase(0), 1000);
+                    }
+                }, 1000);
+            };
 
             const startVotingPhase = (clashIndex) => {
                 if(clashIndex >= stateRef.current.clashes.length) {
@@ -2607,7 +2649,7 @@
 
                 let timeLeft = 25;
                 setTimer(timeLeft);
-                const int = setInterval(() => {
+                const workerTimer = createWorkerInterval(() => {
                     timeLeft--;
                     setTimer(timeLeft);
                     
@@ -2621,7 +2663,7 @@
                     const voteCount = Object.keys(currentClash.votes).length;
 
                     if(timeLeft <= 0 || (expectedTotal > 0 && voteCount >= expectedTotal)) {
-                        clearInterval(int);
+                        workerTimer.clearInterval(); // Use worker clear
                         revealWinner(clashIndex);
                     }
                 }, 1000);
@@ -3086,6 +3128,56 @@
                 if(savedName) setName(savedName);
             }, []);
 
+            // NEW: Document Picture-in-Picture Logic
+            const enablePiP = async () => {
+                if (!('documentPictureInPicture' in window)) {
+                    alert("Your browser does not support Document Picture-in-Picture. Try Chrome or Edge!");
+                    return;
+                }
+                try {
+                    const pipWindow = await window.documentPictureInPicture.requestWindow({
+                        width: 400,
+                        height: 750,
+                    });
+
+                    // Clone styles to the PiP Window
+                    [...document.styleSheets].forEach((styleSheet) => {
+                        try {
+                            const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
+                            const style = document.createElement('style');
+                            style.textContent = cssRules;
+                            pipWindow.document.head.appendChild(style);
+                        } catch (e) {
+                            const link = document.createElement('link');
+                            link.rel = 'stylesheet';
+                            link.href = styleSheet.href;
+                            pipWindow.document.head.appendChild(link);
+                        }
+                    });
+
+                    // Ensure tailwind generates classes in the new window
+                    const script = document.createElement('script');
+                    script.src = "https://cdn.tailwindcss.com";
+                    pipWindow.document.head.appendChild(script);
+
+                    // Replicate body styling
+                    pipWindow.document.body.style.backgroundColor = "#0f0a29";
+                    pipWindow.document.body.style.color = "#fff";
+                    pipWindow.document.body.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+                    pipWindow.document.body.style.backgroundImage = "radial-gradient(circle at 50% 50%, #20114b 0%, #0f0a29 100%)";
+
+                    const clientContainer = document.getElementById('online-client-wrapper');
+                    pipWindow.document.body.appendChild(clientContainer);
+
+                    // Bring it back when the PiP window is closed
+                    pipWindow.addEventListener("pagehide", () => {
+                        document.getElementById('root').firstChild.appendChild(clientContainer);
+                    });
+                } catch (error) {
+                    console.error("PiP Failed:", error);
+                }
+            };
+
             const joinGame = () => {
                 if(!code || !name) return;
                 localStorage.setItem('blersjda_name', name);
@@ -3229,7 +3321,16 @@
             };
 
             return (
-                <div className="w-full max-w-md flex flex-col items-center scale-in text-center px-4 relative z-10">
+                <div id="online-client-wrapper" className="w-full max-w-md flex flex-col items-center scale-in text-center px-4 relative z-10 h-full">
+                    {/* NEW: Picture in Picture Button */}
+                    {'documentPictureInPicture' in window && (
+                        <button 
+                            onClick={enablePiP} 
+                            className="absolute top-2 right-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-50 transition-colors"
+                        >
+                            📺 Pop-out
+                        </button>
+                    )}
 
                     {clientState === 'VOTING' && voteData?.waterfallType && (
                         <WaterfallEffect type={voteData.waterfallType} />
@@ -3477,6 +3578,8 @@
                                     <div key={p.userId} className={`p-4 rounded-xl flex justify-between items-center font-bold shadow-md ${i===0 ? 'bg-yellow-600/30 border border-yellow-500' : 'bg-black/30'}`}>
                                         <div className="flex gap-4 items-center">
                                             <span className={i===0 ? 'text-yellow-400 text-2xl' : 'text-purple-400'}>#{i+1}</span>
+                                            {/* NEW: Added the player's custom avatar to the client screen */}
+                                            <MonsterAvatar attributes={p.avatar} size={40} />
                                             <span className="text-xl break-all">{p.name}</span>
                                         </div>
                                         <span className="text-cyan-300 font-mono text-2xl ml-4">{p.score}</span>
