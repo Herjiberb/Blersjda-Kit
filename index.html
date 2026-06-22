@@ -9,7 +9,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
-	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBjbGFzcz0idy1mdWxsIGgtZnVsbCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImcxLXByaW1hcnkiIHg1PSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMDZiNmQ0IiAvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzNiODJmNiIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMWQ0ZWQ4IiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZzEtc2Vjb25kYXJ5IiB4MT0iMTAwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzIyZDNlZSIgLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMjU2M2ViIiAvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxmaWx0ZXIgaWQ9ImcxLWdsb3ciIHg9Ii0yMCUiIHk9Ii0yMCUiIHdpZHRoPSIxNDAlIiBoZWlnaHQ9IjE0MCUiPgogICAgICA8ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSIxNSIgcmVzdWx0PSJibHVyIiAvPgogICAgICA8ZmVDb21wb3NpdGUgaW49IlNvdXJjZUdyYXBoaWMiIGluMj0iYmx1ciIgb3BlcmF0b3I9Im92ZXIiIC8+CiAgICA8L2ZpbHRlcj4KICA8L2RlZnM+CiAgPCEtLSBCYWNrZ3JvdW5kIFNoaWVsZCBHcmlkIEVsZW1lbnQgLS0+CiAgPHBvbHlnb24gcG9pbnRzPSIyNTYsMzIgNDY0LDEyOCA0NjQsMzg0IDI1Niw0ODAgNDgsMzg0IDQ4LDEyOCIgZmlsbD0iIzAyMDYxNyIgc3Ryb2tlPSJ1cmwoI2cxLXByaW1hcnkpIiBzdHJva2Utd2lkdGg9IjgiIG9wYWNpdHk9IjAuOCIgLz4KICA8cG9seWdvbiBwb2ludHM9IjI1Niw1MiA0NDQsMTM4IDQ0NCwzNzQgMjU2LDQ2MCA2OCwzNzQgNjgsMTM4IiBmaWxsPSJub25lIiBzdHJva2U9InVybCgjZzEtc2Vjb25kYXJ5KSIgc3Ryb2tlLWRhc2hhcnJheT0iMTAsIDUiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC41IiAvPgogIAogIDwhLS0gQmFjayBFbmVyZ3kgR2xvdyAtLT4KICA8cGF0aCBkPSJNMTYwLDExMCBMMzAwLDExMCBDMzYwLDExMCAzOTAsMTQwIDM5MCwxOTAgQzM5MCwyMzAgMzYwLDI1MCAzMTAsMjU2IEMzNzAsMjY1IDQwMCwyOTAgNDAwLDM0MCBDNDAwLDM5MCAzNjAsNDIwIDMwMCw0MjAgTDE2MCw0MjAgWiIgZmlsbD0idXJsKCNnMS1wcmltYXJ5KSIgb3BhY2l0eT0iMC4xIiBmaWx0ZXI9InVybCgjZzEtZ2xvdykiIC8+CioKICA8IS0tIExpZ2h0bmluZyBCb2x0IG92ZXJsYXkgY3V0dGluZyB0aHJvdWdoIHRoZSAnQicgY29yZSAtLT4KICA8cG9seWdvbiBwb2ludHM9IjI4MCwyMCAxODAsMjYwIDI3MCwyNjAgMjEwLDQ5MCAzNTAsMjIwIDI1MCwyMjAiIGZpbGw9InVybCgjZzEtc2Vjb25kYXJ5KSIgb3BhY2l0eT0iMC4zIiBmaWx0ZXI9InVybCgjZzEtZ2xvdykiIC8+CioKICA8IS0tIEJlYXV0aWZ1bCBHZW9tZXRyaWMgJ0InIHBhdGggLS0+CiAgPHBhdGggZD0iTTE4MCwxMjAgTDI5MCwxMjAgQzM0MCwxMjAgMzcwLDE0NSAzNzAsMTg1IEMzNzAsMjIwIDM0NSwyNDAgMzEwLDI0OCBDMzUwLDI1NSAzODAsMjgwIDM4MCwzMjUgQzM4MCwzNzAgMzQwLDM5MiAyOTAsMzkyIEwxODAsMzkyIFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnMS1wcmltYXJ5KSIgc3Ryb2tlLXdpZHRoPSIyOCIgc3Ryb2tlLWxpbmVqb2luPSJtaXRlciIgc3Ryb2tlLWxpbmVjYXA9InNxdWFyZSIgLz4KICA8cGF0aCBkPSTTE4MCwxMjAgTDE4MCwzOTIiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnMS1zZWNvbmRhcnkpIiBzdHJva2Utd2lkdGg9IjM0IiBzdHJva2UtbGluZWNhcD0ic3F1YXJlIiAvPgogIAogIDwhLS0gQ291bnRlciBTcGFjZXMgaW5zaWRlICdCJyAtLT4KICA8cGF0aCBkPSJNMjIwLDE2NSBMMjgwLDE2NSBDMzA1LDE2NSAzMjAsMTc1IDMyMCwxOTUgQzMyMCwyMTUgMzA1LDIyNSAyODAsMjI1IEwyMjAsMjI1IFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0idXJsKCNnMS1zZWNvbmRhcnkpIiBzdHJva2Utd2lkdGg9IjEyIiAvPgogIDxwYXRoIGQ9Ik0yMjAsMjg1IEwyODAsMjg1IEMzMDUsMjg1IDMyNSwyOTUgMzI1LDMyMCBDMzI1LDM0NSAzMDUsMzU1IDI4MCwzNTUgTDIyMCwzNTUgWiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI2cxLXNlY29uZGFyeSkiIHN0cm9rZS13aWR0aD0iMTIiIC8+CiAgCiAgPCEtLSBUcnVlIE92ZXJsYXkgTGlnaHRuaW5nIGJvbHQgaW50ZXJzZWN0aW5nIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iMzEwLDQwIDE5MCwyNjUgMjc1LDI2NSAyMTAsNDcwIDMzMCwyMzUgMjUwLDIzNSIgZmlsbD0idXJsKCNnMS1zZWNvbmRhcnkpIiBzdHJva2U9IiMwMjA2MTciIHN0cm9rZS13aWR0aD0iNiIgLz4KPC9zdmc+" />
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='g1-primary' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2306b6d4'/%3E%3Cstop offset='50%25' stop-color='%233b82f6'/%3E%3Cstop offset='100%25' stop-color='%231d4ed8'/%3E%3C/linearGradient%3E%3ClinearGradient id='g1-secondary' x1='100%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2322d3ee'/%3E%3Cstop offset='100%25' stop-color='%232563eb'/%3E%3C/linearGradient%3E%3Cfilter id='g1-glow' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur stdDeviation='15' result='blur'/%3E%3CfeComposite in='SourceGraphic' in2='blur' operator='over'/%3E%3C/filter%3E%3C/defs%3E%3Cpolygon points='256,32 464,128 464,384 256,480 48,384 48,128' fill='%23020617' stroke='url(%23g1-primary)' stroke-width='8' opacity='0.8'/%3E%3Cpolygon points='256,52 444,138 444,374 256,460 68,374 68,138' fill='none' stroke='url(%23g1-secondary)' stroke-dasharray='10, 5' stroke-width='2' opacity='0.5'/%3E%3Cpath d='M160,110 L300,110 C360,110 390,140 390,190 C390,230 360,250 310,256 C370,265 400,290 400,340 C400,390 360,420 300,420 L160,420 Z' fill='url(%23g1-primary)' opacity='0.1' filter='url(%23g1-glow)'/%3E%3Cpolygon points='280,20 180,260 270,260 210,490 350,220 250,220' fill='url(%23g1-secondary)' opacity='0.3' filter='url(%23g1-glow)'/%3E%3Cpath d='M180,120 L290,120 C340,120 370,145 370,185 C370,220 345,240 310,248 C350,255 380,280 380,325 C380,370 340,392 290,392 L180,392 Z' fill='none' stroke='url(%23g1-primary)' stroke-width='28' stroke-linejoin='miter' stroke-linecap='square'/%3E%3Cpath d='M180,120 L180,392' fill='none' stroke='url(%23g1-secondary)' stroke-width='34' stroke-linecap='square'/%3E%3Cpath d='M220,165 L280,165 C305,165 320,175 320,195 C320,215 305,225 280,225 L220,225 Z' fill='none' stroke='url(%23g1-secondary)' stroke-width='12'/%3E%3Cpath d='M220,285 L280,285 C305,285 325,295 325,320 C325,345 305,355 280,355 L220,355 Z' fill='none' stroke='url(%23g1-secondary)' stroke-width='12'/%3E%3Cpolygon points='310,40 190,265 275,265 210,470 330,235 250,235' fill='url(%23g1-secondary)' stroke='%23020617' stroke-width='6'/%3E%3C/svg%3E">
     <style>
         body { 
             background-color: #0f0a29; 
@@ -960,6 +960,36 @@
             { text: "The most overly dramatic, theatrical way to exit a toddler's backyard bouncy castle.", family: true },
             { text: "A terrible, highly chaotic everyday use for a top-secret government shrinking ray.", family: true },
             { text: "What the little metal Monopoly dog actually does when he gets sent directly to jail.", family: true },
+            { text: "The worst reason to steal Santa Claus with a Hammerhead Shark and put him in an all-you-can eat cookie factory.", family: true },
+            { text: "A terrible name for a friendly neighborhood robot.", family: true },
+            { text: "The real reason your cat stares at the blank wall for hours.", family: true },
+            { text: "What the toaster is thinking when you burn your bagel.", family: true },
+            { text: "A completely useless superpower to use during a math test.", family: true },
+            { text: "The most awkward thing to yell while riding a rollercoaster.", family: true },
+            { text: "What the broccoli in your fridge is secretly plotting.", family: true },
+            { text: "The worst excuse for bringing a penguin to a pool party.", family: true },
+            { text: "A rejected flavor for the new extreme sports energy drink.", family: true },
+            { text: "The secret password to get into the squirrel treehouse.", family: true },
+            { text: "What your shoes say to each other when you take them off.", family: true },
+            { text: "A terrible theme for a middle school science fair project.", family: true },
+            { text: "The most chaotic thing to happen during a quiet game of chess.", family: true },
+            { text: "What the microwave beeps are actually translating to.", family: true },
+            { text: "A highly inappropriate time to start aggressively tap dancing.", family: true },
+            { text: "The real reason aliens keep stealing our left socks.", family: true },
+            { text: "What the school bus driver is actually listening to in their headphones.", family: true },
+            { text: "A completely useless item to bring to a deserted island made of cheese.", family: true },
+            { text: "The worst piece of advice a fortune cookie could give you right before an exam.", family: true },
+            { text: "What the pigeons are actually waiting for when they bob their heads.", family: true },
+            { text: "A terrible new mascot for the local library.", family: true },
+            { text: "The most embarrassing thing to have fall out of your locker in front of your crush.", family: true },
+            { text: "What the statues at the park do when everyone goes home.", family: true },
+            { text: "A highly questionable ingredient in the cafeteria's mystery meat.", family: true },
+            { text: "The absolute worst song to play during a game of musical chairs.", family: true },
+            { text: "What the bubbles in the bubble wrap are screaming when you pop them.", family: true },
+            { text: "A terrible excuse for why you didn't do your chores.", family: true },
+            { text: "The real reason the moon looks like it has a face.", family: true },
+            { text: "What your dog thinks when you pretend to throw the ball but don't.", family: true },
+            { text: "The most chaotic way to eat a plate of spaghetti.", family: true },
             
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
@@ -1242,6 +1272,7 @@
             { text: "The absolute worst, most horrifying thing to realize you've been using as a toothbrush for the past week.", family: false },
             { text: "A highly suspicious, squishy item to confidently pull out of a gas station toilet.", family: false },
             { text: "The most horrifying fluid to accidentally squirt onto your fries out of a seemingly normal ketchup bottle.", family: false },
+            { text: "The full names of each of your butt cheeks.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -2271,19 +2302,23 @@
                         audio.volume = vol;
                     }, 100);
                 } else if (gameState === 'VOTING') {
-                    // NEW: Play voting loop during the voting phase
+                    // UPDATED: Emphasized voting loop that plays fully through the phase
                     let track = 'voting.wav';
                     
-                    if (!audio.src.endsWith(track)) audio.src = track;
+                    if (!audio.src.endsWith(track)) {
+                        audio.src = track;
+                        audio.currentTime = 0; // Starts fresh only when the track initially changes
+                    }
                     
                     audio.loop = true;
-                    audio.volume = 0;
                     audio.play().catch(e => console.log("Audio play prevented:", e));
                     
-                    let vol = 0;
+                    // Start from current volume if transitioning to prevent jarring pops
+                    let vol = audio.volume || 0; 
                     fadeInterval = setInterval(() => {
                         vol += 0.05;
-                        if (vol >= 0.5) { vol = 0.5; clearInterval(fadeInterval); }
+                        // Emphasized volume (0.8 instead of 0.5) to make it hit harder
+                        if (vol >= 0.8) { vol = 0.8; clearInterval(fadeInterval); }
                         audio.volume = vol;
                     }, 100);
                 } else if (audio.volume > 0) {
@@ -2294,7 +2329,6 @@
                             vol = 0;
                             clearInterval(fadeInterval);
                             audio.pause();
-                            audio.currentTime = 0;
                         }
                         try { audio.volume = vol; } catch(e){}
                     }, 100);
