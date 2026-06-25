@@ -1073,7 +1073,9 @@
             { text: "The worst place to find a snow globe with your baby in it.", family: true },
             { text: "The worst reason for dipping a slug in a salt jar.", family: true },
             { text: "The worst line to sing with a nasally voice.", family: true },
-            
+            { text: "A bad food to have batman make for you.", family: true },
+
+            { text: "The worst word to possibly write on a turd in a urinal.", family: false },
             { text: "The least valid reason to commit squirrel genocide.", family: false },
             { text: "A terrible thing to yell during a funeral.", family: false },
             { text: "What's really in the hot dogs.", family: false },
@@ -1385,6 +1387,11 @@
             { text: "The most cringe-inducing memory from middle school.", family: false },
             { text: "What the substitute teacher is secretly plotting.", family: false },
             { text: "The worst thing to do to a skunk mouth.", family: false },
+            { text: "The most awkward public space to get completely naked to change.", family: false },
+            { text: "The worst thing for the doctor to say when the baby is born.", family: false },
+            { text: "The worst sentence to say to your mom containing the word lizard.", family: false },
+            { text: "What the audience says in response to you chugging a gallon of pee.", family: false },
+            { text: "An awful superhero to cast in a nude superhero movie.", family: false },
         ];
 
         const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
@@ -1464,7 +1471,7 @@
             } catch(e) { console.error("Failed to clear history:", e); }
         };
 
-        // NEW: Save prompts from the current game and purge history older than 15 games
+        // NEW: Save prompts from the current game and purge history older than 30 games
         const saveUsedPrompts = async (promptsArray) => {
             try {
                 const db = await initDB();
@@ -1475,8 +1482,8 @@
                 const allReq = store.getAll();
                 allReq.onsuccess = () => {
                     const all = allReq.result.sort((a,b) => b.id - a.id);
-                    if(all.length > 15) {
-                        const toDelete = all.slice(15);
+                    if(all.length > 30) {
+                        const toDelete = all.slice(30);
                         toDelete.forEach(item => {
                             store.delete(item.id);
                         });
