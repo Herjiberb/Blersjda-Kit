@@ -159,6 +159,30 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 .bl-tv.t{-webkit-mask-image:radial-gradient(circle 130px at var(--mx,-999px) var(--my,-999px),transparent 45%,#000 100%),linear-gradient(#000 78%,transparent);mask-image:radial-gradient(circle 130px at var(--mx,-999px) var(--my,-999px),transparent 45%,#000 100%),linear-gradient(#000 78%,transparent)}
 .bl-tv.b{-webkit-mask-image:radial-gradient(circle 130px at var(--mx,-999px) var(--my,-999px),transparent 45%,#000 100%),linear-gradient(transparent,#000 22%);mask-image:radial-gradient(circle 130px at var(--mx,-999px) var(--my,-999px),transparent 45%,#000 100%),linear-gradient(transparent,#000 22%)}
 .bl-lens{position:fixed;z-index:41;pointer-events:none;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;left:var(--mx,-999px);top:var(--my,-999px);border:2px solid rgba(255,255,255,.35);box-shadow:0 0 18px rgba(255,255,255,.25),inset 0 0 14px rgba(255,255,255,.15);opacity:var(--lens,0);transition:opacity .25s}
+
+/* ===== QOL / polish pass ===== */
+html{scroll-behavior:smooth;-webkit-tap-highlight-color:transparent}
+body{overscroll-behavior-y:none;-webkit-font-smoothing:antialiased}
+button{transition:transform .12s,filter .15s,box-shadow .15s}
+button:not(:disabled):hover{filter:brightness(1.1)}
+button:not(:disabled):active{transform:translateY(2px) scale(.97)}
+button:disabled{cursor:not-allowed;opacity:.55}
+:focus-visible{outline:3px solid #22d3ee;outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:rgba(168,85,247,.5);border-radius:99px}::-webkit-scrollbar-track{background:transparent}
+.glass-panel{transition:border-color .2s,box-shadow .2s}
+[data-hidden="1"] *,[data-hidden="1"] ::before,[data-hidden="1"] ::after{animation-play-state:paused!important}
+[data-perf="1"] *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;text-shadow:none!important}
+[data-perf="1"] .glass-panel{background:rgba(30,18,70,.92)!important}
+[data-perf="1"] .sparkle-bg,[data-perf="1"] .floating-popup,[data-perf="1"] .theme-layer{display:none!important}
+[data-contrast="1"] .glass-panel{background:rgba(0,0,0,.85)!important;border:2px solid #fff!important}
+[data-contrast="1"] body{color:#fff}
+[data-contrast="1"] .opacity-50,[data-contrast="1"] .opacity-60,[data-contrast="1"] .opacity-70{opacity:1!important}
+.bl-share{display:block;margin:10px auto 0;padding:8px 16px;border-radius:12px;border:1px solid rgba(34,211,238,.5);background:rgba(34,211,238,.12);color:#67e8f9;font-weight:800;font-size:.9rem}
+.bl-keys{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:.75rem;opacity:.85}
+.bl-keys kbd{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:0 7px;font-family:ui-monospace,monospace;font-weight:800;text-align:center}
+.bl-top{position:fixed;left:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:9996;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(15,10,41,.7);color:#fff;opacity:0;pointer-events:none;transition:opacity .2s}
+.bl-top.on{opacity:.8;pointer-events:auto}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
@@ -166,6 +190,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 <noscript><p style="padding:2rem;text-align:center">Blersjda Madness needs JavaScript to run.</p></noscript>
 <script>"use strict";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
+(() => { const A = window.Audio; if (!A) return; window.__blAudios = []; window.Audio = function (...a) { const x = new A(...a); window.__blAudios.push(x); if (window.__blAudios.length > 40) window.__blAudios.shift(); return x; }; window.Audio.prototype = A.prototype; })();
 const NET = (() => {
     const K = { type: '~t', userId: '~u', name: '~n', avatar: '~a', prompts: '~p', prompt: '~q', answers: '~s', msg: '~m', timeLeft: '~l', players: '~P', isFinal: '~F', round: '~r', stats: '~S', allowPass: '~A', readOnly: '~R', isAudience: '~I', votedFor: '~v', text: '~x', id: '~i', score: '~c', body: '~b', eyes: '~e', mouth: '~o', accessory: '~y', color: '~k' };
     const KR = Object.fromEntries(Object.entries(K).map(([a, b]) => [b, a]));
@@ -2619,6 +2644,14 @@ const OnlineHost = ({ goBack }) => {
     if (!audioRef.current && typeof Audio !== "undefined") {
         audioRef.current = new Audio('music.wav');
     }
+    useEffect(() => () => {
+        // Closing the room: stop and release all music/sfx
+        const a = audioRef.current;
+        if (a) { try { a.pause(); a.removeAttribute('src'); a.load(); } catch (e) { } }
+        (window.__blAudios || []).forEach(x => { try { x.pause(); } catch (e) { } });
+        window.__blAudios = [];
+        try { speechSynthesis.cancel(); } catch (e) { }
+    }, []);
     useEffect(() => {
         const handleBeforeUnload = (e) => {
             e.preventDefault();
@@ -3762,7 +3795,7 @@ const BL_THEMES = [
 ];
 const blMask = (s) => s.split('').map((c, i, a) => (c === ' ' || i === 0 || i === a.length - 1) ? c : '*').join('');
 const BL_SW = { standard: 'linear-gradient(135deg,#20114b,#ec4899)', blue: 'linear-gradient(135deg,#01030f,#2563eb,#22d3ee)', fast: 'linear-gradient(135deg,#121212,#3a3a3a)', oriental: 'linear-gradient(135deg,#150805,#a3141b,#e8b04a)', tunnel: 'linear-gradient(#000,#334155 50%,#000)', beta: 'linear-gradient(135deg,#ff00e5,#00f0ff,#b6ff00)' };
-const blLoad = () => { try { return { theme: 'standard', text: 100, calm: false, haptics: true, unlocked: false, ...JSON.parse(localStorage.getItem(BL_UI_KEY) || '{}') }; } catch (e) { return { theme: 'standard', text: 100, calm: false, haptics: true, unlocked: false }; } };
+const blLoad = () => { try { return { theme: 'standard', text: 100, calm: false, sound: true, perf: false, contrast: false, unlocked: false, ...JSON.parse(localStorage.getItem(BL_UI_KEY) || '{}') }; } catch (e) { return { theme: 'standard', text: 100, calm: false, unlocked: false }; } };
 const BL_DRAGON = `<svg class="bl-dragon" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><filter id="ink" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="4"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter></defs>
 <g filter="url(#ink)" fill="none" stroke-linecap="round" stroke-linejoin="round">
 <g stroke="#8a0d14" opacity=".55" stroke-width="2.5"><path d="M40 120c30-40 80-40 80 0s-50 50-60 10 30-24 30-4"/><path d="M640 820c30-40 80-40 80 0s-50 50-60 10 30-24 30-4"/><path d="M90 560c25-30 60-30 60 0s-38 38-45 8 22-18 22-3"/><path d="M700 470c25-30 60-30 60 0s-38 38-45 8 22-18 22-3"/></g>
@@ -3824,12 +3857,44 @@ const UIExtras = () => {
     const [toasts, setToasts] = useState([]);
     const realVib = useRef(navigator.vibrate ? navigator.vibrate.bind(navigator) : null);
     const upd = (p) => setS(prev => ({ ...prev, ...p }));
+    const wakeRef = useRef(null), ac = useRef(null), [showTop, setShowTop] = useState(false);
+    useEffect(() => {
+        const r = document.documentElement;
+        r.dataset.perf = s.perf ? '1' : '0'; r.dataset.contrast = s.contrast ? '1' : '0';
+        const getWake = async () => { try { if (navigator.wakeLock && document.visibilityState === 'visible') wakeRef.current = await navigator.wakeLock.request('screen'); } catch (e) { } };
+        getWake();
+        const vis = () => { r.dataset.hidden = document.hidden ? '1' : '0'; if (!document.hidden) getWake(); };
+        const click = (e) => {
+            if (!s.sound || !e.target.closest || !e.target.closest('button')) return;
+            try { const A = window.AudioContext || window.webkitAudioContext; ac.current = ac.current || new A(); const o = ac.current.createOscillator(), g = ac.current.createGain(); o.type = 'sine'; o.frequency.value = 520; g.gain.setValueAtTime(.06, ac.current.currentTime); g.gain.exponentialRampToValueAtTime(.001, ac.current.currentTime + .09); o.connect(g); g.connect(ac.current.destination); o.start(); o.stop(ac.current.currentTime + .1); } catch (er) { }
+        };
+        document.addEventListener('visibilitychange', vis); document.addEventListener('click', click, true);
+        return () => { document.removeEventListener('visibilitychange', vis); document.removeEventListener('click', click, true); try { wakeRef.current && wakeRef.current.release(); } catch (e) { } };
+    }, [s.perf, s.contrast, s.sound]);
+    useEffect(() => {
+        const sc = () => setShowTop(window.scrollY > 600);
+        const err = (e) => { if (e && e.message && !/ResizeObserver|Script error/.test(e.message)) window.blToast('Something hiccuped — the game keeps going', { type: 'error', id: 'err', ttl: 2500 }); };
+        const leave = (e) => { if (document.querySelector('.bl-back') === null && /[A-Z0-9]{4}/.test((document.querySelector('.font-mono') || {}).textContent || '')) { e.preventDefault(); e.returnValue = ''; } };
+        const share = (e) => {
+            const b = e.target.closest && e.target.closest('.bl-share'); if (!b) return;
+            const url = location.origin + location.pathname + '?room=' + b.dataset.code;
+            if (navigator.share) navigator.share({ title: 'Blersjda Madness', text: 'Join my game!', url }).catch(() => { });
+            else { try { navigator.clipboard.writeText(url); window.blToast('Join link copied', { type: 'success', ttl: 1800 }); } catch (er) { } }
+        };
+        const mo = new MutationObserver(() => {
+            const el = [...document.querySelectorAll('.font-mono.bg-white')].find(x => /^[A-Z0-9]{4}$/.test(x.textContent.trim()));
+            if (el && !el.parentElement.querySelector('.bl-share')) { const b = document.createElement('button'); b.className = 'bl-share'; b.dataset.code = el.textContent.trim(); b.textContent = '🔗 Share join link'; el.insertAdjacentElement('afterend', b); }
+        });
+        mo.observe(document.getElementById('root'), { childList: true, subtree: true });
+        window.addEventListener('scroll', sc, { passive: true }); window.addEventListener('error', err); window.addEventListener('beforeunload', leave); document.addEventListener('click', share);
+        return () => { mo.disconnect(); window.removeEventListener('scroll', sc); window.removeEventListener('error', err); window.removeEventListener('beforeunload', leave); document.removeEventListener('click', share); };
+    }, []);
     useEffect(() => {
         const r = document.documentElement;
         const t = (BL_THEMES.find(x => x.id === s.theme && (!x.locked || s.unlocked)) || BL_THEMES[0]).id;
         r.dataset.theme = t; r.dataset.calm = s.calm ? '1' : '0'; r.style.fontSize = s.text + '%';
         try { localStorage.setItem(BL_UI_KEY, JSON.stringify(s)); } catch (e) { }
-        try { navigator.vibrate = s.haptics ? (realVib.current || (() => false)) : () => false; } catch (e) { }
+        try { if (realVib.current) navigator.vibrate = realVib.current; } catch (e) { }
     }, [s]);
     useEffect(() => {
         const dismiss = (id) => { setToasts(t => t.map(x => x.id === id ? { ...x, out: true } : x)); setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 260); };
@@ -3874,6 +3939,11 @@ const UIExtras = () => {
         if (code.replace(/\s+/g, '').toLowerCase() === BL_CODE) { upd({ unlocked: true }); setCode(''); window.blToast('Secret themes unlocked! 🔓', { type: 'success' }); }
         else { setShake(true); setTimeout(() => setShake(false), 450); window.blToast('Wrong code. Nice try.', { type: 'error' }); }
     };
+    const relock = () => {
+        const cur = BL_THEMES.find(x => x.id === s.theme);
+        upd({ unlocked: false, theme: cur && cur.locked ? 'standard' : s.theme });
+        window.blToast('Secret themes relocked 🔒', { ttl: 2000 });
+    };
     const fs = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) { window.blToast('Fullscreen not supported here', { type: 'error' }); } };
     const activeTheme = (BL_THEMES.find(x => x.id === s.theme && (!x.locked || s.unlocked)) || BL_THEMES[0]).id;
     return RE(React.Fragment, null,
@@ -3895,14 +3965,18 @@ const UIExtras = () => {
                 RE('div', { className: 'bl-row' + (shake ? ' bl-shake' : '') },
                     RE('input', { type: 'text', value: code, placeholder: 'Enter code…', autoComplete: 'off', autoCapitalize: 'off', spellCheck: false, onChange: e => setCode(e.target.value), onKeyDown: e => { if (e.key === 'Enter') tryCode(); } }),
                     RE('button', { className: 'bl-go', onClick: tryCode }, 'Unlock'))),
+            s.unlocked && RE('div', { className: 'bl-sec' }, RE('h4', null, 'Secret themes'),
+                RE('button', { className: 'bl-sw-row', onClick: relock }, RE('span', null, RE('b', null, '🔒 Relock secret themes'), RE('small', null, 'Hide them again until you re-enter the code')))),
             RE('div', { className: 'bl-sec' }, RE('h4', null, 'Text size'),
                 RE('div', { className: 'bl-seg' }, [[90, 'S'], [100, 'M'], [115, 'L'], [130, 'XL']].map(([v, l]) => RE('button', { key: v, className: s.text === v ? 'sel' : '', onClick: () => upd({ text: v }) }, l)))),
             RE('div', { className: 'bl-sec' }, RE('h4', null, 'Comfort'),
-                [['calm', 'Reduce motion', 'Calmer animations'], ['haptics', 'Vibration', 'Buzz on key moments']].map(([k, t, d]) =>
+                [['calm', 'Reduce motion', 'Calmer animations'], ['perf', 'Performance mode', 'Drops blur & sparkles for smooth play'], ['contrast', 'High contrast', 'Sharper panels & text'], ['sound', 'Sound FX', 'Soft clicks on buttons']].map(([k, t, d]) =>
                     RE('button', { key: k, className: 'bl-sw-row', role: 'switch', 'aria-checked': !!s[k], onClick: () => upd({ [k]: !s[k] }) },
                         RE('span', null, RE('b', null, t), RE('small', null, d)), RE('i', { className: 'bl-knob' + (s[k] ? ' on' : '') })))),
+            RE('div', { className: 'bl-sec' }, RE('h4', null, 'Shortcuts'), RE('div', { className: 'bl-keys' }, [['S','Settings'],['F','Fullscreen'],['K','Skip narration'],['?','Help'],['Esc','Close']].map(([k,v])=>[RE('kbd',{key:'k'+k},k),RE('span',{key:'v'+k},v)]))),
             RE('div', { className: 'bl-sec' }, RE('h4', null, 'Quick actions'), RE('div', { className: 'bl-seg' }, RE('button', { onClick: fs }, 'Fullscreen (F)'), RE('button', { onClick: () => { try { speechSynthesis.cancel(); } catch (e) { } } }, 'Skip narration (K)'))),
-            RE('div', { className: 'bl-ft' }, RE('span', null, 'Saved on this device'), RE('button', { onClick: () => { setS({ theme: 'standard', text: 100, calm: false, haptics: true, unlocked: s.unlocked }); window.blToast('UI settings reset', { ttl: 1800 }); } }, 'Reset'))),
+            RE('div', { className: 'bl-ft' }, RE('span', null, 'Saved on this device'), RE('button', { onClick: () => { setS({ theme: 'standard', text: 100, calm: false, sound: true, perf: false, contrast: false, unlocked: s.unlocked }); window.blToast('UI settings reset', { ttl: 1800 }); } }, 'Reset'))),
+        RE('button', { className: 'bl-top' + (showTop ? ' on' : ''), onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }), 'aria-label': 'Back to top', title: 'Back to top' }, '↑'),
         RE('button', { className: 'bl-cog' + (open ? ' on' : ''), onClick: () => setOpen(o => !o), 'aria-label': 'Settings', title: 'Settings' },
             RE('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, RE('circle', { cx: 12, cy: 12, r: 3 }), RE('path', { d: 'M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z' }))));
 };
