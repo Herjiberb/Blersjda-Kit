@@ -559,7 +559,7 @@ const PROMPTS = [
 { text: "The absolute worst shape for a steering wheel.", family: true },
 { text: "A rejected spell from Hogwarts that was too embarrassing to teach.", family: true },
 { text: "What pigeons are actually looking for when they violently bob their heads.", family: true },
-{ text: "The most suspicious thing to find packed inside a child’s lunchbox.", family: true },
+{ text: "The most suspicious thing to find packed inside a child's lunchbox.", family: true },
 { text: "A terrible superpower that is only activated by sneezing.", family: true },
 { text: "The real reason the washing machine vibrates so violently on the spin cycle.", family: true },
 { text: "What your car says about you to the other cars in the parking lot.", family: true },
@@ -799,7 +799,7 @@ const PROMPTS = [
 { text: "A weird excuse for why the dog is suddenly wearing your best suit.", family: true },
 { text: "What the lint trapped in your belly button is actually made of.", family: true },
 { text: "A highly inappropriate time to aggressively play the triangle.", family: true },
-{ text: "What your car’s GPS system whispers when it thinks you can’t hear.", family: true },
+{ text: "What your car's GPS system whispers when it thinks you can't hear.", family: true },
 { text: "A rejected magic spell that Harry Potter kept accidentally casting.", family: true },
 { text: "The worst piece of advice you could get from a mall fortune teller.", family: true },
 { text: "What the pigeons are actually waiting for when they stare at you.", family: true },
@@ -1390,7 +1390,7 @@ const PROMPTS = [
 { text: "What the HR department actually wrote in bold letters on your permanent file.", family: false },
 { text: "A terrible, career-ending sentence to accidentally reply-all to the entire company.", family: false },
 { text: "The most unhinged thing to aggressively whisper to the person in the bathroom stall next to you.", family: false },
-{ text: "What your sleep paralysis demon’s LinkedIn bio definitely says.", family: false },
+{ text: "What your sleep paralysis demon's LinkedIn bio definitely says.", family: false },
 { text: "A terrible, deeply existential realization to have while stuck in line at the DMV.", family: false },
 { text: "The most wildly inappropriate time to ask for a high-five.", family: false },
 { text: "What the paramedics were definitely trying not to laugh at.", family: false },
@@ -1675,6 +1675,24 @@ const PROMPTS = [
 }
 const DEFAULT_ANSWERS = ["I forgot how to type", "Staring blankly at the wall", "My brain is empty", "Too slow!"];
 const generateCode = () => (Math.random().toString(36) + 'abcdefgh').replace(/[^a-z]/gi, '').substring(0, 4).toUpperCase();
+/* ---- Unicode-safe text helpers: emojis, ZWJ sequences, flags, CJK, RTL, combining marks ---- */
+const _seg = (typeof Intl !== 'undefined' && Intl.Segmenter) ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
+const gSplit = (str) => _seg ? Array.from(_seg.segment(str), x => x.segment) : Array.from(str);
+const gLen = (str) => gSplit(String(str == null ? '' : str)).length;
+const gClamp = (str, n) => gSplit(String(str == null ? '' : str)).slice(0, n).join('');
+const cleanText = (str, keepNewlines) => {
+    str = String(str == null ? '' : str);
+    try { if (str.toWellFormed) str = str.toWellFormed(); } catch (e) { }
+    try { str = str.normalize('NFC'); } catch (e) { }
+    str = str.replace(keepNewlines ? /[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/g : /[\u0000-\u001F\u007F-\u009F]/g, '');
+    str = str.replace(/[\u202A-\u202E\u2066-\u2069]/g, '');
+    return gSplit(str).map(g => { const cp = Array.from(g); return cp.length > 12 ? cp.slice(0, 12).join('') : g; }).join('');
+};
+const hasVisible = (str) => /[^\s\u200B-\u200F\u2060\uFEFF\u00AD\u034F\u115F\u1160\u17B4\u17B5\u180E\u3164\uFFA0]/u.test(str);
+const cleanName = (str) => { const t = gClamp(cleanText(str, false).replace(/\s+/g, ' ').trim(), 12); return hasVisible(t) ? t : ''; };
+const cleanAnswer = (str) => { const t = gClamp(cleanText(str, true).trim(), 100); return hasVisible(t) ? t : ''; };
+window.gLen = gLen; window.gClamp = gClamp;
+
 const generateUUID = () => crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
 const shuffle = (array) => { const a = [...array]; for (let i = a.length - 1; i > 0; i--) {
     const j = (Math.random() * (i + 1)) | 0;
@@ -2947,7 +2965,7 @@ const OnlineHost = ({ goBack }) => {
             return;
         }
         if (data.type === 'JOIN') {
-            const { userId, name } = data;
+            const userId = data.userId; const name = cleanName(data.name) || 'Player';
             conn.metadata = { userId };
             NAMEMAP[userId] = name;
             try { hostPub().then(pk => sendToClient(userId, 'IDENT_REQ', { pk })).catch(() => { }); } catch (e) { }
@@ -3013,7 +3031,7 @@ const OnlineHost = ({ goBack }) => {
                 const next = [...prev];
                 const clash = next.find(c => c.prompt === data.prompt);
                 if (clash) {
-                    clash.answers[data.userId] = data.answer;
+                    clash.answers[data.userId] = cleanAnswer(data.answer) || '...';
                 }
                 return next;
             });
@@ -3390,7 +3408,7 @@ const OnlineHost = ({ goBack }) => {
             React.createElement("div", { className: "flex gap-6 justify-center mt-6" },
                 React.createElement("button", { onClick: () => setShowKickMenu(true), className: "text-pink-400 hover:text-white underline uppercase tracking-widest text-sm font-bold transition-colors" }, "Manage Players"),
                 React.createElement("button", { onClick: goBack, className: "text-gray-400 hover:text-white underline uppercase tracking-widest text-sm font-bold transition-colors" }, "Close Room")))),
-        showKickMenu && (React.createElement("div", { className: "fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4" },
+        showKickMenu && ReactDOM.createPortal(React.createElement("div", { className: "fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4" },
             React.createElement("div", { className: "glass-panel p-8 rounded-3xl w-full max-w-lg border border-pink-500 max-h-[80vh] overflow-y-auto" },
                 React.createElement("h3", { className: "text-3xl font-black text-pink-400 mb-6 uppercase" }, "Manage Lobby"),
                 React.createElement("div", { className: "space-y-4 mb-6 text-left" },
@@ -3434,7 +3452,7 @@ const OnlineHost = ({ goBack }) => {
                         React.createElement("span", null, a.name),
                         React.createElement("button", { onClick: () => kickUser(a.userId), className: "bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-sm font-bold uppercase" }, "Kick")))),
                     audience.length === 0 && React.createElement("p", { className: "text-gray-400 text-sm" }, "No audience yet.")),
-                React.createElement(Button, { color: "gray", onClick: () => setShowKickMenu(false) }, "Close Menu")))),
+                React.createElement(Button, { color: "gray", onClick: () => setShowKickMenu(false) }, "Close Menu"))), document.body),
         gameState === 'ANSWERING' && (React.createElement("div", { className: "w-full scale-in" },
             React.createElement("h2", { className: "text-6xl font-black mb-2 text-pink-400 uppercase tracking-widest bouncing-title" }, round === 3 ? "WHIP OF THE BLERSJ" : `ROUND ${round}`),
             React.createElement("p", { className: "text-3xl mb-12 font-bold text-cyan-200" }, "Look at your devices and answer!"),
@@ -3612,7 +3630,7 @@ const OnlineClient = ({ goBack }) => {
     };
     const joinGame = () => {
         if (joinStatus === 'connecting' || joinStatus === 'joining') return;
-        if (!code || !name.trim()) return;
+        if (!code || !cleanName(name)) return;
         const roomCode = code.toUpperCase().trim();
         try { localStorage.setItem('blersjda_code', roomCode); localStorage.setItem('blersjda_name', name); navigator.vibrate && navigator.vibrate(30); } catch (e) { }
         const att = ++attemptRef.current;
@@ -3636,7 +3654,7 @@ const OnlineClient = ({ goBack }) => {
                 window.blToast(`Joining room ${roomCode}…`, { type: 'loading', id: 'join', ttl: 0 });
                 clearTimeout(joinTimer.current);
                 joinTimer.current = setTimeout(() => failJoin(`Room ${roomCode} didn't answer. Double-check the code, and make sure the host's lobby is open.`, att), 10000);
-                mockConnection.send({ type: 'JOIN', userId, name: name.trim() });
+                mockConnection.send({ type: 'JOIN', userId, name: cleanName(name) });
             });
         });
         mqttClient.on('error', (e) => { if (!joinedRef.current) failJoin('Connection error: ' + ((e && e.message) || 'unknown'), att); });
@@ -3697,12 +3715,12 @@ const OnlineClient = ({ goBack }) => {
         }
     };
     const submitAnswer = () => {
-        if (!answerInput.trim())
+        if (!cleanAnswer(answerInput))
             return;
         conn.send({
             type: 'SUBMIT_ANSWER',
             userId,
-            answer: answerInput.trim(),
+            answer: cleanAnswer(answerInput),
             prompt: promptsToAnswer[currentPromptIndex]
         });
         window.blToast('Answer locked in ' + (currentPromptIndex + 1) + '/' + promptsToAnswer.length, { type: 'success', ttl: 1600 });
@@ -3757,14 +3775,14 @@ const OnlineClient = ({ goBack }) => {
             React.createElement("h2", { className: "text-4xl font-black mb-8 text-pink-400 uppercase tracking-widest" }, "Join Game"),
             React.createElement("div", { className: "text-left mb-6" },
                 React.createElement("label", { className: "block text-sm font-bold text-purple-300 mb-2 uppercase tracking-widest ml-2" }, "Room Code"),
-                React.createElement("input", { type: "text", placeholder: "ABCD", maxLength: 4, value: code, onChange: e => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')), onKeyDown: e => { if (e.key === 'Enter' && name.trim() && code.length === 4) joinGame(); }, autoCapitalize: "characters", autoComplete: "off", autoFocus: !code, className: "w-full p-5 rounded-2xl bg-purple-950/80 border-2 border-pink-500/50 text-center font-mono text-4xl font-black uppercase outline-none focus:border-pink-400 focus:ring-4 focus:ring-pink-500/20 transition-all shadow-inner" })),
+                React.createElement("input", { type: "text", placeholder: "ABCD", maxLength: 4, value: code, onChange: e => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')), onKeyDown: e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && cleanName(name) && code.length === 4) joinGame(); }, autoCapitalize: "characters", autoComplete: "off", autoFocus: !code, className: "w-full p-5 rounded-2xl bg-purple-950/80 border-2 border-pink-500/50 text-center font-mono text-4xl font-black uppercase outline-none focus:border-pink-400 focus:ring-4 focus:ring-pink-500/20 transition-all shadow-inner" })),
             React.createElement("div", { className: "text-left mb-10" },
                 React.createElement("label", { className: "block text-sm font-bold text-purple-300 mb-2 uppercase tracking-widest ml-2" }, "Your Name"),
-                React.createElement("input", { type: "text", placeholder: "Nickname", maxLength: 12, value: name, onChange: e => setName(e.target.value), onKeyDown: e => { if (e.key === 'Enter' && name.trim() && code.length === 4) joinGame(); }, className: "w-full p-5 rounded-2xl bg-purple-950/80 border-2 border-cyan-500/50 text-center font-bold text-3xl outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/20 transition-all shadow-inner" })),
+                React.createElement("input", { type: "text", placeholder: "Nickname", maxLength: 60, value: name, onChange: e => setName(e.nativeEvent && e.nativeEvent.isComposing ? e.target.value : gClamp(e.target.value, 12)), onKeyDown: e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && cleanName(name) && code.length === 4) joinGame(); }, className: "w-full p-5 rounded-2xl bg-purple-950/80 border-2 border-cyan-500/50 text-center font-bold text-3xl outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/20 transition-all shadow-inner" })),
             React.createElement("p", { className: "text-xs text-gray-400 mb-4 flex items-center gap-2 justify-center" }, React.createElement(Ico, { n: "lock", size: 16 }), "Your connection is end-to-end encrypted to the host for stats."),
             joinErr && joinStatus === 'failed' && React.createElement("div", { className: "bl-join-err", role: "alert" }, "\u26A0\uFE0F ", joinErr),
             (joinStatus === 'connecting' || joinStatus === 'joining') && React.createElement("div", { className: "bl-join-busy" }, React.createElement("span", { className: "bl-spin" }), joinStatus === 'connecting' ? "Connecting to the server\u2026" : "Asking the host to let you in\u2026"),
-            React.createElement(Button, { onClick: joinGame, color: (joinStatus === 'connecting' || joinStatus === 'joining') ? "gray" : "pink", disabled: !name.trim() || code.length !== 4 || joinStatus === 'connecting' || joinStatus === 'joining', className: "h-16" }, joinStatus === 'connecting' ? "Connecting\u2026" : joinStatus === 'joining' ? "Joining\u2026" : joinStatus === 'failed' ? "Try Again" : "Enter Game"),
+            React.createElement(Button, { onClick: joinGame, color: (joinStatus === 'connecting' || joinStatus === 'joining') ? "gray" : "pink", disabled: !cleanName(name) || code.length !== 4 || joinStatus === 'connecting' || joinStatus === 'joining', className: "h-16" }, joinStatus === 'connecting' ? "Connecting\u2026" : joinStatus === 'joining' ? "Joining\u2026" : joinStatus === 'failed' ? "Try Again" : "Enter Game"),
             React.createElement("button", { onClick: goBack, className: "block mx-auto mt-6 text-gray-400 font-bold uppercase tracking-widest text-sm hover:text-white transition-colors" }, "Cancel"))),
         clientState === 'WAITING_LOBBY' && !isEditingAvatar && (React.createElement("div", { className: "w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in" },
             React.createElement("h2", { className: "text-4xl font-black text-pink-400 uppercase tracking-widest mb-4" }, "You're In!"),
@@ -3773,7 +3791,7 @@ const OnlineClient = ({ goBack }) => {
                 React.createElement("div", { className: "mb-6 animate-bounce", style: { animationDuration: '2s' } },
                     React.createElement(MonsterAvatar, { attributes: myAvatar, size: 120 })),
                 React.createElement(Button, { onClick: () => setIsEditingAvatar(true), color: "blue", className: "text-lg py-3" }, React.createElement(React.Fragment, null, React.createElement(Ico, { n: "palette", size: 22 }), " Customize Avatar")),
-                React.createElement("p", { className: "text-sm text-purple-300 mt-6 max-w-xs" }, React.createElement(React.Fragment, null, React.createElement(Ico, { n: "bulb", size: 20 }), " Keep this screen open. Funnier answers win votes \u2014 and you can\u2019t vote for yourself!")),
+                React.createElement("p", { className: "text-sm text-purple-300 mt-6 max-w-xs" }, React.createElement(React.Fragment, null, React.createElement(Ico, { n: "bulb", size: 20 }), " Keep this screen open. Funnier answers win votes \u2014 and you ", React.createElement("span", { className: "whitespace-nowrap" }, "can't"), " vote for yourself!")),
                 React.createElement("div", { className: "mt-4 text-xs uppercase tracking-widest text-gray-500 font-bold" }, "Waiting for the host to start..."))))),
         (clientState === 'WAITING_LOBBY' || clientState === 'WAITING') && isEditingAvatar && myAvatar && (React.createElement("div", { className: "w-full flex flex-col items-center mt-4 p-6 glass-panel rounded-3xl scale-in z-20 relative" },
             React.createElement("h2", { className: "text-2xl font-black text-pink-400 uppercase tracking-widest mb-6" }, "Pimp Your Critter"),
@@ -3806,11 +3824,11 @@ const OnlineClient = ({ goBack }) => {
                 clientTimeLeft,
                 "s"),
             React.createElement("div", { className: "relative mb-4" },
-                React.createElement("textarea", { key: "ans" + currentPromptIndex, autoFocus: true, onKeyDown: e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitAnswer(); } }, value: answerInput, maxLength: 100, onChange: e => setAnswerInput(e.target.value), placeholder: "Type your brilliant answer...", className: `w-full p-5 rounded-2xl bg-purple-950 border-2 text-2xl font-bold outline-none focus:ring-2 focus:ring-cyan-500/50 h-40 resize-none shadow-inner transition-colors ${answerInput.length >= 90 ? 'border-red-500' : 'border-pink-500 focus:border-cyan-400'}` }),
-                React.createElement("span", { className: `absolute bottom-4 right-4 font-mono font-bold text-sm px-2 py-1 rounded bg-black/50 ${answerInput.length >= 90 ? 'text-red-400 animate-pulse' : 'text-purple-400'}` },
-                    answerInput.length,
+                React.createElement("textarea", { key: "ans" + currentPromptIndex, autoFocus: true, onKeyDown: e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); submitAnswer(); } }, value: answerInput, maxLength: 500, "data-glimit": 100, onChange: e => setAnswerInput(e.nativeEvent && e.nativeEvent.isComposing ? e.target.value : gClamp(e.target.value, 100)), placeholder: "Type your brilliant answer...", className: `w-full p-5 rounded-2xl bg-purple-950 border-2 text-2xl font-bold outline-none focus:ring-2 focus:ring-cyan-500/50 h-40 resize-none shadow-inner transition-colors ${gLen(answerInput) >= 90 ? 'border-red-500' : 'border-pink-500 focus:border-cyan-400'}` }),
+                React.createElement("span", { className: `absolute bottom-4 right-4 font-mono font-bold text-sm px-2 py-1 rounded bg-black/50 ${gLen(answerInput) >= 90 ? 'text-red-400 animate-pulse' : 'text-purple-400'}` },
+                    gLen(answerInput),
                     "/100")),
-            React.createElement(Button, { onClick: submitAnswer, color: "pink", disabled: !answerInput.trim(), className: "h-16" }, "Submit Answer"))),
+            React.createElement(Button, { onClick: submitAnswer, color: "pink", disabled: !cleanAnswer(answerInput), className: "h-16" }, "Submit Answer"))),
         clientState === 'WAITING_BATTLE' && (React.createElement("div", { className: "w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in" },
             React.createElement("h2", { className: "text-3xl font-black text-red-500 mb-2 uppercase tracking-widest animate-pulse" }, "Answers In!"),
             React.createElement("p", { className: "text-lg text-purple-200 font-bold mb-6 text-center" }, "Prepare for absolute carnage..."),
@@ -4011,9 +4029,10 @@ const UIExtras = () => {
         const cnt = document.createElement('div'); cnt.className = 'bl-cnt'; cnt.style.opacity = 0; document.body.appendChild(cnt);
         const onInput = (e) => {
             const t = e.target;
-            if (!t || t.tagName !== 'TEXTAREA' || !t.maxLength || t.maxLength < 0) return;
-            const left = t.maxLength - t.value.length;
-            cnt.textContent = t.value.length + '/' + t.maxLength; cnt.className = 'bl-cnt' + (left <= 15 ? ' warn' : ''); cnt.style.opacity = 1;
+            if (!t || t.tagName !== 'TEXTAREA' || !(+t.dataset.glimit || (t.maxLength > 0 && t.maxLength))) return;
+            const lim = +t.dataset.glimit || t.maxLength; const len = t.dataset.glimit ? window.gLen(t.value) : t.value.length;
+            const left = lim - len;
+            cnt.textContent = len + '/' + lim; cnt.className = 'bl-cnt' + (left <= 15 ? ' warn' : ''); cnt.style.opacity = 1;
         };
         const onFocusIn = (e) => { const t = e.target; if (t && t.tagName === 'INPUT' && t.type === 'text' && t.value) { try { t.select(); } catch (er) { } } };
         const onFocusOut = (e) => { if (e.target && e.target.tagName === 'TEXTAREA') cnt.style.opacity = 0; };
