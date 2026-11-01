@@ -1934,16 +1934,16 @@ const PlayerCapControl=({cap,setCap,min,count})=>{
     const b="px-4 py-2 rounded-xl font-bold uppercase tracking-wider border-2 ";
     return h(React.Fragment,null,
         h("button",{onClick:openIt,className:"bg-purple-950 border-2 border-pink-500 rounded-lg px-3 py-1 text-white font-bold hover:bg-purple-800",style:{fontSize:16}},"Player cap: "+(cap?cap:"No limit")),
-        open&&h("div",{onClick:()=>setOpen(false),style:{position:'fixed',inset:0,zIndex:9999,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+        open&&ReactDOM.createPortal(h("div",{onClick:()=>setOpen(false),style:{position:'fixed',inset:0,zIndex:9999,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
             h("div",{onClick:e=>e.stopPropagation(),className:"glass-panel rounded-3xl text-center",style:{background:'#1a1033',border:'2px solid #ec4899',padding:28,width:'100%',maxWidth:420,color:'#fff'}},
                 h("h3",{className:"text-2xl font-black text-pink-400 uppercase tracking-widest mb-2"},"Player Cap"),
                 h("p",{className:"text-sm text-gray-300 mb-4"},"Type the max number of players. Leave empty for no limit. Minimum "+floor+(count>min?" ("+count+" already joined)":"")+"."),
-                h("input",{autoFocus:true,type:"text",inputMode:"numeric",value:v,placeholder:"No limit",onChange:e=>{setV(e.target.value.replace(/[^\d]/g,'').slice(0,3));setErr('');},onKeyDown:e=>{if(e.key==='Enter')apply();if(e.key==='Escape')setOpen(false);},className:"w-full text-center text-3xl font-black p-3 rounded-xl bg-purple-950 border-2 border-cyan-500/60 outline-none focus:border-cyan-300"}),
+                h("input",{autoFocus:true,type:"text",inputMode:"numeric",value:v,placeholder:"No limit",onChange:e=>{setV(e.target.value.replace(/[^\d]/g,'').slice(0,3));setErr('');},onKeyDown:e=>{e.stopPropagation();if(e.key==='Enter')apply();if(e.key==='Escape')setOpen(false);},className:"w-full text-center text-3xl font-black p-3 rounded-xl bg-purple-950 border-2 border-cyan-500/60 outline-none focus:border-cyan-300"}),
                 err&&h("p",{className:"text-red-400 font-bold text-sm mt-3"},err),
                 h("div",{className:"flex gap-3 justify-center mt-5 flex-wrap"},
                     h("button",{onClick:()=>setOpen(false),className:b+"border-purple-500/60"},"Cancel"),
                     h("button",{onClick:()=>{setV('');setErr('');},className:b+"border-cyan-500/60"},"No limit"),
-                    h("button",{onClick:apply,className:b+"bg-pink-600 border-pink-400"},"Apply")))));
+                    h("button",{onClick:apply,className:b+"bg-pink-600 border-pink-400"},"Apply")))),document.body));
 };
 const LogPanel=({history})=>{
     const [q,setQ]=useState('');const [sort,setSort]=useState('new');const [winsOnly,setWinsOnly]=useState(false);const [limit,setLimit]=useState(50);
