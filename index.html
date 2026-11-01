@@ -2833,7 +2833,8 @@ const SK = (() => {
     };
     const flood = (g, x, y, col) => {
         x |= 0; y |= 0; if (x < 0 || y < 0 || x >= N || y >= N) return;
-        const im = g.getImageData(0, 0, N, N), d = im.data;
+        const im = g.getImageData(0, 0, N, N), d = im.data, orig0 = d.slice();
+        for (let i = 0; i < d.length; i += 4) { const a = d[i + 3]; if (a < 255) { const k = 255 - a; d[i] = (d[i] * a + 255 * k) / 255 | 0; d[i + 1] = (d[i + 1] * a + 255 * k) / 255 | 0; d[i + 2] = (d[i + 2] * a + 255 * k) / 255 | 0; d[i + 3] = 255; } }
         const r = parseInt(col.slice(1, 3), 16), gg = parseInt(col.slice(3, 5), 16), b = parseInt(col.slice(5, 7), 16);
         const i0 = (y * N + x) * 4, sr = d[i0], sg = d[i0 + 1], sb = d[i0 + 2];
         if (Math.abs(sr - r) + Math.abs(sg - gg) + Math.abs(sb - b) < 6) return;
@@ -2872,9 +2873,11 @@ const SK = (() => {
                 seen[p] = 2; sref[p] = src;
             }
         }
+        for (let p = 0; p < N * N; p++) if (!seen[p]) { const i = p * 4; d[i] = orig0[i]; d[i + 1] = orig0[i + 1]; d[i + 2] = orig0[i + 2]; d[i + 3] = orig0[i + 3]; }
         g.putImageData(im, 0, 0);
     };
-    const replay = (g, doc) => { drawBg(g, doc.s, doc.a, doc.b); for (const o of doc.ops) { if (o.t === 3) flood(g, o.x, o.y, PAL[o.c]); else applyStroke(g, o); } };
+    const replayLayer = (g, doc) => { for (const o of doc.ops) { if (o.t === 3) flood(g, o.x, o.y, PAL[o.c]); else applyStroke(g, o); } };
+    const replay = (g, doc) => { drawBg(g, doc.s, doc.a, doc.b); const t = document.createElement('canvas'); t.width = t.height = N; replayLayer(t.getContext('2d', { willReadFrequently: true }), doc); g.drawImage(t, 0, 0); };
     const rdp = (p, e) => {
         if (p.length < 3) return p; const keep = new Uint8Array(p.length); keep[0] = keep[p.length - 1] = 1; const st = [[0, p.length - 1]];
         while (st.length) {
@@ -2943,7 +2946,7 @@ const SK = (() => {
         ops.push({ t: 1, c: 0, w: 2, p: sm });
         return encFit({ s, a, b: (a + 9) % 32, ops });
     };
-    return { N, PAL, W, BGN, rnd, drawBg, applyStroke, flood, replay, simp, enc, encFit, dec, valid, render, auto, blank };
+    return { N, PAL, W, BGN, rnd, drawBg, applyStroke, flood, replay, replayLayer, simp, enc, encFit, dec, valid, render, auto, blank };
 })();
 const SK_DRAW_PROMPTS = ["A shirt for a sleepy raccoon accountant", "Your pet as a rock star", "A taco superhero", "The world's worst vacation souvenir", "A haunted toaster", "A dentist who loves candy", "A wizard stuck in traffic", "A shirt for a grumpy cloud", "Your landlord as a dragon", "A fish wearing a business suit", "The last slice of pizza", "A llama learning to skateboard", "A robot's first day of school", "A cactus who needs a hug", "A pirate who is afraid of water", "A ninja banana", "Bigfoot on a selfie", "A shirt for the world's okayest chef", "Grandma's secret superpower", "A squirrel running for mayor", "An alien trying to blend in", "A dinosaur at the gym", "A very confident potato", "The Monday morning monster", "A cat CEO", "A jellyfish disco", "A goose causing chaos", "A shirt for an overworked coffee cup", "A knight who forgot his sword", "A snowman on vacation", "Ghost who is bad at haunting", "A duck with big dreams", "Pigeon mafia boss", "A sloth in a hurry", "Birthday cake gone wrong", "A cowboy frog", "A mermaid in the desert", "A vampire at the beach", "The Wi-Fi password monster", "A unicorn doing taxes"];
 /* ===== Custom coloured SVG icons (replace all emojis) ===== */
@@ -3009,8 +3012,8 @@ const SDrawEditor = ({ tid, prompt, dl, total, label, onDone }) => {
     const [tool, setTool] = useState('pen'), [col, setCol] = useState(0), [sz, setSz] = useState(2), [tab, setTab] = useState('draw');
     if (!doc.current) { try { const s = localStorage.getItem('bls_d_' + tid); doc.current = s ? JSON.parse(s) : SK.blank(); } catch (e) { doc.current = SK.blank(); } }
     const save = () => { try { localStorage.setItem('bls_d_' + tid, JSON.stringify(doc.current)); } catch (e) { } };
-    const show = (live) => { const c = cv.current; if (!c || !base.current) return; const g = c.getContext('2d'); g.drawImage(base.current, 0, 0); if (live) SK.applyStroke(g, live); };
-    const rebase = () => { SK.replay(base.current.getContext('2d', { willReadFrequently: true }), doc.current); show(); };
+    const show = (live) => { const c = cv.current; if (!c || !base.current) return; const g = c.getContext('2d'); g.clearRect(0, 0, SK.N, SK.N); SK.drawBg(g, doc.current.s, doc.current.a, doc.current.b); g.drawImage(base.current, 0, 0); if (live) SK.applyStroke(g, live); };
+    const rebase = () => { const bg = base.current.getContext('2d', { willReadFrequently: true }); bg.clearRect(0, 0, SK.N, SK.N); SK.replayLayer(bg, doc.current); show(); };
     useEffect(() => { base.current = document.createElement('canvas'); base.current.width = base.current.height = SK.N; rebase(); }, []);
     const map = (e) => { const r = cv.current.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * SK.N, (e.clientY - r.top) / r.height * SK.N]; };
     const onDown = (e) => {
@@ -3032,7 +3035,7 @@ const SDrawEditor = ({ tid, prompt, dl, total, label, onDone }) => {
     const undo = () => { const o = doc.current.ops.pop(); if (o) { redo.current.push(o); rebase(); save(); bump(); } };
     const redoF = () => { const o = redo.current.pop(); if (o) { doc.current.ops.push(o); rebase(); save(); bump(); } };
     const clear = () => { if (doc.current.ops.length && !confirm('Clear your drawing?')) return; doc.current.ops = []; redo.current = []; rebase(); save(); bump(); };
-    const setBg = (k, v) => { doc.current[k] = v; rebase(); save(); bump(); };
+    const setBg = (k, v) => { doc.current[k] = v; show(); save(); bump(); };
     const submit = () => { if (sent.current) return; sent.current = true; onDone(SK.encFit(doc.current)); };
     useEffect(() => { if (left <= 0) submit(); }, [left]);
     const size = Math.max(200, Math.min(ww - 16, wh - 330, 560));
@@ -3040,7 +3043,7 @@ const SDrawEditor = ({ tid, prompt, dl, total, label, onDone }) => {
     const sw = (i, active, on) => h('button', { key: i, onClick: on, 'aria-label': 'color ' + i, style: { flex: 'none', width: 38, height: 38, borderRadius: '50%', background: SK.PAL[i], border: active ? '4px solid #fff' : '2px solid rgba(255,255,255,.35)', boxShadow: active ? '0 0 0 2px #ec4899' : 'none' } });
     const mini = (s) => h('button', { key: s, onClick: () => setBg('s', s), style: { flex: 'none', width: 56, height: 62, borderRadius: 10, border: doc.current.s === s ? '3px solid #fff' : '2px solid rgba(255,255,255,.25)', background: 'rgba(0,0,0,.3)', color: '#fff', fontSize: 10, fontWeight: 800, padding: 0 } }, h(MiniBg, { s, a: doc.current.a, b: doc.current.b }), SK.BGN[s]);
     return h('div', { style: { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 8px 14px', gap: 8, userSelect: 'none', WebkitUserSelect: 'none' } },
-        h('div', { style: { width: '100%', maxWidth: 560, display: 'flex', alignItems: 'center', gap: 8 } }, h(STimer, { left, total }), h('button', { onClick: submit, style: sBtn('#16a34a', { padding: '8px 14px', minHeight: 44 }) }, 'No more quips ', Ic('check', 16))),
+        h('div', { style: { width: '100%', maxWidth: 560, display: 'flex', alignItems: 'center', gap: 8 } }, h(STimer, { left, total }), h('button', { onClick: submit, style: sBtn('#16a34a', { padding: '8px 14px', minHeight: 44 }) }, 'Submit drawing ', Ic('check', 16))),
         h('div', { style: { width: '100%', maxWidth: 560, textAlign: 'center', fontSize: 14, lineHeight: 1.2 } }, h('span', { style: { color: '#22d3ee', fontWeight: 900, fontSize: 11, letterSpacing: '.1em' } }, label + ' · '), h('span', { style: { color: '#f9a8d4', fontWeight: 900, fontSize: 11, letterSpacing: '.08em' } }, 'SUGGESTED PROMPT (optional, only if you need help): '), h('b', { style: { color: '#fde68a' } }, prompt)),
         h('canvas', { ref: cv, width: SK.N, height: SK.N, onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: onUp, style: { width: size, height: size, background: '#fff', borderRadius: 14, touchAction: 'none', boxShadow: '0 6px 24px rgba(0,0,0,.5)', border: '3px solid rgba(255,255,255,.7)', cursor: tool === 'fill' ? 'cell' : 'crosshair' } }),
         h('div', { style: { width: '100%', maxWidth: 560, display: 'flex', gap: 6 } }, tb('pen', Ic('pen', 26), 'Paint'), tb('fill', Ic('bucket', 26), 'Fill'), tb('hl', Ic('hl', 26), 'Glow'), tb('bg', Ic('palette', 26), 'Backdrop'),
@@ -3118,6 +3121,7 @@ const SVoteView = ({ a, b, ro, dl, total, onVote, tid }) => {
         v && h('div', { style: { color: '#86efac', fontWeight: 900 } }, 'Vote locked in!'));
 };
 
+const SRankList = ({ all, me, big }) => { const h = React.createElement; return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 420 } }, all.map((p, i) => h('div', { key: p.userId, style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', borderRadius: 14, fontWeight: 800, fontSize: big ? 20 : 18, background: p.userId === me ? 'rgba(236,72,153,.3)' : 'rgba(255,255,255,.07)', border: i === 0 ? '3px solid #facc15' : p.userId === me ? '2px solid #ec4899' : '1px solid rgba(255,255,255,.12)' } }, h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 } }, h('span', { style: { width: 30, color: i === 0 ? '#facc15' : '#c084fc' } }, i + 1), h(MonsterAvatar, { attributes: p.avatar, size: i === 0 ? 52 : 40 }), h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis' } }, p.name)), h('span', { style: { color: '#67e8f9', fontFamily: 'monospace' } }, p.score)))); };
 /* ---------- Client controller ---------- */
 const StrokesClient = () => {
     const h = React.createElement, [s, setS] = useState(null);
@@ -3128,12 +3132,12 @@ const StrokesClient = () => {
             const d = e.detail || {}, ty = d.type;
             if (typeof ty === 'string' && ty.startsWith('S_')) {
                 const dl = Date.now() + (d.t || 0) * 1000 - 400;
-                if (ty === 'S_DRAW') setS({ m: 'draw', tid: d.tid, p: d.p, n: d.n, of: d.of, dl, tot: d.tot || 90 });
+                if (ty === 'S_DRAW') setS({ m: 'draw', tid: d.tid, p: d.p, n: d.n, of: d.of, dl, tot: d.tot || 120 });
                 else if (ty === 'S_QUOTE') setS({ m: 'quote', tid: d.tid, th: d.th, dl, tot: d.tot || 60 });
                 else if (ty === 'S_MEME') setS({ m: 'meme', tid: d.tid, ds: d.ds, qs: d.qs, dl, tot: d.tot || 60 });
                 else if (ty === 'S_VOTE') setS({ m: 'vote', tid: d.tid, a: d.a, b: d.b, ro: !!d.ro, dl, tot: d.tot || 20 });
                 else if (ty === 'S_RES') setS({ m: 'res', ...d });
-                else if (ty === 'S_END') setS({ m: 'end', ...d });
+                else if (ty === 'S_END') setS({ m: 'end', ...d }); else if (ty === 'S_RANK') setS({ m: 'rank', ...d });
             } else if (ty === 'STATE_WAITING' || ty === 'KICKED' || ty === 'LOBBY_JOINED') { if (ty !== 'LOBBY_JOINED' || true) setS(null); }
         };
         window.addEventListener('bl-host-msg', f); return () => window.removeEventListener('bl-host-msg', f);
@@ -3149,10 +3153,12 @@ const StrokesClient = () => {
     else if (s.m === 'meme' && s.ds && s.ds.length && s.qs && s.qs.length) body = h(SMemeEditor, { key: s.tid, tid: s.tid, ds: s.ds, qs: s.qs, dl: s.dl, total: s.tot, onLock: (di, qi, st) => send({ k: 'm', tid: s.tid, di, qi, st }) });
     else if (s.m === 'vote') body = h(SVoteView, { key: s.tid, tid: s.tid, a: s.a, b: s.b, ro: s.ro, dl: s.dl, total: s.tot, onVote: (v) => send({ k: 'v', tid: s.tid, v }) });
     else if (s.m === 'res') body = h('div', { style: { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 20, textAlign: 'center' } }, h('h2', { style: { ...sFont, fontSize: 36, color: '#fde68a' } }, s.w === 'a' ? 'A WINS!' : 'B WINS!'), h('div', { style: { fontSize: 22, fontWeight: 900 } }, s.va + ' – ' + s.vb), s.mine != null && h('div', { style: { color: '#4ade80', fontWeight: 900, fontSize: 20 } }, '+' + s.mine + ' points for you!'), h('p', { style: { color: '#c4b5fd' } }, 'Look at the big screen'));
+    else if (s.m === 'rank') body = h('div', { style: { minHeight: '100%', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 } }, h('h2', { style: { ...sFont, fontSize: 30, color: '#facc15', textAlign: 'center' } }, (s.title || 'Round') + (s.title === 'Game Over' ? '' : ' RANKS')), h('p', { style: { color: '#c4b5fd', fontWeight: 700, textAlign: 'center' } }, 'Look at the big screen'), h(SRankList, { all: s.all || [], me: uid }));
+    else if (s.m === 'end' && s.full) body = h('div', { style: { minHeight: '100%', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 } }, h('h2', { style: { ...sFont, fontSize: 34, color: '#facc15' } }, 'FINAL RANKS'), h(SRankList, { all: s.all || [], me: s.me, big: true }), h('button', { onClick: () => setS({ ...s, full: false }), style: sBtn('#4b5563', { width: '100%', maxWidth: 420 }) }, 'Back'));
     else if (s.m === 'end') body = h('div', { style: { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 20, textAlign: 'center' } },
         h('div', { style: { fontSize: 56 } }, Ic(s.rank === 1 ? 'crown' : 'trophy', 64)), h('h2', { style: { ...sFont, fontSize: 34, color: '#fde68a' } }, '#' + s.rank + ' · ' + s.score + ' pts'),
         (s.hon || []).length ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 360 } }, h('div', { style: { color: '#f9a8d4', fontWeight: 900, letterSpacing: '.1em' } }, 'YOUR HONORS'), (s.hon || []).map((x, i) => h('div', { key: i, style: { background: 'rgba(250,204,21,.15)', border: '2px solid #facc15', borderRadius: 12, padding: 10, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' } }, Ic(x.ic, 26), h('span', null, x.t + ' — ' + x.d)))) : h('p', { style: { color: '#c4b5fd', fontWeight: 700 } }, 'Thanks for playing!'),
-        s.meme && h(SMeme, { d: s.meme.d, x: s.meme.x, st: s.meme.st, size: Math.min(240, window.innerWidth - 60) }), s.meme && h('div', { style: { color: '#a5f3fc', fontWeight: 700, fontSize: 13 } }, 'Your best meme'));
+        s.meme && h(SMeme, { d: s.meme.d, x: s.meme.x, st: s.meme.st, size: Math.min(240, window.innerWidth - 60) }), s.meme && h('div', { style: { color: '#a5f3fc', fontWeight: 700, fontSize: 13 } }, 'Your best meme'), s.all && h('button', { onClick: () => setS({ ...s, full: true }), style: sBtn('#7c3aed', { width: '100%', maxWidth: 420, minHeight: 56 }) }, 'See full ranks'));
     else body = wait('Hang tight…', 'Look at the big screen');
     return ReactDOM.createPortal(h('div', { style: { position: 'fixed', inset: 0, zIndex: 60, overflowY: 'auto', overflowX: 'hidden', background: 'radial-gradient(circle at 50% 0%,#2a1560 0%,#0f0a29 70%)', color: '#fff', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } }, body), document.body);
 };
@@ -3265,8 +3271,8 @@ const StrokesHost = ({ goBack, onGames }) => {
         const st = S.current; chk(); setRound(r); st.dsub = {}; const pool = shuffle(SK_DRAW_PROMPTS.filter(p => !st.usedP.has(p))), pm = {};
         st.players.forEach((p, i) => { const pr = pool[i % Math.max(1, pool.length)] || 'Anything goes!'; pm[p.userId] = pr; st.usedP.add(pr); });
         setPhase('DRAW'); setInfo({ title: `DRAW ${k + 1} / ${n}`, sub: `Round ${r}` }); speak(k === 0 ? 'Time to draw! Look at your devices!' : 'Next design! Keep drawing!');
-        openTask('S_DRAW', 90, (u, aud) => aud ? null : { n: k + 1, of: n, p: pm[u] || 'Anything goes!' }, 'Players are drawing… sit tight!');
-        const early = await countdown(90, () => st.players.every(p => st.dsub[p.userId])); if (!early) await sleep(1500); chk();
+        openTask('S_DRAW', 120, (u, aud) => aud ? null : { n: k + 1, of: n, p: pm[u] || 'Anything goes!' }, 'Players are drawing… sit tight!');
+        const early = await countdown(120, () => st.players.every(p => st.dsub[p.userId])); if (!early) await sleep(1500); chk();
         st.players.forEach(p => {
             const s = st.dsub[p.userId], id = 'd' + (++st.idc), it = s ? { id, uid: p.userId, d: s.d, r } : { id, uid: null, d: SK.auto(), r, stock: true };
             st.designs.push(it); st.dmap[id] = it;
@@ -3284,17 +3290,18 @@ const StrokesHost = ({ goBack, onGames }) => {
     };
     const stockD = () => { const st = S.current, it = { id: 'sd' + (++st.idc), uid: null, d: SK.auto(), stock: true }; st.dmap[it.id] = it; return it; };
     const stockQ = () => { const st = S.current, free = SK_STOCK_Q.filter(q => !st.usedStockQ.has(q)), x = SK.rnd(free.length ? free : SK_STOCK_Q); st.usedStockQ.add(x); const it = { id: 'sq' + (++st.idc), uid: null, x, stock: true }; st.qmap[it.id] = it; return it; };
-    const deal = (items, K, used, stock) => {
-        const st = S.current, taken = new Set(), out = {}, pool = shuffle(items.filter(i => !used.has(i.id)));
+    const deal = (items, K, used, stock, extra = []) => {
+        const st = S.current, taken = new Set(), out = {}, ex = new Set(extra.map(e => e.id)), pool = shuffle(items.filter(i => !used.has(i.id) && !ex.has(i.id)));
         for (let k = 0; k < K; k++) shuffle(st.players).forEach(p => {
             let it = pool.find(x => !taken.has(x.id) && x.uid !== p.userId) || pool.find(x => !taken.has(x.id)) || stock();
             taken.add(it.id); (out[p.userId] = out[p.userId] || []).push(it);
         });
+        if (extra.length) st.players.forEach(p => { out[p.userId] = [...out[p.userId], ...extra.filter(e => !out[p.userId].some(o => o.id === e.id))]; });
         return out;
     };
     const memeStep = async (r) => {
         const st = S.current; chk(); st.mm = {}; st.lockTs = 0;
-        const dd = deal(st.designs.filter(d => d.r === r), r === 1 ? 4 : 2, st.usedD, stockD), qq = deal(st.quotes.filter(q => q.r === r), r === 1 ? 6 : 4, st.usedQ, stockQ); st.pools = {};
+        const dd = deal(st.designs.filter(d => d.r <= r), r === 1 ? 4 : 2, st.usedD, stockD, r > 1 ? st.designs.filter(d => d.r < r && !st.usedD.has(d.id)) : []), qq = deal(st.quotes.filter(q => q.r <= r), r === 1 ? 6 : 4, st.usedQ, stockQ, r > 1 ? st.quotes.filter(q => q.r < r && !st.usedQ.has(q.id)) : []); st.pools = {};
         st.players.forEach(p => { st.pools[p.userId] = { ds: dd[p.userId], qs: qq[p.userId] }; });
         setPhase('MEME'); setInfo({ title: 'MEME LOCKER', sub: 'Mix a design with a quote. No repeats!' }); speak('Meme locker! Build the perfect meme!');
         openTask('S_MEME', 60, (u, aud) => { const pl = st.pools[u]; return aud || !pl ? null : { ds: pl.ds.map(x => ({ i: x.id, d: x.d })), qs: pl.qs.map(x => ({ i: x.id, x: x.x })) }; }, 'Players are building memes!');
@@ -3347,10 +3354,10 @@ const StrokesHost = ({ goBack, onGames }) => {
         const order = shuffle(list); if (order.length < 2) return { winner: order[0], runner: null };
         let champ = order[0]; const total = order.length - 1;
         for (let i = 1; i < order.length; i++) champ = await runMatch(champ, order[i], mult, title + ' · Challenger ' + i + '/' + total, i, total);
-        const rk = order.slice().sort((x, y) => rank(y) - rank(x) || y.best - x.best || y.bv - x.bv || (y === champ) - (x === champ));
-        return { winner: rk[0], runner: rk[1] || null };
+        const rk = order.filter(m => m !== champ).sort((x, y) => rank(y) - rank(x) || y.best - x.best || y.bv - x.bv);
+        return { winner: champ, runner: rk[0] || null };
     };
-    const roundEnd = async (title) => { chk(); setPhase('ROUND_END'); setInfo({ title }); sfx('victory.wav'); speak(title + ' is over! Here are the scores!'); await sleep(7000); chk(); };
+    const roundEnd = async (title) => { chk(); setPhase('ROUND_END'); setInfo({ title }); sfx('victory.wav'); speak(title + ' is over! Here are the scores!'); { const all = [...S.current.players].sort((a, b) => b.score - a.score).map(p => ({ userId: p.userId, name: p.name, avatar: p.avatar, score: p.score })); [...S.current.players, ...S.current.audience].forEach(p => send(p.userId, 'S_RANK', { title, all })); } await sleep(7000); chk(); };
     const runGame = async () => {
         const st = S.current;
         st.designs = []; st.quotes = []; st.memes = []; st.matches = []; st.dmap = {}; st.qmap = {}; st.usedD = new Set(); st.usedQ = new Set(); st.usedP = new Set(); st.usedStockQ = new Set(); st.stat = {}; st.speed = {}; st.inkOps = {}; st.qcount = {}; st.cur = null;
@@ -3376,8 +3383,8 @@ const StrokesHost = ({ goBack, onGames }) => {
             ['ink:Ink Marathon', 'Drew the most strokes', u => st.inkOps[u] || 0], ['bolt:Speed Doodler', 'Fastest to finish drawings', u => { const s = st.speed[u]; return s && s.length ? 100000 / (s.reduce((a, b) => a + b, 0) / s.length + 1000) : 0; }]];
         const cnt = {}, honors = []; cands.forEach(([t0, d, f]) => { const [ic, t] = t0.split(':'); const ranked = P.filter(p => f(p.userId) > 0).sort((a, b) => f(b.userId) - f(a.userId)); if (ranked.length) { const w = ranked.find(p => (cnt[p.userId] || 0) < 2) || ranked[0]; cnt[w.userId] = (cnt[w.userId] || 0) + 1; honors.push({ ic, t, d, u: w.userId, name: w.name, avatar: w.avatar }); } });
         st.cur = null; setPhase('GAME_END'); setInfo({ champ, runner, honors, sorted }); sfx('victory.wav'); speak(`The game is over! ${sorted[0] ? sorted[0].name : 'Someone'} is the Blersj champion!`);
-        sorted.forEach((p, i) => { const mine = st.memes.filter(m => m.maker === p.userId).sort((a, b) => b.wins - a.wins || b.votes - a.votes)[0]; send(p.userId, 'S_END', { rank: i + 1, score: p.score, hon: honors.filter(x => x.u === p.userId).map(x => ({ ic: x.ic, t: x.t, d: x.d })), meme: mine ? pubM(mine) : null }); });
-        st.audience.forEach(a => send(a.userId, 'STATE_WAITING', { msg: 'Game over! Thanks for watching!' }));
+        sorted.forEach((p, i) => { const mine = st.memes.filter(m => m.maker === p.userId).sort((a, b) => b.wins - a.wins || b.votes - a.votes)[0]; send(p.userId, 'S_END', { all: sorted.map(x => ({ userId: x.userId, name: x.name, avatar: x.avatar, score: x.score })), me: p.userId, rank: i + 1, score: p.score, hon: honors.filter(x => x.u === p.userId).map(x => ({ ic: x.ic, t: x.t, d: x.d })), meme: mine ? pubM(mine) : null }); });
+        st.audience.forEach(a => send(a.userId, 'S_RANK', { title: 'Game Over', all: sorted.map(x => ({ userId: x.userId, name: x.name, avatar: x.avatar, score: x.score })) }));
         try {
             const rounds = [1, 2, 3].map(r => ({ round: r, clashes: st.matches.filter(m => m.r === r).map(m => {
                 const A = st.memes.find(x => x.id === m.a), B = st.memes.find(x => x.id === m.b), pl = (me) => P.find(p => p.userId === me.maker) || { userId: me.maker, name: '?' }, txt = (me) => `Meme "${st.qmap[me.qid].x}" (art: ${nm(me.designer) || 'auto-doodle'}, quote: ${nm(me.quoter) || 'stock'})`;
@@ -3441,6 +3448,7 @@ const StrokesHost = ({ goBack, onGames }) => {
         body = h('div', { className: 'scale-in', style: { width: '100%' } }, h('h2', { className: 'sweep-text', style: { ...sFont, fontSize: 'clamp(44px,8vw,96px)', margin: '0 0 10px' } }, 'THE WINNING MEME'),
             ch && cm && h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: 20 } }, h('div', { style: { fontWeight: 900, letterSpacing: '.15em', color: '#facc15' } }, Ic('crown', 22), ' GRAND CHAMPION MEME'), h('div', { className: 'bouncing-win', style: { lineHeight: 0, border: '5px solid #facc15', borderRadius: 18, boxShadow: '0 0 60px rgba(250,204,21,.6)' } }, h(SMeme, { d: cm.d, x: st.qmap[ch.qid].x, st: ch.st, size: mSize + 40 })), tags(ch, 20)),
             info.runner && h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: 20 } }, h('div', { style: { fontWeight: 900, letterSpacing: '.15em', color: '#cbd5e1' } }, Ic('medal', 22), ' RUNNER-UP MEME'), h('div', { style: { lineHeight: 0, border: '4px solid #cbd5e1', borderRadius: 18 } }, h(SMeme, { d: st.dmap[info.runner.did].d, x: st.qmap[info.runner.qid].x, st: info.runner.st, size: mSize })), tags(info.runner, 18)),
+            h('h3', { style: { ...sFont, fontSize: 36, color: '#facc15', margin: '30px 0 12px', letterSpacing: '.1em' } }, 'FINAL RANKS'), board(info.sorted || [], true),
             h('h3', { style: { ...sFont, fontSize: 36, color: '#f472b6', margin: '30px 0 12px', letterSpacing: '.1em' } }, 'HONORS'),
             h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14, maxWidth: 980, margin: '0 auto' } }, (info.honors || []).map((x, i) => h('div', { key: i, className: 'scale-in', style: { ...glass, padding: 14, border: '2px solid #facc15', animationDelay: i * .15 + 's' } }, h('div', { style: { fontWeight: 900, fontSize: 20, color: '#fde68a', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' } }, Ic(x.ic, 26), x.t), h('div', { style: { display: 'flex', justifyContent: 'center', margin: '6px 0' } }, h(MonsterAvatar, { attributes: x.avatar, size: 60 })), h('div', { style: { fontWeight: 900, fontSize: 18 } }, x.name), h('div', { style: { color: '#c4b5fd', fontSize: 13, fontWeight: 700 } }, x.d)))),
             h('div', { style: { display: 'flex', gap: 14, justifyContent: 'center', margin: '28px 0 40px', flexWrap: 'wrap' } }, h('button', { onClick: () => window.location.reload(), style: sBtn('#2563eb', { minHeight: 64, fontSize: 22, padding: '12px 36px' }) }, 'Play Again'), h('button', { onClick: goBack, style: sBtn('#4b5563', { minHeight: 64, fontSize: 22, padding: '12px 36px' }) }, 'Main Menu')));
