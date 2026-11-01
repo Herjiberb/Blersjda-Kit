@@ -1927,52 +1927,176 @@ const blCenSet = (c) => { try { localStorage.setItem(BL_CEN_KEY, JSON.stringify(
 const blCenReady = () => typeof window.processTextDirect === 'function';
 const blCensor = (text) => { const c = blCenGet(); if (!c.on || !blCenReady() || !text) return text; try { const r = window.processTextDirect(String(text), c.level, c.style); return (r && typeof r.cleanedText === 'string') ? r.cleanedText : text; } catch (e) { return text; } };
 (() => { if (blCenReady()) return; try { const sc = document.createElement('script'); sc.src = 'censor.js'; sc.async = true; sc.onload = () => window.dispatchEvent(new Event('bl-censor-ready')); sc.onerror = () => { sc.remove(); }; document.head.appendChild(sc); } catch (e) { } })();
-const CensorControl = () => {
-    const h = React.createElement; const [ready, setReady] = useState(blCenReady()); const [open, setOpen] = useState(false); const [c, setC] = useState(blCenGet());
-    useEffect(() => { if (ready) return; const f = () => setReady(blCenReady()); window.addEventListener('bl-censor-ready', f); return () => window.removeEventListener('bl-censor-ready', f); }, [ready]);
-    if (!ready) return null;
-    const save = (p) => { const n = { ...c, ...p }; setC(n); blCenSet(n); };
-    const LV = [[1, 'Child Lock', 'Censors everything, even mild words'], [2, 'Standard', 'Censors moderate and strong language'], [3, 'Mild', 'Only censors the strongest language']];
-    const sample = (() => { try { return blCenReady() ? window.processTextDirect('what the fuck, this is shit', c.level, c.style).cleanedText : ''; } catch (e) { return ''; } })();
-    const row = (on) => "flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 text-left " + (on ? "border-pink-400 bg-pink-900/40" : "border-purple-700/60");
-    return h(React.Fragment, null,
-        h("button", { onClick: () => { setC(blCenGet()); setOpen(true); }, className: "bg-purple-950 border-2 border-pink-500 rounded-lg px-3 py-1 text-white font-bold hover:bg-purple-800", style: { fontSize: 16 } }, "Censor: " + (c.on ? LV[c.level - 1][1] : "Off")),
-        open && ReactDOM.createPortal(h("div", { onClick: () => setOpen(false), style: { position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 } },
-            h("div", { onClick: e => e.stopPropagation(), onKeyDown: e => e.stopPropagation(), className: "rounded-3xl", style: { background: '#1a1033', border: '2px solid #ec4899', padding: 26, width: '100%', maxWidth: 460, color: '#fff', maxHeight: '92vh', overflowY: 'auto' } },
-                h("h3", { className: "text-2xl font-black text-pink-400 uppercase tracking-widest mb-1 text-center" }, "Censor"),
-                h("p", { className: "text-sm text-gray-300 mb-4 text-center" }, "Filters player names, answers and quotes before anyone sees them."),
-                h("label", { className: row(c.on) }, h("input", { type: "checkbox", checked: c.on, onChange: e => save({ on: e.target.checked }), className: "w-6 h-6 accent-pink-500" }), h("span", { className: "font-bold text-lg" }, "Enable censor")),
-                h("p", { className: "text-xs uppercase tracking-widest text-purple-300 font-bold mt-4 mb-2" }, "Strictness"),
-                h("div", { className: "space-y-2", style: { opacity: c.on ? 1 : .5 } }, LV.map(([n, t, d]) => h("label", { key: n, className: row(c.level === n) }, h("input", { type: "radio", name: "blcl", checked: c.level === n, onChange: () => save({ level: n }), className: "w-5 h-5 accent-pink-500" }), h("span", null, h("span", { className: "font-bold block" }, t), h("span", { className: "text-xs text-gray-300" }, d))))),
-                h("p", { className: "text-xs uppercase tracking-widest text-purple-300 font-bold mt-4 mb-2" }, "Style"),
-                h("div", { className: "grid grid-cols-2 gap-2", style: { opacity: c.on ? 1 : .5 } }, [['stars', 'Stars', '*** (default)'], ['replace', 'Replace', 'swap for clean words']].map(([k, t, d]) => h("label", { key: k, className: row(c.style === k) }, h("input", { type: "radio", name: "blcs", checked: c.style === k, onChange: () => save({ style: k }), className: "w-5 h-5 accent-pink-500" }), h("span", null, h("span", { className: "font-bold block" }, t), h("span", { className: "text-xs text-gray-300" }, d))))),
-                c.on && h("p", { className: "mt-4 p-3 rounded-xl bg-black/40 text-sm text-cyan-200 break-words" }, h("span", { className: "text-gray-400" }, "Preview: "), sample),
-                h("div", { className: "flex justify-center mt-5" }, h("button", { onClick: () => setOpen(false), className: "px-6 py-2 rounded-xl font-bold uppercase tracking-wider border-2 bg-pink-600 border-pink-400" }, "Done")))), document.body));
+/* ---------- Arachnid scare (host-controlled, shown on client devices) ---------- */
+const BL_SP_KEY = 'bl_spider';
+const blSpiderOn = () => { try { return localStorage.getItem(BL_SP_KEY) === '1'; } catch (e) { return false; } };
+const blSpiderSet = (v) => { try { localStorage.setItem(BL_SP_KEY, v ? '1' : '0'); } catch (e) { } };
+let SP_ID = 0, _spAC = null;
+(() => { try { const st = document.createElement('style'); st.textContent = `
+.sp-layer{position:fixed;inset:0;z-index:99999;pointer-events:none;overflow:hidden}
+.sp-hit{position:absolute;pointer-events:auto;cursor:pointer;touch-action:manipulation}
+.sp-rot,.sp-svg{width:100%;height:100%;display:block;overflow:visible}
+.sp-leg{animation:spLeg .2s ease-in-out infinite alternate}
+.sp-leg:nth-child(odd){animation-direction:alternate-reverse}
+@keyframes spLeg{from{transform:rotate(calc(var(--r)*-1))}to{transform:rotate(var(--r))}}
+.sp-body{animation:spBob .45s ease-in-out infinite alternate;transform-origin:100px 120px}
+@keyframes spBob{from{transform:translateY(0) scale(1)}to{transform:translateY(-2px) scale(1.025)}}
+.sp-eye{animation:spEye 2.2s infinite}
+@keyframes spEye{0%,88%,100%{opacity:1}91%{opacity:.2}94%{opacity:1}97%{opacity:.45}}
+.sp-fang{animation:spFang .3s ease-in-out infinite alternate;transform-origin:100px 106px}
+.sp-fang.r{animation-direction:alternate-reverse}
+@keyframes spFang{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+.sp-palp{animation:spPalp .17s ease-in-out infinite alternate}
+@keyframes spPalp{from{transform:translateY(-1.5px)}to{transform:translateY(2px)}}
+.sp-venom{animation:spVenom 1.3s infinite}
+@keyframes spVenom{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(36px);opacity:0}}
+.sp-flash{position:absolute;inset:0;background:radial-gradient(circle,rgba(0,0,0,0) 25%,rgba(130,0,0,.7) 100%);animation:spFlash 1.8s forwards}
+@keyframes spFlash{0%{opacity:0}6%{opacity:1}100%{opacity:0}}
+.sp-drop{left:var(--x);top:0;width:var(--s);height:var(--s);animation:spDrop 4.2s cubic-bezier(.3,.7,.3,1) forwards}
+.sp-drop::before{content:'';position:absolute;left:50%;bottom:calc(100% - 26px);width:2px;margin-left:-1px;height:130vh;background:linear-gradient(to bottom,rgba(220,230,235,0),rgba(220,230,235,.75))}
+@keyframes spDrop{0%{transform:translateY(-130%)}16%{transform:translateY(var(--ty))}21%{transform:translateY(calc(var(--ty) - 22px))}27%{transform:translateY(var(--ty))}42%{transform:translateY(calc(var(--ty) + 8px))}48%{transform:translateY(calc(var(--ty) - 6px))}80%{transform:translateY(var(--ty))}88%{transform:translateY(calc(var(--ty) + 34px))}100%{transform:translateY(-140%)}}
+.sp-lunge{left:50%;top:50%;width:var(--s);height:var(--s);margin:calc(var(--s)/-2) 0 0 calc(var(--s)/-2);animation:spLunge 2.5s linear forwards}
+@keyframes spLunge{0%{transform:scale(.02) rotate(var(--rot))}5%{transform:scale(1.1) rotate(var(--rot))}10%{transform:translate(-8px,5px) scale(1.16) rotate(var(--rot))}15%{transform:translate(9px,-6px) scale(1.12) rotate(var(--rot))}20%{transform:translate(-6px,-7px) scale(1.18) rotate(var(--rot))}25%{transform:translate(7px,6px) scale(1.12) rotate(var(--rot))}35%{transform:translate(-9px,3px) scale(1.17) rotate(var(--rot))}45%{transform:translate(8px,-4px) scale(1.13) rotate(var(--rot))}60%{transform:translate(-5px,6px) scale(1.18) rotate(var(--rot))}78%{transform:translate(6px,-5px) scale(1.14) rotate(var(--rot))}90%{transform:translate(0,-6vh) scale(1.2) rotate(var(--rot))}100%{transform:translate(var(--ox),-130vh) scale(.5) rotate(var(--rot))}}
+.sp-crawl{left:0;top:0;width:var(--s);height:var(--s);animation:spCrawl var(--d) linear var(--dl) both}
+@keyframes spCrawl{
+0%{transform:translate(var(--x0),var(--y0)) rotate(var(--rot))}
+20%{transform:translate(calc(var(--x0) + (var(--x1) - var(--x0))*.28),calc(var(--y0) + (var(--y1) - var(--y0))*.28)) rotate(var(--rot))}
+26%{transform:translate(calc(var(--x0) + (var(--x1) - var(--x0))*.3),calc(var(--y0) + (var(--y1) - var(--y0))*.3)) rotate(calc(var(--rot) + 14deg))}
+34%{transform:translate(calc(var(--x0) + (var(--x1) - var(--x0))*.31),calc(var(--y0) + (var(--y1) - var(--y0))*.31)) rotate(calc(var(--rot) - 10deg))}
+58%{transform:translate(calc(var(--x0) + (var(--x1) - var(--x0))*.66),calc(var(--y0) + (var(--y1) - var(--y0))*.66)) rotate(var(--rot))}
+64%{transform:translate(calc(var(--x0) + (var(--x1) - var(--x0))*.68),calc(var(--y0) + (var(--y1) - var(--y0))*.68)) rotate(calc(var(--rot) + 9deg))}
+100%{transform:translate(var(--x1),var(--y1)) rotate(var(--rot))}}
+.sp-hit.sq{animation-play-state:paused!important}
+.sp-hit.sq .sp-rot{animation:spSquish .45s forwards;transform-origin:50% 50%}
+.sp-hit.sq::before{display:none}
+@keyframes spSquish{0%{transform:scale(1);opacity:1}30%{transform:scale(1.3,.3);opacity:1}100%{transform:scale(1.5,.12);opacity:0}}
+`; document.head.appendChild(st); } catch (e) { } })();
+const blSpiderSfx = (mode) => {
+    try {
+        const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+        _spAC = _spAC || new AC(); const ac = _spAC; if (ac.state === 'suspended') ac.resume(); const t0 = ac.currentTime;
+        const noise = (t, dur, f, q, g) => { const n = Math.floor(ac.sampleRate * dur), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); const s = ac.createBufferSource(); s.buffer = b; const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q; const gn = ac.createGain(); gn.gain.value = g; s.connect(bp); bp.connect(gn); gn.connect(ac.destination); s.start(t); };
+        if (mode === 'lunge' || mode === 'drop') { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(mode === 'lunge' ? 180 : 90, t0); o.frequency.exponentialRampToValueAtTime(40, t0 + .5); g.gain.setValueAtTime(mode === 'lunge' ? .2 : .07, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + .6); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + .65); if (mode === 'lunge') noise(t0, .35, 1800, .7, .35); }
+        const cnt = mode === 'swarm' ? 40 : 16, span = mode === 'swarm' ? 2.8 : 1.8; for (let i = 0; i < cnt; i++) noise(t0 + .1 + Math.random() * span, .03 + Math.random() * .03, 2500 + Math.random() * 3500, 6, .16);
+    } catch (e) { }
 };
-const PlayerCapControl=({cap,setCap,min,count})=>{
-    const h=React.createElement;const [open,setOpen]=useState(false);const [v,setV]=useState('');const [err,setErr]=useState('');
-    const floor=Math.max(min,count),MAXC=200;
-    const openIt=()=>{setV(cap?String(cap):'');setErr('');setOpen(true);};
-    const apply=()=>{const t=v.trim();if(t===''||t==='0'){setCap(0);setOpen(false);return;}
-        if(!/^\d+$/.test(t)){setErr('Enter a whole number, or leave empty for no limit.');return;}
-        const n=parseInt(t,10);
-        if(n<min){setErr('Minimum is '+min+' players, the game cannot start with fewer.');return;}
-        if(n<count){setErr(count+' players have already joined; the cap cannot be lower than that.');return;}
-        if(n>MAXC){setErr('Maximum cap is '+MAXC+'.');return;}
-        setCap(n);setOpen(false);};
-    const b="px-4 py-2 rounded-xl font-bold uppercase tracking-wider border-2 ";
-    return h(React.Fragment,null,
-        h("button",{onClick:openIt,className:"bg-purple-950 border-2 border-pink-500 rounded-lg px-3 py-1 text-white font-bold hover:bg-purple-800",style:{fontSize:16}},"Player cap: "+(cap?cap:"No limit")),
-        open&&ReactDOM.createPortal(h("div",{onClick:()=>setOpen(false),style:{position:'fixed',inset:0,zIndex:9999,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
-            h("div",{onClick:e=>e.stopPropagation(),className:"glass-panel rounded-3xl text-center",style:{background:'#1a1033',border:'2px solid #ec4899',padding:28,width:'100%',maxWidth:420,color:'#fff'}},
-                h("h3",{className:"text-2xl font-black text-pink-400 uppercase tracking-widest mb-2"},"Player Cap"),
-                h("p",{className:"text-sm text-gray-300 mb-4"},"Type the max number of players. Leave empty for no limit. Minimum "+floor+(count>min?" ("+count+" already joined)":"")+"."),
-                h("input",{autoFocus:true,type:"text",inputMode:"numeric",value:v,placeholder:"No limit",onChange:e=>{setV(e.target.value.replace(/[^\d]/g,'').slice(0,3));setErr('');},onKeyDown:e=>{e.stopPropagation();if(e.key==='Enter')apply();if(e.key==='Escape')setOpen(false);},className:"w-full text-center text-3xl font-black p-3 rounded-xl bg-purple-950 border-2 border-cyan-500/60 outline-none focus:border-cyan-300"}),
-                err&&h("p",{className:"text-red-400 font-bold text-sm mt-3"},err),
-                h("div",{className:"flex gap-3 justify-center mt-5 flex-wrap"},
-                    h("button",{onClick:()=>setOpen(false),className:b+"border-purple-500/60"},"Cancel"),
-                    h("button",{onClick:()=>{setV('');setErr('');},className:b+"border-cyan-500/60"},"No limit"),
-                    h("button",{onClick:apply,className:b+"bg-pink-600 border-pink-400"},"Apply")))),document.body));
+const SpiderSVG = () => {
+    const h = React.createElement, id = useMemo(() => 'sp' + (++SP_ID), []);
+    const FEM = [-62, -28, 8, 38], TIB = [25, 55, 70, 85], legs = [];
+    [1, -1].forEach(side => { for (let k = 0; k < 4; k++) {
+        const fa = FEM[k] * Math.PI / 180, ta = TIB[k] * Math.PI / 180;
+        const kx = 100 + side * 52 * Math.cos(fa), ky = 100 + 52 * Math.sin(fa), fx = kx + side * 64 * Math.cos(ta), fy = ky + 64 * Math.sin(ta), mx = (kx + fx) / 2 + side * 4, my = (ky + fy) / 2 - 4;
+        const full = `M100 100 L${kx} ${ky} Q${mx} ${my} ${fx} ${fy}`;
+        legs.push(h('g', { key: side + '_' + k, className: 'sp-leg', style: { transformOrigin: '100px 100px', '--r': (3 + k * 1.4) + 'deg', animationDelay: (((k + (side > 0 ? 0 : 2)) % 4) * -.06) + 's', animationDuration: (.18 + k * .02) + 's' } },
+            h('path', { d: full, stroke: '#150b1c', strokeWidth: 11, fill: 'none', strokeDasharray: '.6 3.4', strokeLinecap: 'round', opacity: .7 }),
+            h('path', { d: `M100 100 L${kx} ${ky}`, stroke: '#0a050e', strokeWidth: 8, strokeLinecap: 'round', fill: 'none' }),
+            h('path', { d: `M${kx} ${ky} Q${mx} ${my} ${fx} ${fy}`, stroke: '#0a050e', strokeWidth: 4.5, strokeLinecap: 'round', fill: 'none' }),
+            h('path', { d: full, stroke: '#3a2646', strokeWidth: 1, fill: 'none', opacity: .8, strokeDasharray: '2 3' }),
+            h('circle', { cx: kx, cy: ky, r: 5, fill: '#14091a' })));
+    } });
+    const eyes = [[92, 84, 4.6], [108, 84, 4.6], [83, 90, 3.2], [117, 90, 3.2], [95, 77, 2.5], [105, 77, 2.5], [87, 80, 2.1], [113, 80, 2.1]];
+    return h('svg', { className: 'sp-svg', viewBox: '0 0 200 200', xmlns: 'http://www.w3.org/2000/svg' },
+        h('defs', null,
+            h('radialGradient', { id: id + 'a', cx: '.38', cy: '.3', r: '.8' }, h('stop', { offset: 0, stopColor: '#3d2849' }), h('stop', { offset: .55, stopColor: '#130819' }), h('stop', { offset: 1, stopColor: '#000' })),
+            h('radialGradient', { id: id + 'h', cx: '.4', cy: '.3', r: '.8' }, h('stop', { offset: 0, stopColor: '#33223d' }), h('stop', { offset: 1, stopColor: '#05020a' })),
+            h('filter', { id: id + 'g', x: '-60%', y: '-60%', width: '220%', height: '220%' }, h('feGaussianBlur', { stdDeviation: 2.4, result: 'b' }), h('feMerge', null, h('feMergeNode', { in: 'b' }), h('feMergeNode', { in: 'SourceGraphic' })))),
+        h('g', { className: 'sp-body' },
+            legs,
+            h('ellipse', { cx: 100, cy: 146, rx: 34, ry: 44, fill: `url(#${id}a)` }),
+            h('ellipse', { cx: 100, cy: 146, rx: 36, ry: 46, fill: 'none', stroke: '#1c0f24', strokeWidth: 5, strokeDasharray: '.7 3', strokeLinecap: 'round' }),
+            h('ellipse', { cx: 90, cy: 130, rx: 9, ry: 14, fill: '#fff', opacity: .07, transform: 'rotate(-18 90 130)' }),
+            h('path', { d: 'M89 128 L111 128 L100 145 Z M100 145 L113 164 L87 164 Z', fill: '#d10f1f', filter: `url(#${id}g)`, opacity: .95 }),
+            h('path', { d: 'M82 120 Q100 112 118 120 M78 136 Q100 128 122 136', stroke: '#27152f', strokeWidth: 2, fill: 'none' }),
+            h('ellipse', { cx: 100, cy: 96, rx: 25, ry: 23, fill: `url(#${id}h)` }),
+            h('ellipse', { cx: 100, cy: 96, rx: 27, ry: 25, fill: 'none', stroke: '#1c0f24', strokeWidth: 4, strokeDasharray: '.7 3', strokeLinecap: 'round' }),
+            h('path', { d: 'M100 80 L100 112 M88 98 Q100 104 112 98', stroke: '#241431', strokeWidth: 1.6, fill: 'none' }),
+            h('g', { className: 'sp-palp' }, h('path', { d: 'M83 106 Q72 110 76 122', stroke: '#0e0614', strokeWidth: 5.5, fill: 'none', strokeLinecap: 'round' }), h('path', { d: 'M117 106 Q128 110 124 122', stroke: '#0e0614', strokeWidth: 5.5, fill: 'none', strokeLinecap: 'round' })),
+            h('g', { className: 'sp-fang' }, h('path', { d: 'M95 109 Q86 122 92 136', stroke: '#e9e1c6', strokeWidth: 4.2, fill: 'none', strokeLinecap: 'round' }), h('path', { d: 'M95 109 Q90 114 88 118', stroke: '#6a604a', strokeWidth: 2, fill: 'none' }), h('circle', { className: 'sp-venom', cx: 92, cy: 137, r: 2.3, fill: '#b6ff4a' })),
+            h('g', { className: 'sp-fang r' }, h('path', { d: 'M105 109 Q114 122 108 136', stroke: '#e9e1c6', strokeWidth: 4.2, fill: 'none', strokeLinecap: 'round' }), h('path', { d: 'M105 109 Q110 114 112 118', stroke: '#6a604a', strokeWidth: 2, fill: 'none' }), h('circle', { className: 'sp-venom', cx: 108, cy: 137, r: 2.3, fill: '#b6ff4a', style: { animationDelay: '-.6s' } })),
+            h('g', { className: 'sp-eye', filter: `url(#${id}g)` }, eyes.map(([x, y, r], i) => h('g', { key: i }, h('circle', { cx: x, cy: y, r, fill: '#ff1f1f' }), h('circle', { cx: x - r * .25, cy: y - r * .3, r: r * .3, fill: '#fff', opacity: .85 }))))));
+};
+const SP_DUR = { drop: 4300, lunge: 2500, skitter: 4600, swarm: 5800 };
+const SpiderScare = ({ mode }) => {
+    const h = React.createElement;
+    useEffect(() => { blSpiderSfx(mode); try { navigator.vibrate && navigator.vibrate(mode === 'lunge' ? [70, 40, 110] : [40]); } catch (e) { } }, []);
+    const items = useMemo(() => {
+        const W = window.innerWidth, H = window.innerHeight, R = (a, b) => a + Math.random() * (b - a);
+        const mk = (s, dl, dur) => { const side = Math.floor(R(0, 4)), m = s * 1.2; let x0, y0, x1, y1;
+            if (side === 0) { x0 = -m; y0 = R(0, H); x1 = W + m; y1 = R(0, H); } else if (side === 1) { x0 = W + m; y0 = R(0, H); x1 = -m; y1 = R(0, H); } else if (side === 2) { x0 = R(0, W); y0 = -m; x1 = R(0, W); y1 = H + m; } else { x0 = R(0, W); y0 = H + m; x1 = R(0, W); y1 = -m; }
+            return { cls: 'sp-crawl', style: { '--s': s + 'px', '--x0': (x0 - s / 2) + 'px', '--y0': (y0 - s / 2) + 'px', '--x1': (x1 - s / 2) + 'px', '--y1': (y1 - s / 2) + 'px', '--rot': (Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI + 90) + 'deg', '--d': dur + 's', '--dl': dl + 's' } }; };
+        if (mode === 'drop') { const s = Math.min(W * .6, 260); return [{ cls: 'sp-drop', rot: true, style: { '--s': s + 'px', '--x': R(3, Math.max(4, (W - s) / W * 100 - 3)) + '%', '--ty': R(H * .1, H * .5) + 'px' } }]; }
+        if (mode === 'lunge') return [{ cls: 'sp-lunge', flash: true, style: { '--s': 'min(92vw,92vh,560px)', '--rot': R(-12, 12) + 'deg', '--ox': R(-60, 60) + 'vw' } }];
+        if (mode === 'swarm') return Array.from({ length: 18 }, () => mk(R(50, 110), R(0, 1.8), R(2.2, 3.6)));
+        return [mk(Math.min(W * .5, 230), 0, 3.4), ...Array.from({ length: 4 }, () => mk(R(50, 80), R(.3, 1.2), R(2.4, 3.4)))];
+    }, [mode]);
+    return h('div', { className: 'sp-layer' },
+        items.some(i => i.flash) && h('div', { className: 'sp-flash' }),
+        items.map((it, i) => h('div', { key: i, className: 'sp-hit ' + it.cls, style: it.style, onPointerDown: e => e.currentTarget.classList.add('sq') },
+            h('div', { className: 'sp-rot', style: it.rot ? { transform: 'rotate(180deg)' } : null }, h(SpiderSVG)))));
+};
+const SpiderFX = () => {
+    const [fx, setFx] = useState(null);
+    useEffect(() => { const f = (e) => { const d = e.detail; if (d && d.type === 'FX_SPIDER') setFx({ mode: SP_DUR[d.mode] ? d.mode : 'drop', k: Date.now() + Math.random() }); }; window.addEventListener('bl-host-msg', f); return () => window.removeEventListener('bl-host-msg', f); }, []);
+    useEffect(() => { if (!fx) return; const t = setTimeout(() => setFx(null), SP_DUR[fx.mode] + 300); return () => clearTimeout(t); }, [fx]);
+    return fx ? React.createElement(SpiderScare, { key: fx.k, mode: fx.mode }) : null;
+};
+/* host: randomly sends FX_SPIDER to some connected clients while voting / showing results */
+const useSpiderSender = (active, getConns) => {
+    const ref = useRef(getConns); ref.current = getConns;
+    useEffect(() => {
+        if (!active) return; let t; const modes = ['drop', 'drop', 'lunge', 'skitter', 'swarm'];
+        const tick = () => {
+            if (blSpiderOn()) { const open = (ref.current() || []).filter(c => c && c.open); let pick = open.filter(() => Math.random() < .55); if (!pick.length && open.length) pick = [open[Math.floor(Math.random() * open.length)]]; pick.forEach(c => { try { c.send({ type: 'FX_SPIDER', mode: modes[Math.floor(Math.random() * modes.length)] }); } catch (e) { } }); }
+            t = setTimeout(tick, 6000 + Math.random() * 9000);
+        };
+        t = setTimeout(tick, 3000 + Math.random() * 5000); return () => clearTimeout(t);
+    }, [active]);
+};
+/* ---------- Unified Game Settings (player cap + censor + arachnid scare) ---------- */
+const GameSettingsControl = ({ cap, setCap, min, count }) => {
+    const h = React.createElement; const [open, setOpen] = useState(false); const [v, setV] = useState(''); const [err, setErr] = useState('');
+    const [ready, setReady] = useState(blCenReady()); const [c, setC] = useState(blCenGet()); const [sp, setSp] = useState(blSpiderOn());
+    useEffect(() => { if (ready) return; const f = () => setReady(blCenReady()); window.addEventListener('bl-censor-ready', f); return () => window.removeEventListener('bl-censor-ready', f); }, [ready]);
+    const floor = Math.max(min, count), MAXC = 200;
+    const openIt = () => { setV(cap ? String(cap) : ''); setErr(''); setC(blCenGet()); setSp(blSpiderOn()); setOpen(true); };
+    const saveCen = (p) => { const n = { ...c, ...p }; setC(n); blCenSet(n); };
+    const apply = () => {
+        const t = v.trim(); let n = 0;
+        if (t !== '' && t !== '0') { if (!/^\d+$/.test(t)) { setErr('Player cap: enter a whole number, or leave empty for no limit.'); return; } n = parseInt(t, 10);
+            if (n < min) { setErr('Player cap: minimum is ' + min + ' players, the game cannot start with fewer.'); return; }
+            if (n < count) { setErr('Player cap: ' + count + ' players have already joined; the cap cannot be lower than that.'); return; }
+            if (n > MAXC) { setErr('Player cap: maximum is ' + MAXC + '.'); return; } }
+        setCap(n); setOpen(false);
+    };
+    const LV = [[1, 'Child Lock', 'Censors everything, even mild words'], [2, 'Standard', 'Moderate and strong language'], [3, 'Mild', 'Only the strongest language']];
+    const sample = (() => { try { return ready && c.on ? window.processTextDirect('what the fuck, this is shit', c.level, c.style).cleanedText : ''; } catch (e) { return ''; } })();
+    const row = (on) => "flex items-center gap-3 p-2.5 rounded-xl cursor-pointer border-2 text-left " + (on ? "border-pink-400 bg-pink-900/40" : "border-purple-700/60");
+    const card = (col, title, sub, kids) => h("div", { className: "rounded-2xl p-4 text-left", style: { background: 'rgba(255,255,255,.04)', borderLeft: '6px solid ' + col } }, h("div", { className: "flex items-baseline justify-between gap-2 mb-2" }, h("h4", { className: "font-black uppercase tracking-widest text-sm", style: { color: col } }, title), sub && h("span", { className: "text-xs text-gray-400" }, sub)), kids);
+    const tog = (on, set, label) => h("label", { className: row(on) }, h("input", { type: "checkbox", checked: on, onChange: e => set(e.target.checked), className: "w-6 h-6 accent-pink-500" }), h("span", { className: "font-bold" }, label));
+    const chips = [cap ? 'Cap ' + cap : null, ready && c.on ? 'Censor' : null, sp ? 'Spiders' : null].filter(Boolean);
+    return h(React.Fragment, null,
+        h("button", { onClick: openIt, className: "bg-purple-950 border-2 border-pink-500 rounded-lg px-4 py-1 text-white font-bold hover:bg-purple-800", style: { fontSize: 16 } }, "Game Settings", chips.length > 0 && h("span", { className: "ml-2 text-xs text-cyan-300 font-mono" }, chips.join(' · '))),
+        open && ReactDOM.createPortal(h("div", { onClick: () => setOpen(false), style: { position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 } },
+            h("div", { onClick: e => e.stopPropagation(), onKeyDown: e => e.stopPropagation(), className: "rounded-3xl", style: { background: '#1a1033', border: '2px solid #ec4899', padding: 24, width: '100%', maxWidth: 560, color: '#fff', maxHeight: '92vh', overflowY: 'auto' } },
+                h("h3", { className: "text-3xl font-black text-pink-400 uppercase tracking-widest text-center" }, "Game Settings"),
+                h("p", { className: "text-sm text-gray-300 text-center mb-4" }, "Everything the host controls, in one place."),
+                h("div", { className: "space-y-4" },
+                    card('#22d3ee', 'Player cap', 'min ' + floor + (count > min ? ' (' + count + ' joined)' : ''), h("div", null,
+                        h("input", { type: "text", inputMode: "numeric", value: v, placeholder: "No limit", onChange: e => { setV(e.target.value.replace(/[^\d]/g, '').slice(0, 3)); setErr(''); }, onKeyDown: e => { if (e.key === 'Enter') apply(); if (e.key === 'Escape') setOpen(false); }, className: "w-full text-center text-2xl font-black p-2 rounded-xl bg-purple-950 border-2 border-cyan-500/60 outline-none focus:border-cyan-300" }),
+                        h("p", { className: "text-xs text-gray-400 mt-1 text-center" }, "Type a number, or leave empty for no limit."))),
+                    ready && card('#f472b6', 'Censor', 'filters names, answers and quotes', h("div", { className: "space-y-2" },
+                        tog(c.on, on => saveCen({ on }), 'Enable censor'),
+                        h("div", { className: "space-y-1.5", style: { opacity: c.on ? 1 : .5 } }, LV.map(([n, t, d]) => h("label", { key: n, className: row(c.level === n) }, h("input", { type: "radio", name: "gscl", checked: c.level === n, onChange: () => saveCen({ level: n }), className: "w-5 h-5 accent-pink-500" }), h("span", null, h("span", { className: "font-bold block" }, t), h("span", { className: "text-xs text-gray-300" }, d))))),
+                        h("div", { className: "grid grid-cols-2 gap-2", style: { opacity: c.on ? 1 : .5 } }, [['stars', 'Stars', '*** (default)'], ['replace', 'Replace', 'clean words']].map(([k, t, d]) => h("label", { key: k, className: row(c.style === k) }, h("input", { type: "radio", name: "gscs", checked: c.style === k, onChange: () => saveCen({ style: k }), className: "w-5 h-5 accent-pink-500" }), h("span", null, h("span", { className: "font-bold block" }, t), h("span", { className: "text-xs text-gray-300" }, d))))),
+                        c.on && h("p", { className: "p-2 rounded-xl bg-black/40 text-sm text-cyan-200 break-words" }, h("span", { className: "text-gray-400" }, "Preview: "), sample))),
+                    card('#ef4444', 'Arachnid scare', 'jump-scare for players', h("div", { className: "space-y-2" },
+                        tog(sp, on => { setSp(on); blSpiderSet(on); }, 'Creepy spiders pop up on player devices'),
+                        h("p", { className: "text-xs text-gray-300" }, "While voting and during results, a spider randomly drops, lunges or skitters across some players' screens. Tap it to squish it. Off by default; may startle people with arachnophobia."),
+                        h("button", { onClick: () => window.dispatchEvent(new CustomEvent('bl-host-msg', { detail: { type: 'FX_SPIDER', mode: ['drop', 'lunge', 'skitter', 'swarm'][Math.floor(Math.random() * 4)] } })), className: "px-4 py-1.5 rounded-xl font-bold text-sm uppercase tracking-wider border-2 border-red-500/70 hover:bg-red-900/40" }, "Preview on this screen")))),
+                err && h("p", { className: "text-red-400 font-bold text-sm mt-3 text-center" }, err),
+                h("div", { className: "flex gap-3 justify-center mt-5" },
+                    h("button", { onClick: () => setOpen(false), className: "px-5 py-2 rounded-xl font-bold uppercase tracking-wider border-2 border-purple-500/60" }, "Cancel"),
+                    h("button", { onClick: apply, className: "px-6 py-2 rounded-xl font-bold uppercase tracking-wider border-2 bg-pink-600 border-pink-400" }, "Save")))), document.body));
 };
 const LogPanel=({history})=>{
     const [q,setQ]=useState('');const [sort,setSort]=useState('new');const [winsOnly,setWinsOnly]=useState(false);const [limit,setLimit]=useState(50);
@@ -3020,6 +3144,7 @@ const StrokesHost = ({ goBack, onGames }) => {
         return () => clearInterval(fi);
     }, [phase, round]);
     /* net */
+    useSpiderSender(['VOTING', 'REVEAL', 'ROUND_END', 'GAME_END'].includes(phase), () => Object.values(conns.current));
     const send = (uid, type, payload) => { const c = conns.current[uid]; if (c && c.open) c.send({ type, ...payload }); };
     const resend = (uid, aud) => {
         const c = S.current.cur; if (!c) { send(uid, 'STATE_WAITING', { msg: 'Look at the big screen!' }); return; }
@@ -3221,7 +3346,7 @@ const StrokesHost = ({ goBack, onGames }) => {
         h('h2', { style: { fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 } }, 'Join at ', h('span', { style: { color: '#f472b6' } }, 'herjiberb.github.io/Blersjda-Kit')),
         h('div', { style: { display: 'inline-block', background: 'rgba(88,28,135,.5)', border: '3px solid #f59e0b', borderRadius: 28, padding: '18px 30px', marginBottom: 18, boxShadow: '0 0 40px rgba(245,158,11,.3)' } }, h('div', { style: { color: '#e9d5ff', fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase' } }, 'Room Code'), h('div', { style: { fontFamily: 'monospace', background: '#fff', color: '#000', padding: '6px 28px', borderRadius: 14, fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, letterSpacing: '.2em' } }, roomCode || '...')),
         h('div', { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' } }, h(SDisc, { g: SGAMES[1], size: 64 }), h('b', { style: { ...sFont, fontSize: 30, letterSpacing: '.08em', color: '#fbbf24' } }, 'BLERSJDA STROKES')),
-        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h(PlayerCapControl, { cap, setCap, min: 3, count: players.length }), h(CensorControl), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
+        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h(GameSettingsControl, { cap, setCap, min: 3, count: players.length }), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
         h('div', { style: { ...glass, padding: 24, minHeight: 200, marginBottom: 16 } }, h('h3', { style: { color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 14, fontSize: 22 } }, `Players (${players.length}) - Needs 3+` + (cap ? ` (cap ${cap})` : '')),
             h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' } }, players.map(p => h('div', { key: p.userId, className: 'animate-bounce', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', animationDuration: (1.5 + Math.random() * .5) + 's' } }, h(MonsterAvatar, { attributes: p.avatar, size: 80 }), h('div', { style: { marginTop: 6, background: 'rgba(107,33,168,.8)', padding: '3px 12px', borderRadius: 99, fontWeight: 800, fontSize: 14 } }, p.name))), !players.length && h('div', { style: { color: '#c084fc', fontWeight: 800, letterSpacing: '.1em' } }, 'WAITING FOR PLAYERS…'))),
         h('button', { onClick: () => startGame(false), disabled: players.length < 3, style: sBtn(players.length < 3 ? '#4b5563' : '#ec4899', { width: '100%', maxWidth: 440, minHeight: 72, fontSize: 24 }) }, players.length < 3 ? `Waiting for ${3 - players.length} more…` : `Start Game (${players.length} ready)`),
@@ -3271,6 +3396,7 @@ const StrokesHost = ({ goBack, onGames }) => {
 
 const App = () => {
     const [view, setView] = useState('MENU');
+    window.__blView = view;
     const [game, setGame] = useState(() => { try { return localStorage.getItem('bl_game') || 'madness'; } catch (e) { return 'madness'; } });
     const [menuFx, setMenuFx] = useState(null);
     const [showGames, setShowGames] = useState(false);
@@ -3316,6 +3442,11 @@ const App = () => {
                 const k = Date.now(); setMenuFx({ t, k }); setTimeout(() => setMenuFx(m => m && m.k === k ? null : m), 3200); try { new Audio('squelchy.wav').play(); } catch (e) { }
                 keyBuffer = '';
             }
+            const spCodes = { ARACHNID: null, EIGHTLEGS: 'swarm' };
+            for (const code in spCodes) if (keyBuffer.endsWith(code) && window.__blView === 'MENU') {
+                const mode = spCodes[code] || ['drop', 'lunge', 'skitter', 'swarm'][Math.floor(Math.random() * 4)];
+                window.dispatchEvent(new CustomEvent('bl-host-msg', { detail: { type: 'FX_SPIDER', mode } })); keyBuffer = '';
+            }
             if (keyBuffer.endsWith('KICKALL')) {
                 window.dispatchEvent(new CustomEvent('blersjda-host-cmd', { detail: 'KICKALL' }));
                 keyBuffer = '';
@@ -3330,6 +3461,7 @@ const App = () => {
     }, []);
     return (React.createElement("div", { className: "min-h-screen flex flex-col items-center justify-center p-4 relative z-10" },
         React.createElement("div", { className: "sparkle-bg" }),
+        React.createElement(SpiderFX, null),
         menuFx && view === 'MENU' && React.createElement(WaterfallEffect, { key: menuFx.k, type: menuFx.t }),
         view === 'MENU' && React.createElement(MainMenu, { setView: setView, game: game, openGames: () => setShowGames(true) }),
         view === 'HOST' && React.createElement(game === 'strokes' ? StrokesHost : OnlineHost, { key: game, goBack: () => setView('MENU'), onGames: () => setShowGames(true) }),
@@ -3647,6 +3779,7 @@ const OnlineHost = ({ goBack, onGames }) => {
         window.addEventListener('blersjda-host-cmd', handleHostCmd);
         return () => window.removeEventListener('blersjda-host-cmd', handleHostCmd);
     }, []);
+    useSpiderSender(['VOTING', 'REVEAL', 'ROUND_END', 'GAME_END'].includes(gameState), () => Object.values(connectionsRef.current));
     const broadcast = (type, payload) => {
         Object.values(connectionsRef.current).forEach(conn => {
             if (conn && conn.open)
@@ -4133,8 +4266,7 @@ const OnlineHost = ({ goBack, onGames }) => {
                     React.createElement("input", { type: "checkbox", checked: settings.autoProgress, onChange: e => setSettings(s => ({ ...s, autoProgress: e.target.checked })), className: "w-6 h-6 accent-pink-500" }),
                     "Auto Progress"),
                 React.createElement("div", { className: "w-px h-8 bg-white/20" }),
-                React.createElement(PlayerCapControl, { cap: settings.cap || 0, setCap: n => setSettings(x => ({ ...x, cap: n })), min: 4, count: players.length }),
-                React.createElement(CensorControl)),
+                React.createElement(GameSettingsControl, { cap: settings.cap || 0, setCap: n => setSettings(x => ({ ...x, cap: n })), min: 4, count: players.length })),
             React.createElement("div", { className: "glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30" },
                 React.createElement("h3", { className: "text-2xl mb-6 text-pink-300 font-bold uppercase tracking-widest" },
                     "Players (",
