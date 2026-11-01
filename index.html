@@ -2426,107 +2426,88 @@ const FloatingPopups = ({ active }) => {
 const WaterfallEffect = ({ type }) => {
     const canvasRef = useRef(null);
     useEffect(() => {
-        if (!type)
-            return;
+        if (!type) return;
         const canvas = canvasRef.current;
-        if (!canvas)
-            return;
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        let animationId;
-        const colors = {
-            coffee: { base: '#3b2313', highlight: '#6b3e21', shadow: '#1a0f08' },
-            lemonade: { base: '#ffea00', highlight: '#ffffff', shadow: '#cca300' },
-            milk: { base: '#ffffff', highlight: '#ffffff', shadow: '#d0d0d0' }
-        }[type] || { base: '#ffffff', highlight: '#ffffff', shadow: '#000000' };
-        const resize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        const kind = type === 'coffee' ? 'poo' : type === 'lemonade' ? 'pee' : 'milk';
+        const PAL = { poo: { base: '#5b3a1d', hi: '#9a6a3a', sh: '#2b190a', acc: '#8fa32c' }, pee: { base: 'rgba(255,224,40,.80)', hi: '#fffde0', sh: '#d6a300', acc: '#fff6a0' }, milk: { base: '#fbfcff', hi: '#ffffff', sh: '#c9d4ee', acc: '#8ea9e6' } }[kind];
+        const rnd = (a, b) => a + Math.random() * (b - a);
+        let W = 0, H = 0;
+        const resize = () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; };
+        resize(); window.addEventListener('resize', resize);
+        const cfg = { poo: { step: 40, w: [26, 46], sp: [9, 15], pool: .15 }, pee: { step: 11, w: [3, 8], sp: [20, 32], pool: .09 }, milk: { step: 26, w: [14, 30], sp: [14, 22], pool: .12 } }[kind];
+        const streams = [];
+        for (let x = -10; x < W + 10; x += cfg.step) streams.push({ x: x + rnd(-cfg.step / 3, cfg.step / 3), w: rnd(...cfg.w), sp: rnd(...cfg.sp), y: -rnd(40, 320), delay: rnd(0, 14), ph: rnd(0, 6.28), spot: Math.random() < .4 });
+        const parts = [], flies = [], stink = [];
+        if (kind === 'poo') for (let i = 0; i < 9; i++) flies.push({ a: rnd(0, 6.28), r: rnd(40, 140), cx: rnd(.1, .9) * W, cy: rnd(.45, .8) * H, s: rnd(.12, .3) });
+        const burst = (x, y, n, up) => { for (let i = 0; i < n; i++) parts.push({ x, y, vx: rnd(-5, 5), vy: -rnd(up * .4, up), r: rnd(kind === 'pee' ? 2 : 4, kind === 'pee' ? 5 : 11), life: 1, bub: Math.random() < .25 }); };
+        let frame = 0, alpha = 1, level = 0, raf;
+        const blob = (x, y, rx, ry, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, 6.2832); ctx.fill(); };
+        const tip = (s, y) => {
+            const w = s.w;
+            if (kind === 'poo') { /* soft-serve coil */
+                blob(s.x, y, w * .75, w * .42, PAL.sh); blob(s.x, y - w * .28, w * .6, w * .34, PAL.base); blob(s.x, y - w * .52, w * .42, w * .27, PAL.base); blob(s.x, y - w * .72, w * .24, w * .2, PAL.base);
+                ctx.strokeStyle = PAL.hi; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(s.x - w * .45, y - w * .3); ctx.quadraticCurveTo(s.x, y - w * .1, s.x + w * .45, y - w * .34); ctx.stroke();
+            } else if (kind === 'pee') { blob(s.x, y, w * .9, w * 1.5, PAL.base); blob(s.x - w * .25, y - w * .4, w * .25, w * .5, PAL.hi); }
+            else { blob(s.x, y, w * .75, w * .75, PAL.base); blob(s.x - w * .22, y - w * .22, w * .22, w * .22, PAL.hi); blob(s.x + w * .15, y + w * .2, w * .5, w * .35, PAL.sh); }
         };
-        resize();
-        window.addEventListener('resize', resize);
-        const drips = [];
-        const numDrips = Math.floor(window.innerWidth / 18);
-        for (let i = 0; i < numDrips; i++) {
-            drips.push({
-                x: i * (window.innerWidth / numDrips) + (Math.random() * 40 - 20),
-                y: -(Math.random() * 400) - 100,
-                speed: Math.random() * 14 + 18,
-                radius: Math.random() * 18 + 10,
-                delay: Math.random() * 10
-            });
-        }
-        let frame = 0;
-        let globalAlpha = 1;
         const render = () => {
             frame++;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (frame > 80) {
-                globalAlpha -= 0.025;
-            }
-            if (globalAlpha <= 0) {
-                globalAlpha = 0;
-                return;
-            }
-            ctx.globalAlpha = globalAlpha;
-            let highestY = Math.min(...drips.map(d => d.y));
-            if (highestY > -100) {
-                ctx.fillStyle = colors.base;
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                drips.forEach((drip, i) => {
-                    if (i === 0)
-                        ctx.lineTo(0, drip.y - drip.radius * 2);
-                    ctx.lineTo(drip.x, drip.y - drip.radius * 3);
-                });
-                ctx.lineTo(canvas.width, 0);
-                ctx.fill();
-            }
-            drips.forEach(drip => {
-                if (frame > drip.delay) {
-                    drip.y += drip.speed;
-                    ctx.beginPath();
-                    ctx.moveTo(drip.x, 0);
-                    ctx.lineTo(drip.x, drip.y);
-                    ctx.lineWidth = drip.radius * 2;
-                    ctx.lineCap = 'round';
-                    ctx.strokeStyle = colors.base;
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(drip.x - drip.radius + 3, 0);
-                    ctx.lineTo(drip.x - drip.radius + 3, drip.y);
-                    ctx.lineWidth = 4;
-                    ctx.strokeStyle = colors.shadow;
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(drip.x + drip.radius - 4, 0);
-                    ctx.lineTo(drip.x + drip.radius - 4, drip.y - drip.radius);
-                    ctx.lineWidth = 3;
-                    ctx.strokeStyle = colors.highlight;
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.arc(drip.x, drip.y, drip.radius * 1.15, 0, Math.PI * 2);
-                    ctx.fillStyle = colors.base;
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(drip.x - 2, drip.y + 2, drip.radius * 0.9, 0, Math.PI * 2);
-                    ctx.fillStyle = colors.shadow;
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.arc(drip.x + drip.radius * 0.35, drip.y - drip.radius * 0.35, drip.radius * 0.25, 0, Math.PI * 2);
-                    ctx.fillStyle = colors.highlight;
-                    ctx.fill();
-                }
+            ctx.clearRect(0, 0, W, H);
+            if (frame > 85) alpha -= .025;
+            if (alpha <= 0) return;
+            ctx.globalAlpha = Math.max(0, alpha);
+            /* ceiling gunk */
+            ctx.fillStyle = PAL.base; ctx.beginPath(); ctx.moveTo(0, 0);
+            for (let x = 0; x <= W; x += 14) ctx.lineTo(x, 18 + Math.sin(x * .05 + frame * .2) * 7 + (kind === 'poo' ? Math.sin(x * .13) * 8 : 0));
+            ctx.lineTo(W, 0); ctx.fill();
+            streams.forEach(s => {
+                if (frame < s.delay) return;
+                s.y = Math.min(H + 40, s.y + s.sp);
+                const wob = Math.sin(frame * .15 + s.ph) * (kind === 'pee' ? 5 : 2);
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = PAL.base; ctx.lineWidth = s.w;
+                ctx.beginPath(); ctx.moveTo(s.x, 0);
+                for (let y = 0; y <= s.y; y += 24) ctx.lineTo(s.x + Math.sin(y * .02 + frame * .15 + s.ph) * (kind === 'pee' ? 5 : 2), y);
+                ctx.stroke();
+                if (s.w > 8) { ctx.strokeStyle = PAL.sh; ctx.lineWidth = Math.max(2, s.w * .14); ctx.beginPath(); ctx.moveTo(s.x - s.w * .38, 0); ctx.lineTo(s.x - s.w * .38, s.y - s.w); ctx.stroke(); ctx.strokeStyle = PAL.hi; ctx.lineWidth = Math.max(2, s.w * .1); ctx.beginPath(); ctx.moveTo(s.x + s.w * .25, 0); ctx.lineTo(s.x + s.w * .25, s.y - s.w * 1.3); ctx.stroke(); }
+                if (kind === 'milk' && s.spot && s.w > 16) for (let k = 1; k < 4; k++) { const sy = (s.y * k / 4 + frame * 6 * k) % Math.max(60, s.y); blob(s.x + 3, sy, s.w * .3, s.w * .22, 'rgba(40,40,60,.55)'); }
+                if (kind === 'pee' && Math.random() < .12) parts.push({ x: s.x + rnd(-4, 4), y: rnd(0, s.y), vx: rnd(-1, 1), vy: 0, r: rnd(1.5, 3), life: 1, bub: true });
+                tip(s, s.y);
+                if (s.y >= H + 30 && Math.random() < .25) burst(s.x, H - level * H, kind === 'poo' ? 2 : 3, kind === 'pee' ? 14 : 18);
             });
-            animationId = requestAnimationFrame(render);
+            /* rising pool */
+            level = Math.min(cfg.pool, level + .0035);
+            const top = H - level * H;
+            const g = ctx.createLinearGradient(0, top, 0, H); g.addColorStop(0, PAL.base); g.addColorStop(1, PAL.sh);
+            ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, H);
+            for (let x = 0; x <= W; x += 10) ctx.lineTo(x, top + Math.sin(x * .02 + frame * .18) * 8 + Math.sin(x * .05 - frame * .1) * 4);
+            ctx.lineTo(W, H); ctx.fill();
+            /* splash / bubbles */
+            for (let i = parts.length - 1; i >= 0; i--) {
+                const p = parts[i]; p.x += p.vx; p.y += p.vy; p.vy += p.bub && p.vy === 0 ? 0 : .9; p.life -= .02;
+                if (p.life <= 0 || p.y > H + 20) { parts.splice(i, 1); continue; }
+                ctx.globalAlpha = Math.max(0, Math.min(alpha, p.life));
+                if (p.bub) { ctx.strokeStyle = PAL.hi; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832); ctx.stroke(); }
+                else blob(p.x, p.y, p.r, p.r * 1.15, kind === 'poo' ? (Math.random() < .5 ? PAL.base : PAL.hi) : PAL.base);
+            }
+            ctx.globalAlpha = Math.max(0, alpha);
+            /* per-liquid flourishes */
+            if (kind === 'poo') {
+                flies.forEach(f => { f.a += f.s; const x = f.cx + Math.cos(f.a * 1.7) * f.r + rnd(-3, 3), y = f.cy + Math.sin(f.a) * f.r * .5 + rnd(-3, 3); blob(x, y, 3, 2.2, '#111'); blob(x - 3, y - 2, 3, 1.5, 'rgba(200,220,255,.7)'); blob(x + 3, y - 2, 3, 1.5, 'rgba(200,220,255,.7)'); });
+                if (frame % 4 === 0) stink.push({ x: rnd(0, W), y: top, life: 1 });
+                for (let i = stink.length - 1; i >= 0; i--) { const s = stink[i]; s.y -= 3; s.life -= .015; if (s.life <= 0) { stink.splice(i, 1); continue; } ctx.strokeStyle = 'rgba(143,163,44,' + (s.life * .6) + ')'; ctx.lineWidth = 3; ctx.beginPath(); for (let k = 0; k < 40; k += 4) ctx.lineTo(s.x + Math.sin((s.y - k) * .06) * 9, s.y - k); ctx.stroke(); }
+            }
+            if (kind === 'pee' && frame % 2 === 0) stink.push({ x: rnd(0, W), y: top - 4, life: 1, r: rnd(10, 26) });
+            if (kind === 'pee') for (let i = stink.length - 1; i >= 0; i--) { const s = stink[i]; s.y -= 2.2; s.r += .5; s.life -= .02; if (s.life <= 0) { stink.splice(i, 1); continue; } ctx.fillStyle = 'rgba(255,255,230,' + (s.life * .22) + ')'; ctx.beginPath(); ctx.arc(s.x + Math.sin(s.y * .04) * 8, s.y, s.r, 0, 6.2832); ctx.fill(); }
+            if (kind === 'milk') { ctx.strokeStyle = PAL.acc; ctx.lineWidth = 2; for (let k = 0; k < 3; k++) { const rr = ((frame * 3 + k * 40) % 120); ctx.globalAlpha = Math.max(0, alpha * (1 - rr / 120) * .6); ctx.beginPath(); ctx.ellipse(W / 2 + (k - 1) * W * .28, top + 4, rr * 2, rr * .22, 0, 0, 6.2832); ctx.stroke(); } }
+            raf = requestAnimationFrame(render);
         };
         render();
-        return () => {
-            window.removeEventListener('resize', resize);
-            cancelAnimationFrame(animationId);
-        };
+        return () => { window.removeEventListener('resize', resize); cancelAnimationFrame(raf); };
     }, [type]);
-    if (!type)
-        return null;
+    if (!type) return null;
     return (React.createElement("canvas", { ref: canvasRef, className: "fixed inset-0 w-full h-full pointer-events-none z-[5]" }));
 };
 const JSBattleAnimation = ({ avatars }) => {
@@ -3262,6 +3243,7 @@ const StrokesHost = ({ goBack, onGames }) => {
 const App = () => {
     const [view, setView] = useState('MENU');
     const [game, setGame] = useState(() => { try { return localStorage.getItem('bl_game') || 'madness'; } catch (e) { return 'madness'; } });
+    const [menuFx, setMenuFx] = useState(null);
     const [showGames, setShowGames] = useState(false);
     const pickGame = (id) => { setShowGames(false); if (id === game) return; if (view === 'HOST' && !confirm('Switching games opens a NEW room code, so players must rejoin. Switch?')) return; try { localStorage.setItem('bl_game', id); } catch (e) { } setGame(id); };
     useEffect(() => {
@@ -3299,6 +3281,12 @@ const App = () => {
                 setView(prev => prev === 'MENU' ? 'HISTORY' : prev);
                 keyBuffer = '';
             }
+            const fxCodes = { NUMBER1: 'lemonade', NUMBER2: 'coffee', GOTMILK: 'milk', FLOOD: 'ALL' };
+            for (const code in fxCodes) if (keyBuffer.endsWith(code)) {
+                const t = fxCodes[code] === 'ALL' ? ['coffee', 'lemonade', 'milk'][Math.floor(Math.random() * 3)] : fxCodes[code];
+                const k = Date.now(); setMenuFx({ t, k }); setTimeout(() => setMenuFx(m => m && m.k === k ? null : m), 3200); try { new Audio('squelchy.wav').play(); } catch (e) { }
+                keyBuffer = '';
+            }
             if (keyBuffer.endsWith('KICKALL')) {
                 window.dispatchEvent(new CustomEvent('blersjda-host-cmd', { detail: 'KICKALL' }));
                 keyBuffer = '';
@@ -3313,6 +3301,7 @@ const App = () => {
     }, []);
     return (React.createElement("div", { className: "min-h-screen flex flex-col items-center justify-center p-4 relative z-10" },
         React.createElement("div", { className: "sparkle-bg" }),
+        menuFx && view === 'MENU' && React.createElement(WaterfallEffect, { key: menuFx.k, type: menuFx.t }),
         view === 'MENU' && React.createElement(MainMenu, { setView: setView, game: game, openGames: () => setShowGames(true) }),
         view === 'HOST' && React.createElement(game === 'strokes' ? StrokesHost : OnlineHost, { key: game, goBack: () => setView('MENU'), onGames: () => setShowGames(true) }),
         showGames && React.createElement(GamesMenu, { current: game, onPick: pickGame, onClose: () => setShowGames(false) }),
