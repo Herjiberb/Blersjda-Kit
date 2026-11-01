@@ -2551,6 +2551,7 @@ const SK = (() => {
         const i0 = (y * N + x) * 4, sr = d[i0], sg = d[i0 + 1], sb = d[i0 + 2];
         if (Math.abs(sr - r) + Math.abs(sg - gg) + Math.abs(sb - b) < 6) return;
         const T = 90, seen = new Uint8Array(N * N);
+        const o = d.slice();
         const m = (p) => !seen[p] && Math.abs(d[p * 4] - sr) + Math.abs(d[p * 4 + 1] - sg) + Math.abs(d[p * 4 + 2] - sb) <= T;
         const st = [x, y];
         while (st.length) {
@@ -2561,6 +2562,27 @@ const SK = (() => {
                 const p = yy * N + cx; seen[p] = 1; d[p * 4] = r; d[p * 4 + 1] = gg; d[p * 4 + 2] = b; d[p * 4 + 3] = 255;
                 if (yy > 0) { const q = m(p - N); if (q && !up) { st.push(cx, yy - 1); up = true; } else if (!q) up = false; }
                 if (yy < N - 1) { const q = m(p + N); if (q && !dn) { st.push(cx, yy + 1); dn = true; } else if (!q) dn = false; }
+            }
+        }
+        /* soften edge: antialiased pixels next to the fill are re-blended fill<->line so no halo of the old colour is left */
+        const sref = new Int32Array(N * N), dist = (p, q) => Math.abs(o[p * 4] - o[q * 4]) + Math.abs(o[p * 4 + 1] - o[q * 4 + 1]) + Math.abs(o[p * 4 + 2] - o[q * 4 + 2]);
+        for (let pass = 0; pass < 2; pass++) {
+            const add = [];
+            for (let p = 0; p < N * N; p++) {
+                if (seen[p]) continue; const px = p % N, py = (p / N) | 0; let sp = -1;
+                if (px > 0 && seen[p - 1]) sp = p - 1; else if (px < N - 1 && seen[p + 1]) sp = p + 1; else if (py > 0 && seen[p - N]) sp = p - N; else if (py < N - 1 && seen[p + N]) sp = p + N;
+                if (sp < 0) continue;
+                const src = seen[sp] === 1 ? sp : sref[sp]; let ref = -1, best = 0;
+                for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const qx = px + dx, qy = py + dy; if (qx < 0 || qy < 0 || qx >= N || qy >= N) continue; const q = qy * N + qx; if (seen[q]) continue; const dd = dist(q, src); if (dd > best) { best = dd; ref = q; } }
+                if (ref < 0 || best < 40) continue;
+                const t = Math.min(1, dist(p, src) / best);
+                if (t >= 0.97) continue;
+                add.push(p, src, ref, t);
+            }
+            for (let i = 0; i < add.length; i += 4) {
+                const p = add[i], src = add[i + 1], ref = add[i + 2], t = add[i + 3];
+                d[p * 4] = Math.round(r * (1 - t) + o[ref * 4] * t); d[p * 4 + 1] = Math.round(gg * (1 - t) + o[ref * 4 + 1] * t); d[p * 4 + 2] = Math.round(b * (1 - t) + o[ref * 4 + 2] * t); d[p * 4 + 3] = 255;
+                seen[p] = 2; sref[p] = src;
             }
         }
         g.putImageData(im, 0, 0);
