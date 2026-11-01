@@ -1920,6 +1920,35 @@ const ArtPanel=({history,compact})=>{
         !rows.length&&h("p",{className:"text-gray-400"},"Nothing here (older games weren't archived this deeply)."));
 };
 
+/* ---------- Optional censor (only active if censor.js loads) ---------- */
+const BL_CEN_KEY = 'bl_censor';
+const blCenGet = () => { try { const c = JSON.parse(localStorage.getItem(BL_CEN_KEY) || '{}'); return { on: !!c.on, level: [1, 2, 3].includes(c.level) ? c.level : 1, style: c.style === 'replace' ? 'replace' : 'stars' }; } catch (e) { return { on: false, level: 1, style: 'stars' }; } };
+const blCenSet = (c) => { try { localStorage.setItem(BL_CEN_KEY, JSON.stringify(c)); } catch (e) { } };
+const blCenReady = () => typeof window.processTextDirect === 'function';
+const blCensor = (text) => { const c = blCenGet(); if (!c.on || !blCenReady() || !text) return text; try { const r = window.processTextDirect(String(text), c.level, c.style); return (r && typeof r.cleanedText === 'string') ? r.cleanedText : text; } catch (e) { return text; } };
+(() => { if (blCenReady()) return; try { const sc = document.createElement('script'); sc.src = 'censor.js'; sc.async = true; sc.onload = () => window.dispatchEvent(new Event('bl-censor-ready')); sc.onerror = () => { sc.remove(); }; document.head.appendChild(sc); } catch (e) { } })();
+const CensorControl = () => {
+    const h = React.createElement; const [ready, setReady] = useState(blCenReady()); const [open, setOpen] = useState(false); const [c, setC] = useState(blCenGet());
+    useEffect(() => { if (ready) return; const f = () => setReady(blCenReady()); window.addEventListener('bl-censor-ready', f); return () => window.removeEventListener('bl-censor-ready', f); }, [ready]);
+    if (!ready) return null;
+    const save = (p) => { const n = { ...c, ...p }; setC(n); blCenSet(n); };
+    const LV = [[1, 'Child Lock', 'Censors everything, even mild words'], [2, 'Standard', 'Censors moderate and strong language'], [3, 'Mild', 'Only censors the strongest language']];
+    const sample = (() => { try { return blCenReady() ? window.processTextDirect('what the fuck, this is shit', c.level, c.style).cleanedText : ''; } catch (e) { return ''; } })();
+    const row = (on) => "flex items-center gap-3 p-3 rounded-xl cursor-pointer border-2 text-left " + (on ? "border-pink-400 bg-pink-900/40" : "border-purple-700/60");
+    return h(React.Fragment, null,
+        h("button", { onClick: () => { setC(blCenGet()); setOpen(true); }, className: "bg-purple-950 border-2 border-pink-500 rounded-lg px-3 py-1 text-white font-bold hover:bg-purple-800", style: { fontSize: 16 } }, "Censor: " + (c.on ? LV[c.level - 1][1] : "Off")),
+        open && ReactDOM.createPortal(h("div", { onClick: () => setOpen(false), style: { position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 } },
+            h("div", { onClick: e => e.stopPropagation(), onKeyDown: e => e.stopPropagation(), className: "rounded-3xl", style: { background: '#1a1033', border: '2px solid #ec4899', padding: 26, width: '100%', maxWidth: 460, color: '#fff', maxHeight: '92vh', overflowY: 'auto' } },
+                h("h3", { className: "text-2xl font-black text-pink-400 uppercase tracking-widest mb-1 text-center" }, "Censor"),
+                h("p", { className: "text-sm text-gray-300 mb-4 text-center" }, "Filters player names, answers and quotes before anyone sees them."),
+                h("label", { className: row(c.on) }, h("input", { type: "checkbox", checked: c.on, onChange: e => save({ on: e.target.checked }), className: "w-6 h-6 accent-pink-500" }), h("span", { className: "font-bold text-lg" }, "Enable censor")),
+                h("p", { className: "text-xs uppercase tracking-widest text-purple-300 font-bold mt-4 mb-2" }, "Strictness"),
+                h("div", { className: "space-y-2", style: { opacity: c.on ? 1 : .5 } }, LV.map(([n, t, d]) => h("label", { key: n, className: row(c.level === n) }, h("input", { type: "radio", name: "blcl", checked: c.level === n, onChange: () => save({ level: n }), className: "w-5 h-5 accent-pink-500" }), h("span", null, h("span", { className: "font-bold block" }, t), h("span", { className: "text-xs text-gray-300" }, d))))),
+                h("p", { className: "text-xs uppercase tracking-widest text-purple-300 font-bold mt-4 mb-2" }, "Style"),
+                h("div", { className: "grid grid-cols-2 gap-2", style: { opacity: c.on ? 1 : .5 } }, [['stars', 'Stars', '*** (default)'], ['replace', 'Replace', 'swap for clean words']].map(([k, t, d]) => h("label", { key: k, className: row(c.style === k) }, h("input", { type: "radio", name: "blcs", checked: c.style === k, onChange: () => save({ style: k }), className: "w-5 h-5 accent-pink-500" }), h("span", null, h("span", { className: "font-bold block" }, t), h("span", { className: "text-xs text-gray-300" }, d))))),
+                c.on && h("p", { className: "mt-4 p-3 rounded-xl bg-black/40 text-sm text-cyan-200 break-words" }, h("span", { className: "text-gray-400" }, "Preview: "), sample),
+                h("div", { className: "flex justify-center mt-5" }, h("button", { onClick: () => setOpen(false), className: "px-6 py-2 rounded-xl font-bold uppercase tracking-wider border-2 bg-pink-600 border-pink-400" }, "Done")))), document.body));
+};
 const PlayerCapControl=({cap,setCap,min,count})=>{
     const h=React.createElement;const [open,setOpen]=useState(false);const [v,setV]=useState('');const [err,setErr]=useState('');
     const floor=Math.max(min,count),MAXC=200;
@@ -3002,7 +3031,7 @@ const StrokesHost = ({ goBack, onGames }) => {
         const st = S.current, c = st.cur, u = data.userId; if (!c || data.tid !== c.tid) return;
         const isP = st.players.some(p => p.userId === u);
         if (data.k === 'd' && isP && c.type === 'S_DRAW') { if (SK.valid(data.d)) st.dsub[u] = { d: data.d, ts: Date.now() - c.start }; }
-        else if (data.k === 'q' && isP && c.type === 'S_QUOTE') { const x = cleanAnswer(data.x).slice(0, 60).trim(); const arr = st.qsub[u] = st.qsub[u] || []; if (x && arr.length < 15 && !arr.some(y => y.toLowerCase() === x.toLowerCase())) arr.push(x); }
+        else if (data.k === 'q' && isP && c.type === 'S_QUOTE') { const x = blCensor(cleanAnswer(data.x)).slice(0, 60).trim(); const arr = st.qsub[u] = st.qsub[u] || []; if (x && arr.length < 15 && !arr.some(y => y.toLowerCase() === x.toLowerCase())) arr.push(x); }
         else if (data.k === 'qd' && isP && c.type === 'S_QUOTE') st.qdone[u] = 1;
         else if (data.k === 'm' && isP && c.type === 'S_MEME') { const pool = st.pools[u]; if (!pool) return; const di = pool.ds.find(x => x.id === data.di), qi = pool.qs.find(x => x.id === data.qi); if (di && qi) { st.mm[u] = { did: di.id, qid: qi.id, st: Math.max(0, Math.min(53, data.st | 0)) }; st.lockTs = Date.now(); } }
         else if (data.k === 'v' && c.type === 'S_VOTE') { if ((data.v === 'a' || data.v === 'b') && (isP || st.audience.some(a => a.userId === u))) st.votes[u] = data.v; }
@@ -3012,7 +3041,7 @@ const StrokesHost = ({ goBack, onGames }) => {
         const t = data.type, st = S.current;
         if (t === 'IDENT') { const uid = data.userId; if (uid && _hkp) hostDecrypt(data).then(ip => /^[0-9a-f:.]{3,45}$/i.test(ip) ? recordIdentity(ip, NAMEMAP[uid], uid) : null).then(r => { if (r) { PIDMAP[uid] = r.pid; NETMAP[uid] = r.net; } }).catch(() => { }); return; }
         if (t === 'JOIN') {
-            const userId = data.userId, name = cleanName(data.name) || 'Player'; conn.metadata = { userId }; NAMEMAP[userId] = name;
+            const userId = data.userId, name = blCensor(cleanName(data.name)) || 'Player'; conn.metadata = { userId }; NAMEMAP[userId] = name;
             try { hostPub().then(pk => send(userId, 'IDENT_REQ', { pk })).catch(() => { }); } catch (e) { }
             conns.current[userId] = conn;
             const ex = st.players.find(p => p.userId === userId);
@@ -3192,7 +3221,7 @@ const StrokesHost = ({ goBack, onGames }) => {
         h('h2', { style: { fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 } }, 'Join at ', h('span', { style: { color: '#f472b6' } }, 'herjiberb.github.io/Blersjda-Kit')),
         h('div', { style: { display: 'inline-block', background: 'rgba(88,28,135,.5)', border: '3px solid #f59e0b', borderRadius: 28, padding: '18px 30px', marginBottom: 18, boxShadow: '0 0 40px rgba(245,158,11,.3)' } }, h('div', { style: { color: '#e9d5ff', fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase' } }, 'Room Code'), h('div', { style: { fontFamily: 'monospace', background: '#fff', color: '#000', padding: '6px 28px', borderRadius: 14, fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, letterSpacing: '.2em' } }, roomCode || '...')),
         h('div', { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' } }, h(SDisc, { g: SGAMES[1], size: 64 }), h('b', { style: { ...sFont, fontSize: 30, letterSpacing: '.08em', color: '#fbbf24' } }, 'BLERSJDA STROKES')),
-        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h(PlayerCapControl, { cap, setCap, min: 3, count: players.length }), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
+        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h(PlayerCapControl, { cap, setCap, min: 3, count: players.length }), h(CensorControl), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
         h('div', { style: { ...glass, padding: 24, minHeight: 200, marginBottom: 16 } }, h('h3', { style: { color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 14, fontSize: 22 } }, `Players (${players.length}) - Needs 3+` + (cap ? ` (cap ${cap})` : '')),
             h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' } }, players.map(p => h('div', { key: p.userId, className: 'animate-bounce', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', animationDuration: (1.5 + Math.random() * .5) + 's' } }, h(MonsterAvatar, { attributes: p.avatar, size: 80 }), h('div', { style: { marginTop: 6, background: 'rgba(107,33,168,.8)', padding: '3px 12px', borderRadius: 99, fontWeight: 800, fontSize: 14 } }, p.name))), !players.length && h('div', { style: { color: '#c084fc', fontWeight: 800, letterSpacing: '.1em' } }, 'WAITING FOR PLAYERS…'))),
         h('button', { onClick: () => startGame(false), disabled: players.length < 3, style: sBtn(players.length < 3 ? '#4b5563' : '#ec4899', { width: '100%', maxWidth: 440, minHeight: 72, fontSize: 24 }) }, players.length < 3 ? `Waiting for ${3 - players.length} more…` : `Start Game (${players.length} ready)`),
@@ -3675,7 +3704,7 @@ const OnlineHost = ({ goBack, onGames }) => {
             return;
         }
         if (data.type === 'JOIN') {
-            const userId = data.userId; const name = cleanName(data.name) || 'Player';
+            const userId = data.userId; const name = blCensor(cleanName(data.name)) || 'Player';
             conn.metadata = { userId };
             NAMEMAP[userId] = name;
             try { hostPub().then(pk => sendToClient(userId, 'IDENT_REQ', { pk })).catch(() => { }); } catch (e) { }
@@ -3742,7 +3771,7 @@ const OnlineHost = ({ goBack, onGames }) => {
                 const next = [...prev];
                 const clash = next.find(c => c.prompt === data.prompt);
                 if (clash) {
-                    clash.answers[data.userId] = cleanAnswer(data.answer) || '...';
+                    clash.answers[data.userId] = blCensor(cleanAnswer(data.answer)) || '...';
                 }
                 return next;
             });
@@ -4104,7 +4133,8 @@ const OnlineHost = ({ goBack, onGames }) => {
                     React.createElement("input", { type: "checkbox", checked: settings.autoProgress, onChange: e => setSettings(s => ({ ...s, autoProgress: e.target.checked })), className: "w-6 h-6 accent-pink-500" }),
                     "Auto Progress"),
                 React.createElement("div", { className: "w-px h-8 bg-white/20" }),
-                React.createElement(PlayerCapControl, { cap: settings.cap || 0, setCap: n => setSettings(x => ({ ...x, cap: n })), min: 4, count: players.length })),
+                React.createElement(PlayerCapControl, { cap: settings.cap || 0, setCap: n => setSettings(x => ({ ...x, cap: n })), min: 4, count: players.length }),
+                React.createElement(CensorControl)),
             React.createElement("div", { className: "glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30" },
                 React.createElement("h3", { className: "text-2xl mb-6 text-pink-300 font-bold uppercase tracking-widest" },
                     "Players (",
