@@ -186,39 +186,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 @keyframes blDragon{from{transform:translateY(-1.5%) scale(1)}to{transform:translateY(1.5%) scale(1.03)}}
 [data-theme=oriental] .bl-char{position:absolute;color:#b3121b;font-family:"Songti SC","KaiTi",serif;font-weight:900;opacity:.18;writing-mode:vertical-rl;letter-spacing:.2em}
 
-/* ===== ASIAN VISION ===== */
-.bl-tv{position:fixed;left:0;right:0;height:25vh;z-index:40;pointer-events:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.bl-tv.t{top:0;background:linear-gradient(rgba(0,0,0,.92),rgba(0,0,0,.7) 60%,rgba(0,0,0,.2));-webkit-mask-image:linear-gradient(#000 78%,transparent);mask-image:linear-gradient(#000 78%,transparent)}
-.bl-tv.b{bottom:0;background:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.7) 40%,rgba(0,0,0,.92));-webkit-mask-image:linear-gradient(transparent,#000 22%);mask-image:linear-gradient(transparent,#000 22%)}
 
-/* ===== MASTER BETA ===== */
-[data-theme=beta]{--b1:#ff00e5;--b2:#00f0ff;--b3:#b6ff00}
-[data-theme=beta] body{background:#04000c!important;font-family:"Courier New",ui-monospace,monospace!important;cursor:crosshair}
-[data-theme=beta] ::selection{background:var(--b3);color:#000}
-[data-theme=beta] .sparkle-bg{opacity:.9;animation:sparkleMove 3s linear infinite,betaHue 9s linear infinite}
-[data-theme=beta] .glass-panel{background:linear-gradient(135deg,rgba(255,0,229,.14),rgba(0,240,255,.1))!important;border:2px solid transparent!important;border-image:linear-gradient(135deg,var(--b1),var(--b2),var(--b3),var(--b1)) 1!important;clip-path:polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);border-radius:0!important;box-shadow:none!important;transform:perspective(900px) rotateX(1.2deg)}
-[data-theme=beta] h1,[data-theme=beta] h2,[data-theme=beta] h3{text-transform:uppercase;letter-spacing:.12em}
-[data-theme=beta] h2:not(.text-transparent),[data-theme=beta] h3:not(.text-transparent){text-shadow:2px 0 var(--b1),-2px 0 var(--b2);animation:betaGlitch 3.2s infinite}
-[data-theme=beta] .bouncing-title{animation:betaWarp 5s ease-in-out infinite}
-[data-theme=beta] button.border-b-4{background:linear-gradient(90deg,var(--b1),var(--b2))!important;color:#000!important;border:0!important;border-radius:0!important;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);text-shadow:none;letter-spacing:.2em;font-weight:900}
-[data-theme=beta] input,[data-theme=beta] textarea{background:#000!important;border:2px solid var(--b2)!important;border-radius:0!important;color:var(--b3)!important;box-shadow:0 0 14px rgba(0,240,255,.35)}
-[data-theme=beta] .text-pink-400,[data-theme=beta] .text-pink-300{color:var(--b1)!important}
-[data-theme=beta] .text-cyan-300,[data-theme=beta] .text-cyan-400,[data-theme=beta] .text-cyan-200{color:var(--b2)!important}
-[data-theme=beta] .text-yellow-400,[data-theme=beta] .text-yellow-300{color:var(--b3)!important}
-[data-theme=beta] .text-purple-300,[data-theme=beta] .text-purple-200,[data-theme=beta] .text-purple-400{color:#e0b3ff!important}
-[data-theme=beta] .rounded-3xl,[data-theme=beta] .rounded-2xl,[data-theme=beta] .rounded-xl{border-radius:0!important}
-.bl-bgrid{position:absolute;left:-50%;right:-50%;bottom:0;height:55%;transform:perspective(380px) rotateX(62deg);transform-origin:bottom;background-image:linear-gradient(var(--b1) 2px,transparent 2px),linear-gradient(90deg,var(--b2) 2px,transparent 2px);background-size:56px 56px;opacity:.38;animation:betaGrid 1.4s linear infinite;-webkit-mask-image:linear-gradient(transparent,#000 70%);mask-image:linear-gradient(transparent,#000 70%)}
-.bl-bsun{position:absolute;left:50%;bottom:30%;width:min(60vw,420px);aspect-ratio:1;transform:translateX(-50%);border-radius:50%;background:linear-gradient(#ffe600,var(--b1) 60%,#6a00ff);opacity:.4;-webkit-mask-image:repeating-linear-gradient(transparent 0 12px,#000 12px 26px);mask-image:repeating-linear-gradient(transparent 0 12px,#000 12px 26px);animation:betaHue 12s linear infinite}
-.bl-borb{position:absolute;width:60vmax;height:60vmax;border-radius:50%;filter:blur(70px);opacity:.28;animation:betaOrb 16s linear infinite}
-.bl-bglyph{position:absolute;bottom:-10%;color:var(--b3);opacity:.5;font-weight:900;text-shadow:0 0 10px var(--b2);animation:betaRise linear infinite}
-.bl-bscan{position:fixed;inset:0;z-index:45;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,rgba(0,0,0,.28) 2px 3px);mix-blend-mode:multiply;animation:betaFlick 6s infinite}
-@keyframes betaGrid{to{background-position:0 56px}}
-@keyframes betaHue{to{filter:hue-rotate(360deg)}}
-@keyframes betaOrb{from{transform:rotate(0) translateX(18vw) rotate(0)}to{transform:rotate(360deg) translateX(18vw) rotate(-360deg)}}
-@keyframes betaRise{to{transform:translateY(-120vh) rotate(360deg);opacity:0}}
-@keyframes betaFlick{0%,92%,100%{opacity:1}94%{opacity:.5}96%{opacity:.9}}
-@keyframes betaGlitch{0%,92%,100%{transform:none}93%{transform:translate(-3px,1px) skewX(8deg)}95%{transform:translate(4px,-1px) skewX(-8deg)}97%{transform:translate(-2px,0)}}
-@keyframes betaWarp{0%,100%{transform:skewX(0) scaleY(1)}50%{transform:skewX(-4deg) scaleY(1.06)}}
 
 .bl-panel{width:min(340px,92vw);padding:0;border-radius:22px;background:linear-gradient(180deg,rgba(28,18,66,.97),rgba(12,8,30,.98));border:1px solid rgba(192,132,252,.35);box-shadow:0 24px 60px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04) inset;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .bl-hd{padding:14px 16px;margin:0;background:linear-gradient(90deg,rgba(236,72,153,.22),rgba(34,211,238,.16));border-bottom:1px solid rgba(255,255,255,.1);border-radius:22px 22px 0 0}
@@ -245,12 +213,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 .bl-ft{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 14px;font-size:.7rem;opacity:.8}
 .bl-ft button{background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:9px;padding:4px 10px;font-weight:700;font-size:.72rem}
 [data-theme=fast] .bl-panel,[data-theme=fast] .bl-hd{background:#1c1c1c!important}
-
-.bl-tv{transition:none}
-.bl-tv.t,.bl-tv.b{-webkit-mask-composite:source-in;mask-composite:intersect}
-.bl-tv.t{-webkit-mask-image:radial-gradient(circle 130px at var(--mx,-999px) var(--my,-999px),transparent 45%,#000 100%),linear-gradient(#000 78%,transparent);mask-image:radial-gradient(circle 130px at var(--mx,-999px) var(--my,-999px),transparent 45%,#000 100%),linear-gradient(#000 78%,transparent)}
-.bl-tv.b{-webkit-mask-image:radial-gradient(circle 130px at var(--mx,-999px) var(--my,-999px),transparent 45%,#000 100%),linear-gradient(transparent,#000 22%);mask-image:radial-gradient(circle 130px at var(--mx,-999px) var(--my,-999px),transparent 45%,#000 100%),linear-gradient(transparent,#000 22%)}
-.bl-lens{position:fixed;z-index:41;pointer-events:none;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;left:var(--mx,-999px);top:var(--my,-999px);border:2px solid rgba(255,255,255,.35);box-shadow:0 0 18px rgba(255,255,255,.25),inset 0 0 14px rgba(255,255,255,.15);opacity:var(--lens,0);transition:opacity .25s}
 
 /* ===== QOL / polish pass ===== */
 html{scroll-behavior:smooth;-webkit-tap-highlight-color:transparent}
@@ -4500,17 +4462,21 @@ const OnlineClient = ({ goBack }) => {
 /* ===== UI EXTRAS: toasts, settings cog, themes ===== */
 window.blToast = (msg, o = {}) => window.dispatchEvent(new CustomEvent('bl-toast', { detail: { msg, ...o } }));
 const BL_UI_KEY = 'blersjda_ui';
-const BL_CODE = 'chickenexpress';
+/* Secret themes (names, swatches, CSS and layer code) are AES-256-GCM encrypted; key = PBKDF2-SHA256 of the unlock code. */
+const BL_VAULT = { salt: '6sWZCCR9IxSOsW8YyIYsBA==', iv: '9z8IyA80Vd6Xn3ki', it: 250000, ct: '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' };
 const BL_THEMES = [
     { id: 'standard', name: 'Standard', desc: 'The classic madness' },
     { id: 'blue', name: 'Blue', desc: 'Deep blue space & stars' },
     { id: 'fast', name: 'Fast', desc: 'Simple, rigid, dark' },
     { id: 'oriental', name: 'Oriental', desc: 'Red ink dragon, old paper' },
-    { id: 'tunnel', name: 'Asian Vision', desc: 'Blurred, darkened edges', locked: true },
-    { id: 'beta', name: 'Master Beta', desc: 'Strange. Very strange.', locked: true },
 ];
+/* hard-coded previews shown while locked */
+const BL_LOCKED = [{ id: 'tunnel', name: 'A**** *****n' }, { id: 'beta', name: 'M***** ***a' }];
+const blB64 = (x) => Uint8Array.from(atob(x), c => c.charCodeAt(0));
+const blOpen = async (key) => { const v = BL_VAULT, pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: blB64(v.iv) }, key, blB64(v.ct)); const d = JSON.parse(new TextDecoder().decode(pt)); let st = document.getElementById('bl-secret-css'); if (!st) { st = document.createElement('style'); st.id = 'bl-secret-css'; document.head.appendChild(st); } st.textContent = d.css; return { themes: d.themes, mod: (0, eval)(d.js)(React.createElement) }; };
+const blKeyFromCode = async (code) => { const v = BL_VAULT, bk = await crypto.subtle.importKey('raw', new TextEncoder().encode(code.replace(/\s+/g, '').toLowerCase()), 'PBKDF2', false, ['deriveKey']); return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: blB64(v.salt), iterations: v.it, hash: 'SHA-256' }, bk, { name: 'AES-GCM', length: 256 }, true, ['decrypt']); };
 const blMask = (s) => s.split('').map((c, i, a) => (c === ' ' || i === 0 || i === a.length - 1) ? c : '*').join('');
-const BL_SW = { standard: 'linear-gradient(135deg,#20114b,#ec4899)', blue: 'linear-gradient(135deg,#01030f,#2563eb,#22d3ee)', fast: 'linear-gradient(135deg,#121212,#3a3a3a)', oriental: 'linear-gradient(135deg,#150805,#a3141b,#e8b04a)', tunnel: 'linear-gradient(#000,#334155 50%,#000)', beta: 'linear-gradient(135deg,#ff00e5,#00f0ff,#b6ff00)' };
+const BL_SW = { standard: 'linear-gradient(135deg,#20114b,#ec4899)', blue: 'linear-gradient(135deg,#01030f,#2563eb,#22d3ee)', fast: 'linear-gradient(135deg,#121212,#3a3a3a)', oriental: 'linear-gradient(135deg,#150805,#a3141b,#e8b04a)' };
 const blLoad = () => { try { return { theme: 'standard', text: 100, calm: false, sound: true, perf: false, contrast: false, unlocked: false, ...JSON.parse(localStorage.getItem(BL_UI_KEY) || '{}') }; } catch (e) { return { theme: 'standard', text: 100, calm: false, unlocked: false }; } };
 const BL_DRAGON = `<svg class="bl-dragon" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><filter id="ink" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="4"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter></defs>
 <g filter="url(#ink)" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -4534,34 +4500,17 @@ const BL_DRAGON = `<svg class="bl-dragon" viewBox="0 0 800 1000" preserveAspectR
 <circle cx="0" cy="-150" r="14" fill="#e8523f" stroke="#f5deb3" stroke-width="3" opacity=".9"/>
 </g></g></svg>`;
 
-const BL_GLYPHS = ['β', '∆', '◈', '⟁', '☍', '✦', '≋', 'Ω', '⌬', '░'];
-const BlThemeLayer = ({ theme }) => {
-    const RE = React.createElement;
-    const glyphs = useMemo(() => Array.from({ length: 16 }, (_, i) => ({ g: BL_GLYPHS[i % BL_GLYPHS.length], l: Math.random() * 96, s: 14 + Math.random() * 30, d: 8 + Math.random() * 14, dl: -Math.random() * 14 })), []);
-    useEffect(() => {
-        if (theme !== 'tunnel') return;
-        const r = document.documentElement; let t;
-        const mv = (e) => { r.style.setProperty('--mx', e.clientX + 'px'); r.style.setProperty('--my', e.clientY + 'px'); r.style.setProperty('--lens', '1'); clearTimeout(t); if (e.pointerType === 'touch') t = setTimeout(() => r.style.setProperty('--lens', '0'), 1200); };
-        const lv = () => r.style.setProperty('--lens', '0');
-        window.addEventListener('pointermove', mv); window.addEventListener('pointerdown', mv); document.addEventListener('pointerleave', lv);
-        window.blToast('Move your cursor or finger over the dark edges to peek through the lens', { ttl: 4500 });
-        return () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerdown', mv); document.removeEventListener('pointerleave', lv); ['--mx', '--my', '--lens'].forEach(k => r.style.removeProperty(k)); };
-    }, [theme]);
+const BlThemeLayer = ({ theme, sec }) => {
+    const RE = React.createElement, mod = sec && sec.mod;
+    const glyphs = useMemo(() => mod ? mod.glyphs() : [], [mod]);
+    useEffect(() => (mod && mod.fx) ? mod.fx(theme) : undefined, [theme, mod]);
     if (theme === 'oriental') return RE('div', { className: 'theme-layer' },
         RE('div', { dangerouslySetInnerHTML: { __html: BL_DRAGON }, style: { position: 'absolute', inset: 0 } }),
         RE('div', { className: 'bl-char', style: { top: '5%', left: '3%', fontSize: '4rem' } }, '龍'),
         RE('div', { className: 'bl-char', style: { bottom: '6%', right: '4%', fontSize: '3.4rem' } }, '福壽'),
         RE('div', { style: { position: 'absolute', top: '4%', right: '4%', width: 44, height: 44, background: '#b3121b', color: '#f5deb3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 26, fontFamily: 'serif', transform: 'rotate(4deg)', opacity: .8, borderRadius: 4 } }, '印'));
     if (theme === 'blue') return RE('div', { className: 'theme-layer' });
-    if (theme === 'tunnel') return RE(React.Fragment, null, RE('div', { className: 'bl-tv t' }), RE('div', { className: 'bl-tv b' }), RE('div', { className: 'bl-lens' }));
-    if (theme === 'beta') return RE(React.Fragment, null,
-        RE('div', { className: 'theme-layer' },
-            RE('div', { className: 'bl-borb', style: { background: 'var(--b1)', top: '-20%', left: '-10%' } }),
-            RE('div', { className: 'bl-borb', style: { background: 'var(--b2)', bottom: '-25%', right: '-15%', animationDirection: 'reverse' } }),
-            RE('div', { className: 'bl-bsun' }), RE('div', { className: 'bl-bgrid' }),
-            glyphs.map((x, i) => RE('span', { key: i, className: 'bl-bglyph', style: { left: x.l + '%', fontSize: x.s, animationDuration: x.d + 's', animationDelay: x.dl + 's' } }, x.g))),
-        RE('div', { className: 'bl-bscan' }));
-    return null;
+    return mod ? mod.layer(theme, glyphs) : null;
 };
 
 const UIExtras = () => {
@@ -4570,6 +4519,9 @@ const UIExtras = () => {
     const [open, setOpen] = useState(false);
     const [code, setCode] = useState('');
     const [shake, setShake] = useState(false);
+    const [sec, setSec] = useState(null);
+    const ALL = sec ? [...BL_THEMES, ...sec.themes] : BL_THEMES;
+    useEffect(() => { if (!s.k) return; (async () => { try { const key = await crypto.subtle.importKey('raw', blB64(s.k), 'AES-GCM', false, ['decrypt']); setSec(await blOpen(key)); } catch (e) { setS(p => ({ ...p, k: '', unlocked: false, theme: ['tunnel', 'beta'].includes(p.theme) ? 'standard' : p.theme })); } })(); }, []);
     const [toasts, setToasts] = useState([]);
     const realVib = useRef(navigator.vibrate ? navigator.vibrate.bind(navigator) : null);
     const upd = (p) => setS(prev => ({ ...prev, ...p }));
@@ -4607,11 +4559,11 @@ const UIExtras = () => {
     }, []);
     useEffect(() => {
         const r = document.documentElement;
-        const t = (BL_THEMES.find(x => x.id === s.theme && (!x.locked || s.unlocked)) || BL_THEMES[0]).id;
+        const t = (ALL.find(x => x.id === s.theme) || BL_THEMES[0]).id;
         r.dataset.theme = t; r.dataset.calm = s.calm ? '1' : '0'; r.style.fontSize = s.text + '%';
         try { localStorage.setItem(BL_UI_KEY, JSON.stringify(s)); } catch (e) { }
         try { if (realVib.current) navigator.vibrate = realVib.current; } catch (e) { }
-    }, [s]);
+    }, [s, sec]);
     useEffect(() => {
         const dismiss = (id) => { setToasts(t => t.map(x => x.id === id ? { ...x, out: true } : x)); setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 260); };
         const on = (e) => {
@@ -4649,22 +4601,22 @@ const UIExtras = () => {
         return () => { window.removeEventListener('bl-toast', on); window.removeEventListener('offline', off); window.removeEventListener('online', back); window.removeEventListener('keydown', esc); document.removeEventListener('input', onInput); document.removeEventListener('focusin', onFocusIn); document.removeEventListener('focusout', onFocusOut); document.removeEventListener('click', onCopy); cnt.remove(); };
     }, []);
     const pick = (th) => {
-        if (th.locked && !s.unlocked) { window.blToast('That one is locked. Enter the Secret UI Unlock Code.', { type: 'error' }); setShake(true); setTimeout(() => setShake(false), 450); return; }
+        if (th.locked) { window.blToast('That one is locked. Enter the Secret UI Unlock Code.', { type: 'error' }); setShake(true); setTimeout(() => setShake(false), 450); return; }
         upd({ theme: th.id }); window.blToast(th.name + ' theme on', { type: 'success', ttl: 1800 });
     };
     const tryCode = () => {
-        if (code.replace(/\s+/g, '').toLowerCase() === BL_CODE) { upd({ unlocked: true }); setCode(''); window.blToast('Secret themes unlocked! 🔓', { type: 'success' }); }
-        else { setShake(true); setTimeout(() => setShake(false), 450); window.blToast('Wrong code. Nice try.', { type: 'error' }); }
+        (async () => { try { const key = await blKeyFromCode(code), r = await blOpen(key), raw = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw', key)))); setSec(r); upd({ unlocked: true, k: raw }); setCode(''); window.blToast('Secret themes unlocked! 🔓', { type: 'success' }); }
+        catch (e) { setShake(true); setTimeout(() => setShake(false), 450); window.blToast('Wrong code. Nice try.', { type: 'error' }); } })();
     };
     const relock = () => {
-        const cur = BL_THEMES.find(x => x.id === s.theme);
-        upd({ unlocked: false, theme: cur && cur.locked ? 'standard' : s.theme });
+        const st = document.getElementById('bl-secret-css'); if (st) st.remove(); setSec(null);
+        upd({ unlocked: false, k: '', theme: ['tunnel', 'beta'].includes(s.theme) ? 'standard' : s.theme });
         window.blToast('Secret themes relocked 🔒', { ttl: 2000 });
     };
     const fs = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) { window.blToast('Fullscreen not supported here', { type: 'error' }); } };
-    const activeTheme = (BL_THEMES.find(x => x.id === s.theme && (!x.locked || s.unlocked)) || BL_THEMES[0]).id;
+    const activeTheme = (ALL.find(x => x.id === s.theme) || BL_THEMES[0]).id;
     return RE(React.Fragment, null,
-        RE(BlThemeLayer, { theme: activeTheme }),
+        RE(BlThemeLayer, { theme: activeTheme, sec }),
         RE('div', { className: 'bl-toasts', role: 'status', 'aria-live': 'polite' }, toasts.map(t => RE('div', { key: t.id, className: 'bl-toast ' + t.type + (t.out ? ' out' : '') },
             t.type === 'loading' ? RE('span', { className: 'bl-spin' }) : RE('span', null, t.type === 'success' ? '✅' : t.type === 'error' ? '⚠️' : 'ℹ️'),
             RE('span', null, t.msg), RE('button', { className: 'bl-x', onClick: () => window.__blDismiss(t.id), 'aria-label': 'Dismiss' }, '✕')))),
@@ -4672,17 +4624,18 @@ const UIExtras = () => {
         open && RE('div', { className: 'bl-panel', role: 'dialog', 'aria-label': 'Settings' },
             RE('div', { className: 'bl-hd' }, RE('div', null, RE('b', null, 'Settings'), RE('small', null, 'Make it yours')), RE('button', { onClick: () => setOpen(false), 'aria-label': 'Close' }, '✕')),
             RE('div', { className: 'bl-sec' }, RE('h4', null, 'Theme'),
-                RE('div', { className: 'bl-themes' + (shake ? ' bl-shake' : '') }, BL_THEMES.map(th => {
-                    const locked = th.locked && !s.unlocked;
-                    return RE('button', { key: th.id, className: 'bl-th' + (activeTheme === th.id ? ' sel' : '') + (locked ? ' lock' : ''), onClick: () => pick(th), 'aria-disabled': locked },
-                        RE('span', { className: 'bl-sw', style: { background: locked ? '#17122e' : BL_SW[th.id] } }, locked ? '🔒' : (activeTheme === th.id ? '✓' : '')),
-                        RE('span', { className: 'bl-tn' }, locked ? blMask(th.name) : th.name), RE('small', null, locked ? 'Locked' : th.desc));
-                }))),
-            !s.unlocked && RE('div', { className: 'bl-sec' }, RE('h4', null, 'Secret UI Unlock Code'),
+                RE('div', { className: 'bl-themes' + (shake ? ' bl-shake' : '') }, [...ALL.map(th => {
+                    const sw = th.sw || BL_SW[th.id];
+                    return RE('button', { key: th.id, className: 'bl-th' + (activeTheme === th.id ? ' sel' : ''), onClick: () => pick(th) },
+                        RE('span', { className: 'bl-sw', style: { background: sw } }, activeTheme === th.id ? '✓' : ''),
+                        RE('span', { className: 'bl-tn' }, th.name), RE('small', null, th.desc));
+                }), ...(sec ? [] : BL_LOCKED.map(th => RE('button', { key: th.id, className: 'bl-th lock', onClick: () => pick({ locked: true }), 'aria-disabled': true },
+                    RE('span', { className: 'bl-sw', style: { background: '#17122e' } }, '🔒'), RE('span', { className: 'bl-tn' }, th.name), RE('small', null, 'Locked'))))])),
+            !sec && RE('div', { className: 'bl-sec' }, RE('h4', null, 'Secret UI Unlock Code'),
                 RE('div', { className: 'bl-row' + (shake ? ' bl-shake' : '') },
                     RE('input', { type: 'text', value: code, placeholder: 'Enter code…', autoComplete: 'off', autoCapitalize: 'off', spellCheck: false, onChange: e => setCode(e.target.value), onKeyDown: e => { if (e.key === 'Enter') tryCode(); } }),
                     RE('button', { className: 'bl-go', onClick: tryCode }, 'Unlock'))),
-            s.unlocked && RE('div', { className: 'bl-sec' }, RE('h4', null, 'Secret themes'),
+            sec && RE('div', { className: 'bl-sec' }, RE('h4', null, 'Secret themes'),
                 RE('button', { className: 'bl-sw-row', onClick: relock }, RE('span', null, RE('b', null, '🔒 Relock secret themes'), RE('small', null, 'Hide them again until you re-enter the code')))),
             RE('div', { className: 'bl-sec' }, RE('h4', null, 'Text size'),
                 RE('div', { className: 'bl-seg' }, [[90, 'S'], [100, 'M'], [115, 'L'], [130, 'XL']].map(([v, l]) => RE('button', { key: v, className: s.text === v ? 'sel' : '', onClick: () => upd({ text: v }) }, l)))),
@@ -4692,7 +4645,7 @@ const UIExtras = () => {
                         RE('span', null, RE('b', null, t), RE('small', null, d)), RE('i', { className: 'bl-knob' + (s[k] ? ' on' : '') })))),
             RE('div', { className: 'bl-sec' }, RE('h4', null, 'Shortcuts'), RE('div', { className: 'bl-keys' }, [['S','Settings'],['F','Fullscreen'],['K','Skip narration'],['?','Help'],['Esc','Close']].map(([k,v])=>[RE('kbd',{key:'k'+k},k),RE('span',{key:'v'+k},v)]))),
             RE('div', { className: 'bl-sec' }, RE('h4', null, 'Quick actions'), RE('div', { className: 'bl-seg' }, RE('button', { onClick: fs }, 'Fullscreen (F)'), RE('button', { onClick: () => { try { speechSynthesis.cancel(); } catch (e) { } } }, 'Skip narration (K)'))),
-            RE('div', { className: 'bl-ft' }, RE('span', null, 'Saved on this device'), RE('button', { onClick: () => { setS({ theme: 'standard', text: 100, calm: false, sound: true, perf: false, contrast: false, unlocked: s.unlocked }); window.blToast('UI settings reset', { ttl: 1800 }); } }, 'Reset'))),
+            RE('div', { className: 'bl-ft' }, RE('span', null, 'Saved on this device'), RE('button', { onClick: () => { setS({ theme: 'standard', text: 100, calm: false, sound: true, perf: false, contrast: false, unlocked: s.unlocked, k: s.k }); window.blToast('UI settings reset', { ttl: 1800 }); } }, 'Reset'))),
         RE('button', { className: 'bl-top' + (showTop ? ' on' : ''), onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }), 'aria-label': 'Back to top', title: 'Back to top' }, '↑'),
         RE('button', { className: 'bl-cog' + (open ? ' on' : ''), onClick: () => setOpen(o => !o), 'aria-label': 'Settings', title: 'Settings' },
             RE('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, RE('circle', { cx: 12, cy: 12, r: 3 }), RE('path', { d: 'M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z' }))));
