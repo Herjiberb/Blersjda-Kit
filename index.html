@@ -1919,6 +1919,32 @@ const ArtPanel=({history,compact})=>{
         rows.length>limit&&h("button",{onClick:()=>setLimit(l=>l+24),className:"block mx-auto text-pink-400 underline font-bold uppercase tracking-widest text-sm"},"Show more ("+(rows.length-limit)+")"),
         !rows.length&&h("p",{className:"text-gray-400"},"Nothing here (older games weren't archived this deeply)."));
 };
+
+const PlayerCapControl=({cap,setCap,min,count})=>{
+    const h=React.createElement;const [open,setOpen]=useState(false);const [v,setV]=useState('');const [err,setErr]=useState('');
+    const floor=Math.max(min,count),MAXC=200;
+    const openIt=()=>{setV(cap?String(cap):'');setErr('');setOpen(true);};
+    const apply=()=>{const t=v.trim();if(t===''||t==='0'){setCap(0);setOpen(false);return;}
+        if(!/^\d+$/.test(t)){setErr('Enter a whole number, or leave empty for no limit.');return;}
+        const n=parseInt(t,10);
+        if(n<min){setErr('Minimum is '+min+' players, the game cannot start with fewer.');return;}
+        if(n<count){setErr(count+' players have already joined; the cap cannot be lower than that.');return;}
+        if(n>MAXC){setErr('Maximum cap is '+MAXC+'.');return;}
+        setCap(n);setOpen(false);};
+    const b="px-4 py-2 rounded-xl font-bold uppercase tracking-wider border-2 ";
+    return h(React.Fragment,null,
+        h("button",{onClick:openIt,className:"bg-purple-950 border-2 border-pink-500 rounded-lg px-3 py-1 text-white font-bold hover:bg-purple-800",style:{fontSize:16}},"Player cap: "+(cap?cap:"No limit")),
+        open&&h("div",{onClick:()=>setOpen(false),style:{position:'fixed',inset:0,zIndex:9999,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+            h("div",{onClick:e=>e.stopPropagation(),className:"glass-panel rounded-3xl text-center",style:{background:'#1a1033',border:'2px solid #ec4899',padding:28,width:'100%',maxWidth:420,color:'#fff'}},
+                h("h3",{className:"text-2xl font-black text-pink-400 uppercase tracking-widest mb-2"},"Player Cap"),
+                h("p",{className:"text-sm text-gray-300 mb-4"},"Type the max number of players. Leave empty for no limit. Minimum "+floor+(count>min?" ("+count+" already joined)":"")+"."),
+                h("input",{autoFocus:true,type:"text",inputMode:"numeric",value:v,placeholder:"No limit",onChange:e=>{setV(e.target.value.replace(/[^\d]/g,'').slice(0,3));setErr('');},onKeyDown:e=>{if(e.key==='Enter')apply();if(e.key==='Escape')setOpen(false);},className:"w-full text-center text-3xl font-black p-3 rounded-xl bg-purple-950 border-2 border-cyan-500/60 outline-none focus:border-cyan-300"}),
+                err&&h("p",{className:"text-red-400 font-bold text-sm mt-3"},err),
+                h("div",{className:"flex gap-3 justify-center mt-5 flex-wrap"},
+                    h("button",{onClick:()=>setOpen(false),className:b+"border-purple-500/60"},"Cancel"),
+                    h("button",{onClick:()=>{setV('');setErr('');},className:b+"border-cyan-500/60"},"No limit"),
+                    h("button",{onClick:apply,className:b+"bg-pink-600 border-pink-400"},"Apply")))));
+};
 const LogPanel=({history})=>{
     const [q,setQ]=useState('');const [sort,setSort]=useState('new');const [winsOnly,setWinsOnly]=useState(false);const [limit,setLimit]=useState(50);
     const all=useMemo(()=>flattenLog(history),[history]);
@@ -3185,7 +3211,7 @@ const StrokesHost = ({ goBack, onGames }) => {
         h('h2', { style: { fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 } }, 'Join at ', h('span', { style: { color: '#f472b6' } }, 'herjiberb.github.io/Blersjda-Kit')),
         h('div', { style: { display: 'inline-block', background: 'rgba(88,28,135,.5)', border: '3px solid #f59e0b', borderRadius: 28, padding: '18px 30px', marginBottom: 18, boxShadow: '0 0 40px rgba(245,158,11,.3)' } }, h('div', { style: { color: '#e9d5ff', fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase' } }, 'Room Code'), h('div', { style: { fontFamily: 'monospace', background: '#fff', color: '#000', padding: '6px 28px', borderRadius: 14, fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, letterSpacing: '.2em' } }, roomCode || '...')),
         h('div', { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' } }, h(SDisc, { g: SGAMES[1], size: 64 }), h('b', { style: { ...sFont, fontSize: 30, letterSpacing: '.08em', color: '#fbbf24' } }, 'BLERSJDA STROKES')),
-        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h('label', { style: { display: 'flex', alignItems: 'center', gap: 10 } }, 'Player cap', h('select', { value: cap, onChange: e => setCap(+e.target.value), style: { background: '#1a1033', color: '#fff', border: '2px solid #ec4899', borderRadius: 10, padding: '4px 8px', fontWeight: 800, fontSize: 16 } }, h('option', { value: 0 }, 'No limit'), Array.from({ length: 14 }, (_, i) => i + 3).map(n => h('option', { key: n, value: n, disabled: n < players.length }, n)))), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
+        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h(PlayerCapControl, { cap, setCap, min: 3, count: players.length }), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
         h('div', { style: { ...glass, padding: 24, minHeight: 200, marginBottom: 16 } }, h('h3', { style: { color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 14, fontSize: 22 } }, `Players (${players.length}) - Needs 3+` + (cap ? ` (cap ${cap})` : '')),
             h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' } }, players.map(p => h('div', { key: p.userId, className: 'animate-bounce', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', animationDuration: (1.5 + Math.random() * .5) + 's' } }, h(MonsterAvatar, { attributes: p.avatar, size: 80 }), h('div', { style: { marginTop: 6, background: 'rgba(107,33,168,.8)', padding: '3px 12px', borderRadius: 99, fontWeight: 800, fontSize: 14 } }, p.name))), !players.length && h('div', { style: { color: '#c084fc', fontWeight: 800, letterSpacing: '.1em' } }, 'WAITING FOR PLAYERS…'))),
         h('button', { onClick: () => startGame(false), disabled: players.length < 3, style: sBtn(players.length < 3 ? '#4b5563' : '#ec4899', { width: '100%', maxWidth: 440, minHeight: 72, fontSize: 24 }) }, players.length < 3 ? `Waiting for ${3 - players.length} more…` : `Start Game (${players.length} ready)`),
@@ -4089,10 +4115,7 @@ const OnlineHost = ({ goBack, onGames }) => {
                     React.createElement("input", { type: "checkbox", checked: settings.autoProgress, onChange: e => setSettings(s => ({ ...s, autoProgress: e.target.checked })), className: "w-6 h-6 accent-pink-500" }),
                     "Auto Progress"),
                 React.createElement("div", { className: "w-px h-8 bg-white/20" }),
-                React.createElement("label", { className: "flex items-center gap-3" }, "Player cap",
-                    React.createElement("select", { value: settings.cap || 0, onChange: e => setSettings(s => ({ ...s, cap: +e.target.value })), className: "bg-purple-950 border-2 border-pink-500 rounded-lg px-2 py-1 text-white font-bold" },
-                        React.createElement("option", { value: 0 }, "No limit"),
-                        Array.from({ length: 13 }, (_, i) => i + 4).map(n => React.createElement("option", { key: n, value: n, disabled: n < players.length }, n))))),
+                React.createElement(PlayerCapControl, { cap: settings.cap || 0, setCap: n => setSettings(x => ({ ...x, cap: n })), min: 4, count: players.length })),
             React.createElement("div", { className: "glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30" },
                 React.createElement("h3", { className: "text-2xl mb-6 text-pink-300 font-bold uppercase tracking-widest" },
                     "Players (",
