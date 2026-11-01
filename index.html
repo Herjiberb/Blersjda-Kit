@@ -245,6 +245,30 @@ button:disabled{cursor:not-allowed;opacity:.55}
 <script>"use strict";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 (() => { const A = window.Audio; if (!A) return; window.__blAudios = []; window.Audio = function (...a) { const x = new A(...a); window.__blAudios.push(x); if (window.__blAudios.length > 40) window.__blAudios.shift(); return x; }; window.Audio.prototype = A.prototype; })();
+/* ===== Submit sounds: optional sound.blersjsound pack (JSON of base64 audio). Missing file = silently disabled. Host screens only. ===== */
+const BLSND = (() => {
+    let bufs = [], ctx = null, out = null, started = false, last = -1;
+    const getCtx = () => { if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); const c = ctx.createDynamicsCompressor(); c.threshold.value = -8; c.knee.value = 6; c.ratio.value = 12; c.attack.value = .003; c.release.value = .2; c.connect(ctx.destination); out = c; } catch (e) { ctx = null; } } return ctx; };
+    const unlock = () => { const c = getCtx(); if (c && c.state === 'suspended') c.resume().catch(() => { }); };
+    ['pointerdown', 'keydown', 'touchend', 'click'].forEach(e => { try { document.addEventListener(e, unlock, { passive: true }); } catch (er) { } });
+    const b64 = (b) => { const bin = atob(b), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; };
+    const preload = async () => {
+        if (started) return; started = true;
+        try {
+            const r = await fetch('sound.blersjsound', { cache: 'no-cache' }); if (!r || !r.ok) return;
+            const j = await r.json(), c = getCtx(); if (!c || !j || !Array.isArray(j.sounds)) return;
+            for (const x of j.sounds) { try { bufs.push(await new Promise((res, rej) => { const p = c.decodeAudioData(b64(x.data), res, rej); if (p && p.catch) p.catch(rej); })); } catch (e) { } }
+        } catch (e) { }
+    };
+    const play = () => {
+        try {
+            if (!started) preload(); if (!bufs.length) return; const c = getCtx(); if (!c) return; if (c.state === 'suspended') c.resume().catch(() => { });
+            let i = Math.floor(Math.random() * bufs.length); if (bufs.length > 1 && i === last) i = (i + 1 + Math.floor(Math.random() * (bufs.length - 1))) % bufs.length; last = i;
+            const src = c.createBufferSource(), g = c.createGain(); src.buffer = bufs[i]; g.gain.value = 2.2; src.connect(g); g.connect(out || c.destination); src.start();
+        } catch (e) { }
+    };
+    return { play, preload };
+})();
 const NET = (() => {
     const K = { type: '~t', userId: '~u', name: '~n', avatar: '~a', prompts: '~p', prompt: '~q', answers: '~s', msg: '~m', timeLeft: '~l', players: '~P', isFinal: '~F', round: '~r', stats: '~S', allowPass: '~A', readOnly: '~R', isAudience: '~I', votedFor: '~v', text: '~x', id: '~i', score: '~c', body: '~b', eyes: '~e', mouth: '~o', accessory: '~y', color: '~k' };
     const KR = Object.fromEntries(Object.entries(K).map(([a, b]) => [b, a]));
@@ -1604,6 +1628,11 @@ const PROMPTS = [
 { text: "A shockingly honest diary entry from the future tax collector who works for the robots.", family: false },
 { text: "The government-issued diary prompt you'd be arrested for answering truthfully.", family: false },
 { text: "What the dictator of Mars wrote in his diary after his first orgy with the senate.", family: false },
+{ text: "The single most dramatic last words of a haunted vending machine that has finally been unplugged after 400 years of snack-based revenge.", family: true },
+{ text: "The terms and conditions you accidentally agreed to when you shook hands with a time-traveling raccoon who claims to be your future landlord.", family: true },
+{ text: "The official apology letter written by the Moon to Earth after it realized it has been mooning everyone for billions of years.", family: true },
+{ text: "The unhinged speech delivered by a sentient microwave to a jury of 12 angry toasters after being accused of 'emotional reheating'.", family: true },
+{ text: "What the final boss of your own Monday morning screams as you finally defeat it using only a half-eaten sandwich and pure spite.", family: true },
 { text: "A terrible name for a pet rock that thinks it's a dragon.", family: true },
 { text: "What the spoon said to the fork at the divorce hearing.", family: true },
 { text: "The worst thing to put on a pizza when you're a raccoon.", family: true },
@@ -3221,10 +3250,10 @@ const StrokesHost = ({ goBack, onGames }) => {
     const onSub = (data) => {
         const st = S.current, c = st.cur, u = data.userId; if (!c || data.tid !== c.tid) return;
         const isP = st.players.some(p => p.userId === u);
-        if (data.k === 'd' && isP && c.type === 'S_DRAW') { if (SK.valid(data.d)) st.dsub[u] = { d: data.d, ts: Date.now() - c.start }; }
+        if (data.k === 'd' && isP && c.type === 'S_DRAW') { if (SK.valid(data.d)) { if (!st.dsub[u]) BLSND.play(); st.dsub[u] = { d: data.d, ts: Date.now() - c.start }; } }
         else if (data.k === 'q' && isP && c.type === 'S_QUOTE') { const x = blCensor(cleanAnswer(data.x)).slice(0, 60).trim(); const arr = st.qsub[u] = st.qsub[u] || []; if (x && arr.length < 15 && !arr.some(y => y.toLowerCase() === x.toLowerCase())) arr.push(x); }
-        else if (data.k === 'qd' && isP && c.type === 'S_QUOTE') st.qdone[u] = 1;
-        else if (data.k === 'm' && isP && c.type === 'S_MEME') { const pool = st.pools[u]; if (!pool) return; const di = pool.ds.find(x => x.id === data.di), qi = pool.qs.find(x => x.id === data.qi); if (di && qi) { st.mm[u] = { did: di.id, qid: qi.id, st: Math.max(0, Math.min(53, data.st | 0)) }; st.lockTs = Date.now(); } }
+        else if (data.k === 'qd' && isP && c.type === 'S_QUOTE') { if (!st.qdone[u]) BLSND.play(); st.qdone[u] = 1; }
+        else if (data.k === 'm' && isP && c.type === 'S_MEME') { const pool = st.pools[u]; if (!pool) return; const di = pool.ds.find(x => x.id === data.di), qi = pool.qs.find(x => x.id === data.qi); if (di && qi) { if (!st.mm[u]) BLSND.play(); st.mm[u] = { did: di.id, qid: qi.id, st: Math.max(0, Math.min(53, data.st | 0)) }; st.lockTs = Date.now(); } }
         else if (data.k === 'v' && c.type === 'S_VOTE') { if ((data.v === 'a' || data.v === 'b') && (isP || st.audience.some(a => a.userId === u))) st.votes[u] = data.v; }
         setTick(x => x + 1);
     };
@@ -3236,13 +3265,13 @@ const StrokesHost = ({ goBack, onGames }) => {
             try { hostPub().then(pk => send(userId, 'IDENT_REQ', { pk })).catch(() => { }); } catch (e) { }
             conns.current[userId] = conn;
             const ex = st.players.find(p => p.userId === userId);
-            if (ex) { setPlayers(prev => prev.map(p => p.userId === userId ? { ...p, name, connected: true } : p)); conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar: ex.avatar }); if (st.phase !== 'LOBBY') setTimeout(() => resend(userId, false), 700); return; }
+            if (ex) { setPlayers(prev => prev.map(p => p.userId === userId ? { ...p, name, connected: true } : p)); conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar: ex.avatar, resync: !!data.rejoin }); if (st.phase !== 'LOBBY') setTimeout(() => resend(userId, false), 700); return; }
             if (st.phase === 'LOBBY' && !(st.cap && st.players.length >= st.cap)) {
                 const avatar = generateAvatar(st.players.map(p => p.avatar)); let fn = name; if (st.players.some(p => p.name.toLowerCase() === name.toLowerCase())) fn = name + ' ' + Math.floor(Math.random() * 100);
                 conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar }); setPlayers(prev => prev.some(p => p.userId === userId) ? prev : [...prev, { userId, name: fn, score: 0, avatar, connected: true }]); return;
             }
             const ea = st.audience.find(a => a.userId === userId), av = ea ? ea.avatar : generateAvatar([...st.players, ...st.audience].map(p => p.avatar));
-            conn.send({ type: 'LOBBY_JOINED', isAudience: true, avatar: av }); if (!ea) setAudience(prev => prev.some(a => a.userId === userId) ? prev : [...prev, { userId, name, avatar: av, connected: true }]);
+            conn.send({ type: 'LOBBY_JOINED', isAudience: true, avatar: av, resync: !!(ea && data.rejoin) }); if (!ea) setAudience(prev => prev.some(a => a.userId === userId) ? prev : [...prev, { userId, name, avatar: av, connected: true }]);
             setTimeout(() => resend(userId, true), 700); return;
         }
         if (t === 'UPDATE_AVATAR') { setPlayers(prev => prev.map(p => p.userId === data.userId ? { ...p, avatar: data.avatar } : p)); setAudience(prev => prev.map(a => a.userId === data.userId ? { ...a, avatar: data.avatar } : a)); send(data.userId, 'AVATAR_UPDATED', { avatar: data.avatar }); return; }
@@ -3250,7 +3279,7 @@ const StrokesHost = ({ goBack, onGames }) => {
     };
     const hcRef = useRef(); hcRef.current = handleClientMessage;
     useEffect(() => {
-        const code = generateCode(); setRoomCode(code);
+        const code = generateCode(); setRoomCode(code); BLSND.preload();
         const mq = mqtt.connect(MQTT_URL + '/' + code, MQTT_OPTS); mqttRef.current = mq; const mock = {};
         mq.on('connect', () => { mq.subscribe(`blersjda/${code}/host`, () => { }); });
         mq.on('message', (topic, message) => {
@@ -3799,7 +3828,7 @@ const OnlineHost = ({ goBack, onGames }) => {
     }, [players, audience, gameState, round, clashes, currentClashIndex, settings]);
     useEffect(() => {
         const code = generateCode();
-        setRoomCode(code);
+        setRoomCode(code); BLSND.preload();
         const mqttClient = mqtt.connect(MQTT_URL + '/' + code, MQTT_OPTS);
         const mockConnections = {};
         mqttClient.on('connect', () => {
@@ -3873,7 +3902,7 @@ const OnlineHost = ({ goBack, onGames }) => {
                 sendToClient(userId, 'STATE_WAITING', { msg: "Answers in! Waiting for others..." });
             }
         }
-        else if (gameState === 'VOTING') {
+        else if (gameState === 'VOTING' && clashes[currentClashIndex]) {
             const clash = clashes[currentClashIndex];
             if (!isAudience && clash.players.some(p => p.userId === userId)) {
                 sendToClient(userId, 'STATE_VOTING', {
@@ -3916,7 +3945,6 @@ const OnlineHost = ({ goBack, onGames }) => {
                 if (existingPlayer) {
                     existingPlayer.name = name;
                     existingPlayer.connected = true;
-                    setTimeout(() => syncPlayerState(userId, false), 500);
                     return [...prevPlayers];
                 }
                 if (stateRef.current.gameState === 'LOBBY' && !(stateRef.current.settings.cap && prevPlayers.length >= stateRef.current.settings.cap)) {
@@ -3930,9 +3958,12 @@ const OnlineHost = ({ goBack, onGames }) => {
                 }
                 return prevPlayers;
             });
+            const exP = stateRef.current.players.find(p => p.userId === userId), exA = !exP && (stateRef.current.audience || []).find(a => a.userId === userId);
+            if (exP) { conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar: exP.avatar, resync: !!data.rejoin }); setTimeout(() => syncPlayerState(userId, false), 500); }
+            else if (exA) { conn.send({ type: 'LOBBY_JOINED', isAudience: true, avatar: exA.avatar, resync: !!data.rejoin }); setTimeout(() => syncPlayerState(userId, true), 500); }
             if (stateRef.current.gameState !== 'LOBBY' || lobbyFull()) {
                 const isExistingPlayer = stateRef.current.players.some(p => p.userId === userId);
-                if (!isExistingPlayer) {
+                if (!isExistingPlayer && !exA) {
                     setAudience(prev => {
                         const exists = prev.find(a => a.userId === userId);
                         if (exists) {
@@ -3946,21 +3977,6 @@ const OnlineHost = ({ goBack, onGames }) => {
                     setTimeout(() => syncPlayerState(userId, true), 500);
                 }
             }
-            if (stateRef.current.gameState !== 'LOBBY' || lobbyFull()) {
-                const isExistingPlayer = stateRef.current.players.some(p => p.userId === userId);
-                if (!isExistingPlayer) {
-                    setAudience(prev => {
-                        const exists = prev.find(a => a.userId === userId);
-                        if (exists) {
-                            exists.name = name;
-                            return [...prev];
-                        }
-                        return [...prev, { userId, name, connected: true }];
-                    });
-                    conn.send({ type: 'LOBBY_JOINED', isAudience: true });
-                    setTimeout(() => syncPlayerState(userId, true), 500);
-                }
-            }
         }
         if (data.type === 'UPDATE_AVATAR') {
             setPlayers(prev => prev.map(p => p.userId === data.userId ? { ...p, avatar: data.avatar } : p));
@@ -3968,6 +3984,7 @@ const OnlineHost = ({ goBack, onGames }) => {
             sendToClient(data.userId, 'AVATAR_UPDATED', { avatar: data.avatar });
         }
         if (data.type === 'SUBMIT_ANSWER') {
+            BLSND.play();
             setClashes(prev => {
                 const next = [...prev];
                 const clash = next.find(c => c.prompt === data.prompt);
@@ -4505,8 +4522,8 @@ const OnlineClient = ({ goBack }) => {
     const [voteData, setVoteData] = useState(null);
     const [joinStatus, setJoinStatus] = useState('idle');
     const [joinErr, setJoinErr] = useState('');
-    const mqttRef = useRef(null), joinTimer = useRef(null), joinedRef = useRef(false), attemptRef = useRef(0);
-    useEffect(() => () => { clearTimeout(joinTimer.current); try { mqttRef.current && mqttRef.current.end(true); } catch (e) { } window.blToast && window.__blDismiss && window.__blDismiss('join'); }, []);
+    const mqttRef = useRef(null), joinTimer = useRef(null), joinedRef = useRef(false), attemptRef = useRef(0), autoRef = useRef(false);
+    useEffect(() => () => { clearTimeout(joinTimer.current); try { localStorage.removeItem('blersjda_session'); } catch (e) { } try { mqttRef.current && mqttRef.current.end(true); } catch (e) { } window.blToast && window.__blDismiss && window.__blDismiss('join'); }, []);
     const voteKey = voteData && voteData.answers ? (voteData.prompt || '') + '|' + voteData.answers.map(a => a.id).join(',') : '';
     const shuffledAnswers = useMemo(() => (voteData && voteData.answers) ? shuffle([...voteData.answers]) : [], [voteKey]);
     const [userId] = useState(() => {
@@ -4568,15 +4585,16 @@ const OnlineClient = ({ goBack }) => {
         clearTimeout(joinTimer.current);
         try { mqttRef.current && mqttRef.current.end(true); } catch (e) { }
         mqttRef.current = null; window.__bConn = null; setConn(null);
-        setJoinStatus('failed'); setJoinErr(reason);
+        setJoinStatus('failed'); setJoinErr(reason); if (autoRef.current) { autoRef.current = false; try { localStorage.removeItem('blersjda_session'); } catch (e) { } }
         window.blToast(reason, { type: 'error', id: 'join', ttl: 8000 });
         try { navigator.vibrate && navigator.vibrate([80, 60, 80]); } catch (e) { }
     };
-    const joinGame = () => {
+    const joinGame = (ov) => {
         if (joinStatus === 'connecting' || joinStatus === 'joining') return;
-        if (!code || !cleanName(name)) return;
-        const roomCode = code.toUpperCase().trim();
-        try { localStorage.setItem('blersjda_code', roomCode); localStorage.setItem('blersjda_name', name); navigator.vibrate && navigator.vibrate(30); } catch (e) { }
+        const au = !!(ov && ov.auto), jc = au ? ov.code : code, jn = au ? ov.name : name;
+        if (!jc || !cleanName(jn)) return;
+        const roomCode = jc.toUpperCase().trim();
+        try { localStorage.setItem('blersjda_code', roomCode); localStorage.setItem('blersjda_name', jn); navigator.vibrate && navigator.vibrate(30); } catch (e) { }
         const att = ++attemptRef.current;
         joinedRef.current = false; setJoinErr(''); setJoinStatus('connecting');
         window.blToast(`Connecting to room ${roomCode}…`, { type: 'loading', id: 'join', ttl: 0 });
@@ -4588,7 +4606,7 @@ const OnlineClient = ({ goBack }) => {
         mqttRef.current = mqttClient;
         mqttClient.on('connect', () => {
             if (att !== attemptRef.current) return;
-            if (joinedRef.current) { window.blToast('Reconnected!', { type: 'success', id: 'net', ttl: 2000 }); return; }
+            if (joinedRef.current) { window.blToast('Reconnected!', { type: 'success', id: 'net', ttl: 2000 }); try { window.__bConn && window.__bConn.send({ type: 'JOIN', userId, name: cleanName(jn), rejoin: true }); } catch (e) { } return; }
             mqttClient.subscribe(`blersjda/${roomCode}/client/${userId}`, (err) => {
                 if (att !== attemptRef.current) return;
                 if (err) { failJoin("Couldn't open a channel to the room. Try again.", att); return; }
@@ -4598,7 +4616,7 @@ const OnlineClient = ({ goBack }) => {
                 window.blToast(`Joining room ${roomCode}…`, { type: 'loading', id: 'join', ttl: 0 });
                 clearTimeout(joinTimer.current);
                 joinTimer.current = setTimeout(() => failJoin(`Room ${roomCode} didn't answer. Double-check the code, and make sure the host's lobby is open.`, att), 10000);
-                mockConnection.send({ type: 'JOIN', userId, name: cleanName(name) });
+                mockConnection.send({ type: 'JOIN', userId, name: cleanName(jn) });
             });
         });
         mqttClient.on('error', (e) => { if (!joinedRef.current) failJoin('Connection error: ' + ((e && e.message) || 'unknown'), att); });
@@ -4609,6 +4627,21 @@ const OnlineClient = ({ goBack }) => {
             catch (e) { console.error("Failed to parse client inbound MQTT packet:", e); }
         });
     };
+    useEffect(() => {
+        try {
+            const ss = JSON.parse(localStorage.getItem('blersjda_session') || 'null'), urlRoom = new URLSearchParams(location.search).get('room');
+            if (ss && ss.code && ss.name && Date.now() - ss.ts < 4 * 3600e3 && (!urlRoom || urlRoom.toUpperCase() === ss.code)) { autoRef.current = true; setCode(ss.code); setName(ss.name); setTimeout(() => joinGame({ auto: true, code: ss.code, name: ss.name }), 250); }
+        } catch (e) { }
+    }, []);
+    useEffect(() => {
+        if (!conn) return;
+        const ping = () => { try { if (joinedRef.current && conn.open) conn.send({ type: 'PING', userId }); } catch (e) { } };
+        const resync = () => { try { if (joinedRef.current && document.visibilityState !== 'hidden') window.__bConn && window.__bConn.send({ type: 'JOIN', userId, name: cleanName(localStorage.getItem('blersjda_name') || ''), rejoin: true }); } catch (e) { } };
+        const iv = setInterval(ping, 10000);
+        document.addEventListener('visibilitychange', resync); window.addEventListener('online', resync);
+        return () => { clearInterval(iv); document.removeEventListener('visibilitychange', resync); window.removeEventListener('online', resync); };
+    }, [conn]);
+    const csRef = useRef({}); csRef.current = { clientState, prompts: promptsToAnswer };
     const handleHostMessage = (data) => {
         try { window.dispatchEvent(new CustomEvent('bl-host-msg', { detail: data })); } catch (e) { }
         if (data.type === 'IDENT_REQ') {
@@ -4616,7 +4649,10 @@ const OnlineClient = ({ goBack }) => {
             return;
         }
         if (data.type === 'LOBBY_JOINED') {
+            const wasIn = joinedRef.current;
             joinedRef.current = true; clearTimeout(joinTimer.current); setJoinStatus('idle'); setJoinErr('');
+            try { localStorage.setItem('blersjda_session', JSON.stringify({ code: localStorage.getItem('blersjda_code') || '', name: localStorage.getItem('blersjda_name') || '', ts: Date.now() })); } catch (e) { }
+            if (wasIn && data.resync) { if (data.avatar) setMyAvatar(data.avatar); return; }
             window.blToast("You're in room " + (localStorage.getItem('blersjda_code') || '') + '!', { type: 'success', id: 'join', ttl: 3000 });
             try { document.title = 'Blersjda · Room ' + (localStorage.getItem('blersjda_code') || ''); } catch (e) { }
             setClientState('WAITING_LOBBY');
@@ -4625,7 +4661,7 @@ const OnlineClient = ({ goBack }) => {
             setVoteData(data.isAudience ? "You joined as Audience!" : "You're in! Look at the big screen.");
         }
         if (data.type === 'KICKED') {
-            clearTimeout(joinTimer.current);
+            clearTimeout(joinTimer.current); try { localStorage.removeItem('blersjda_session'); } catch (e) { }
             window.blToast(data.msg || 'You were removed from the game.', { type: 'error', ttl: 6000 });
             goBack();
         }
@@ -4634,6 +4670,7 @@ const OnlineClient = ({ goBack }) => {
             setVoteData(data.msg);
         }
         if (data.type === 'STATE_ANSWERING') {
+            if (csRef.current.clientState === 'ANSWERING' && JSON.stringify(csRef.current.prompts) === JSON.stringify(data.prompts)) return;
             setPromptsToAnswer(data.prompts);
             setCurrentPromptIndex(0);
             setAnswerInput('');
