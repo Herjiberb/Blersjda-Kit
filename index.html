@@ -1852,6 +1852,73 @@ const StatsPanel=({history})=>{
                     h("td",{className:"pr-3 font-mono"},p.best))))))
     );
 };
+
+const ArtPanel=({history,compact})=>{
+    const h=React.createElement;const [view,setView]=useState('memes');const [q,setQ]=useState('');const [sort,setSort]=useState('votes');const [limit,setLimit]=useState(24);
+    const A=useMemo(()=>{const memes=[],designs=[],quotes=[];history.forEach(g=>{const gid=g.id;(g.memes||[]).forEach(m=>memes.push({...m,gid,key:gid+m.id}));(g.designs||[]).forEach(d=>designs.push({...d,gid,key:gid+d.id}));(g.quotes||[]).forEach(x=>quotes.push({...x,gid,key:gid+x.id}));});
+        const dv={},qv={},dw={};memes.forEach(m=>{if(m.did){dv[m.gid+m.did]=(dv[m.gid+m.did]||0)+m.votes;dw[m.gid+m.did]=(dw[m.gid+m.did]||0)+m.wins;}if(m.qid)qv[m.gid+m.qid]=(qv[m.gid+m.qid]||0)+m.votes;});
+        designs.forEach(d=>{d.votes=dv[d.key]||0;d.wins=dw[d.key]||0;});quotes.forEach(x=>{x.votes=qv[x.key]||0;});
+        const by={};const P=n=>by[n]||(by[n]={name:n,art:0,quotes:0,usedQ:0,votes:0,wins:0,memes:0,inkVotes:0});
+        designs.filter(d=>d.by).forEach(d=>{const p=P(d.by);p.art++;p.inkVotes+=d.votes;});quotes.filter(x=>x.by).forEach(x=>{const p=P(x.by);p.quotes++;if(x.used)p.usedQ++;});memes.forEach(m=>{if(!m.maker)return;const p=P(m.maker);p.memes++;p.votes+=m.votes;p.wins+=m.wins;});
+        const ppl=Object.values(by);const mx=(arr,k)=>[...arr].sort((a,b)=>b[k]-a[k])[0];
+        const unusedQ=quotes.filter(x=>!x.used),unusedD=designs.filter(d=>!d.used&&!d.stock);
+        const longQ=mx(quotes,'votes');const bestM=mx(memes,'votes'),streakM=mx(memes,'best'),winM=mx(memes,'wins');
+        const noVoteM=memes.filter(m=>m.bouts>0&&m.votes===0).length;
+        const stockQ=memes.filter(m=>!m.quoter).length,autoD=memes.filter(m=>!m.designer).length;
+        const wordsAll=quotes.reduce((n,x)=>n+x.x.split(/\s+/).filter(Boolean).length,0);
+        const shortWin=[...quotes].filter(x=>x.votes>0&&x.used).sort((a,b)=>a.x.length-b.x.length)[0];
+        const loudest=[...quotes].sort((a,b)=>(b.x.match(/[A-Z]/g)||[]).length-(a.x.match(/[A-Z]/g)||[]).length)[0];
+        const wc={};quotes.forEach(x=>x.x.toLowerCase().replace(/[^a-z0-9' ]/g,'').split(/\s+/).filter(w=>w.length>3).forEach(w=>wc[w]=(wc[w]||0)+1));const topWords=Object.entries(wc).sort((a,b)=>b[1]-a[1]).slice(0,8);
+        return {memes,designs,quotes,ppl,unusedQ,unusedD,bestM,streakM,winM,noVoteM,stockQ,autoD,wordsAll,shortWin,topWords,longQ,
+            topArtist:mx(ppl,'inkVotes'),topWriter:mx(ppl,'quotes'),topMaker:mx(ppl,'votes'),topDraw:mx(ppl,'art'),
+            ratio:quotes.length?Math.round(unusedQ.length/quotes.length*100):0};},[history]);
+    if(!A.memes.length&&!A.designs.length&&!A.quotes.length)return compact?null:h("div",{className:"glass-panel p-10 rounded-3xl text-gray-300"},"No Strokes archives yet. Play Art mode and every drawing, quote and meme will be kept here forever.");
+    const btn="px-4 py-2 rounded-xl font-bold text-sm uppercase tracking-wider border-2 transition-all ";
+    const tag=(t,c)=>h("span",{className:"text-xs px-2 py-0.5 rounded-md font-bold "+(c||"bg-purple-900 text-purple-200")},t);
+    const when=g=>new Date(g).toLocaleDateString();
+    const tl=q.trim().toLowerCase();
+    const sorter=(a,b)=>sort==='votes'?(b.votes||0)-(a.votes||0):sort==='old'?a.gid-b.gid:b.gid-a.gid;
+    const rows=view==='memes'?A.memes.filter(m=>!tl||(m.x+' '+m.maker+' '+(m.designer||'')+' '+(m.quoter||'')).toLowerCase().includes(tl)).sort(sorter)
+        :view==='art'?A.designs.filter(d=>!tl||(d.by||'auto').toLowerCase().includes(tl)).sort(sorter)
+        :A.quotes.filter(x=>(view!=='graveyard'||!x.used)&&(!tl||(x.x+' '+(x.by||'stock')).toLowerCase().includes(tl))).sort(sorter);
+    const SC=(ic,l,v,sub)=>h(StatCard,{key:l,icon:ic,label:l,value:v,sub});
+    const ft=(title,col,body,sub)=>h("div",{className:"glass-panel p-4 rounded-3xl border-l-8 text-left "+col},h("p",{className:"text-xs uppercase tracking-widest font-bold mb-2"},title),body,sub&&h("p",{className:"text-cyan-300 font-mono text-sm mt-2"},sub));
+    return h("div",{className:"w-full space-y-6 text-left"},
+        !compact&&h("div",{className:"grid grid-cols-2 md:grid-cols-4 gap-4"},
+            SC("palette","Drawings",A.designs.length,A.unusedD.length+" never made it to a meme"),
+            SC("chat","Quotes Written",A.quotes.length,A.wordsAll+" words total"),
+            SC("laugh","Memes Created",A.memes.length,A.noVoteM+" got zero votes"),
+            SC("trash","Quote Graveyard",A.unusedQ.length,A.ratio+"% of quotes unused"),
+            SC("crown","Top Meme Maker",A.topMaker?A.topMaker.name:'-',A.topMaker?A.topMaker.votes+" votes earned":''),
+            SC("palette","Fan-Fave Artist",A.topArtist&&A.topArtist.inkVotes?A.topArtist.name:'-',A.topArtist?A.topArtist.inkVotes+" votes via their art":''),
+            SC("keyboard","Wordsmith",A.topWriter?A.topWriter.name:'-',A.topWriter?A.topWriter.quotes+" quotes ("+A.topWriter.usedQ+" used)":''),
+            SC("ink","Busiest Doodler",A.topDraw?A.topDraw.name:'-',A.topDraw?A.topDraw.art+" drawings":'')),
+        !compact&&h("div",{className:"grid md:grid-cols-3 gap-4"},
+            A.bestM&&A.bestM.votes>0&&ft("Most Voted Meme","border-yellow-400 text-yellow-400",h(SMeme,{d:A.bestM.d,x:A.bestM.x,st:A.bestM.st,size:220}),A.bestM.maker+" · "+A.bestM.votes+" votes"),
+            A.streakM&&A.streakM.best>1&&ft("Longest Meme Win Streak","border-orange-400 text-orange-400",h(SMeme,{d:A.streakM.d,x:A.streakM.x,st:A.streakM.st,size:220}),A.streakM.maker+" · "+A.streakM.best+" in a row"),
+            A.winM&&A.winM.wins>0&&ft("Most Bout Wins","border-green-400 text-green-400",h(SMeme,{d:A.winM.d,x:A.winM.x,st:A.winM.st,size:220}),A.winM.maker+" · "+A.winM.wins+" wins")),
+        !compact&&h("div",{className:"grid md:grid-cols-2 gap-4"},
+            A.longQ&&A.longQ.votes>0&&ft("Quote That Powered The Most Votes","border-pink-400 text-pink-400",h("p",{className:"text-xl font-bold italic break-words"},'"'+A.longQ.x+'"'),(A.longQ.by||'Stock')+" · "+A.longQ.votes+" votes"),
+            A.loudest&&ft("Loudest Quote","border-red-400 text-red-400",h("p",{className:"text-xl font-bold italic break-words"},'"'+A.loudest.x+'"'),(A.loudest.by||'Stock')),
+            A.shortWin&&ft("Shortest Quote That Got Votes","border-cyan-400 text-cyan-400",h("p",{className:"text-xl font-bold italic break-words"},'"'+A.shortWin.x+'"'),(A.shortWin.by||'Stock')+" · "+A.shortWin.votes+" votes"),
+            A.topWords.length>0&&ft("Favourite Words","border-purple-400 text-purple-300",h("p",{className:"text-lg"},A.topWords.map(([w,n])=>w+" ×"+n).join("  ·  ")),A.stockQ+" memes used stock quotes, "+A.autoD+" used auto-doodles")),
+        h("div",{className:"flex flex-wrap gap-3 items-center"},
+            [['memes','Memes',A.memes.length],['art','Art',A.designs.length],['quotes','Quotes',A.quotes.length],['graveyard','Unused Quotes',A.unusedQ.length]].map(([k,l,n])=>h("button",{key:k,onClick:()=>{setView(k);setLimit(24);},className:btn+(view===k?"bg-pink-600 border-pink-400":"border-purple-500/50")},l+" ("+n+")")),
+            h("input",{value:q,onChange:e=>{setQ(e.target.value);setLimit(24);},placeholder:"Search...",className:"flex-1 min-w-[160px] p-2 rounded-xl bg-purple-950/80 border-2 border-cyan-500/50 outline-none"}),
+            h("select",{value:sort,onChange:e=>setSort(e.target.value),className:"p-2 rounded-xl bg-purple-950/80 border-2 border-purple-500/50"},h("option",{value:"votes"},"Most votes"),h("option",{value:"new"},"Newest"),h("option",{value:"old"},"Oldest"))),
+        h("div",{className:view==='quotes'||view==='graveyard'?"space-y-2":"grid grid-cols-2 md:grid-cols-3 gap-4"},rows.slice(0,limit).map(it=>
+            view==='memes'?h("div",{key:it.key,className:"glass-panel p-3 rounded-2xl flex flex-col items-center gap-2"},h(SMeme,{d:it.d,x:it.x,st:it.st,size:230}),
+                h("p",{className:"text-xs text-gray-300 text-center"},"by "+it.maker+" · art "+(it.designer||'auto')+" · quote "+(it.quoter||'stock')),
+                h("div",{className:"flex gap-2 flex-wrap justify-center"},tag(it.votes+" votes","bg-cyan-900 text-cyan-200"),tag(it.wins+"/"+(it.bouts||0)+" wins","bg-green-900 text-green-200"),it.best>1&&tag("streak "+it.best,"bg-orange-900 text-orange-200"),tag("R"+it.r+" · "+when(it.gid))))
+            :view==='art'?h("div",{key:it.key,className:"glass-panel p-3 rounded-2xl flex flex-col items-center gap-2"},h("div",{style:{background:'#fff',borderRadius:10,lineHeight:0,overflow:'hidden'}},h(SArt,{d:it.d,size:230})),
+                h("p",{className:"text-xs text-gray-300"},(it.by||'Auto-doodle')+" · R"+it.r+" · "+when(it.gid)),
+                h("div",{className:"flex gap-2 flex-wrap justify-center"},tag(it.votes+" votes via memes","bg-cyan-900 text-cyan-200"),tag(it.used?"used in meme":"never used",it.used?"bg-green-900 text-green-200":"bg-red-900 text-red-200")))
+            :h("div",{key:it.key,className:"glass-panel p-3 rounded-xl flex flex-wrap items-center gap-3"},h("span",{className:"text-lg font-bold italic flex-1 break-words min-w-[200px]"},'"'+it.x+'"'),
+                h("span",{className:"text-pink-300 text-sm font-bold"},it.by||'Stock'),tag(it.used?it.votes+" votes":"unused",it.used?"bg-cyan-900 text-cyan-200":"bg-red-900 text-red-200"),tag("R"+it.r+" · "+when(it.gid)))
+        )),
+        rows.length>limit&&h("button",{onClick:()=>setLimit(l=>l+24),className:"block mx-auto text-pink-400 underline font-bold uppercase tracking-widest text-sm"},"Show more ("+(rows.length-limit)+")"),
+        !rows.length&&h("p",{className:"text-gray-400"},"Nothing here (older games weren't archived this deeply)."));
+};
 const LogPanel=({history})=>{
     const [q,setQ]=useState('');const [sort,setSort]=useState('new');const [winsOnly,setWinsOnly]=useState(false);const [limit,setLimit]=useState(50);
     const all=useMemo(()=>flattenLog(history),[history]);
@@ -1950,7 +2017,7 @@ const HistoryViewer = ({ goBack }) => {
                     React.createElement("span", { className: "text-cyan-400 font-mono text-2xl font-black bg-cyan-900/30 px-3 py-1 rounded-lg mt-2" },
                         p.score,
                         " pts")))))),
-            React.createElement("div", { className: "w-full space-y-12" }, selectedGame.rounds.map(r => (React.createElement("div", { key: r.round, className: "w-full" },
+            (selectedGame.memes || selectedGame.quotes) ? React.createElement("div",{className:"w-full mb-12"},React.createElement(ArtPanel,{history:[selectedGame],compact:true})) : null, React.createElement("div", { className: "w-full space-y-12" }, selectedGame.rounds.map(r => (React.createElement("div", { key: r.round, className: "w-full" },
                 React.createElement("h3", { className: "text-4xl font-black text-purple-300 uppercase mb-6 border-b-2 border-purple-500/50 pb-2 text-left" },
                     "Round ",
                     r.round),
@@ -1988,7 +2055,7 @@ const HistoryViewer = ({ goBack }) => {
             React.createElement(Button, { onClick: goBack, color: "blue", className: "w-auto px-6 py-2 text-sm" }, "\u2190 Main Menu"),
             React.createElement("h2", { className: "text-5xl font-black text-pink-400 uppercase tracking-widest sweep-text drop-shadow-lg" }, "Match History"),
             React.createElement("button", { onClick: handleDeleteAll, disabled: history.length === 0, className: `p-3 px-6 rounded-xl text-white font-bold tracking-wider uppercase transition-all shadow-lg ${history.length === 0 ? 'bg-gray-600 opacity-50 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500 border-b-4 border-red-800 active:border-b-0 active:translate-y-1'}` }, React.createElement(React.Fragment, null, React.createElement(Ico, { n: "trash", size: 20 }), " Delete All"))),
-        React.createElement("div", { className: "w-full flex flex-wrap gap-3 mb-6 justify-center" }, [['GAMES', 'gamepad', 'Games'], ['STATS', 'chart', 'Stats'], ['LOG', 'scroll', 'Answer Log'], ['PLAYERS', 'users', 'Players'], ['PRIVACY', 'shield', 'Data & Privacy']].map(([k, ic, l]) => React.createElement("button", { key: k, onClick: () => setTab(k), className: `px-5 py-2 rounded-full font-black uppercase tracking-widest text-sm border-2 transition-all inline-flex items-center gap-2 ${tab === k ? 'bg-pink-600 border-pink-300 shadow-lg' : 'border-purple-500/50 text-purple-300 hover:bg-purple-900/40'}` }, React.createElement(Ico, { n: ic, size: 20 }), l))),
+        React.createElement("div", { className: "w-full flex flex-wrap gap-3 mb-6 justify-center" }, [['GAMES', 'gamepad', 'Games'], ['STATS', 'chart', 'Stats'], ['LOG', 'scroll', 'Answer Log'], ['PLAYERS', 'users', 'Players'], ['ART', 'palette', 'Art Archive'], ['PRIVACY', 'shield', 'Data & Privacy']].map(([k, ic, l]) => React.createElement("button", { key: k, onClick: () => setTab(k), className: `px-5 py-2 rounded-full font-black uppercase tracking-widest text-sm border-2 transition-all inline-flex items-center gap-2 ${tab === k ? 'bg-pink-600 border-pink-300 shadow-lg' : 'border-purple-500/50 text-purple-300 hover:bg-purple-900/40'}` }, React.createElement(Ico, { n: ic, size: 20 }), l))),
         tab !== 'PRIVACY' && React.createElement("div", { className: "w-full flex flex-wrap gap-3 mb-8 glass-panel p-4 rounded-2xl items-center justify-center text-sm" },
             React.createElement(Ico, { n: "calendar", size: 22 }),
             React.createElement("select", { value: fl.range, onChange: e => setFl(f => ({ ...f, range: e.target.value })), className: "p-2 rounded-lg bg-purple-950/80 border border-purple-500/50" }, [['ALL', 'All time'], ['7', 'Last 7 days'], ['30', 'Last 30 days'], ['90', 'Last 90 days']].map(([v, l]) => React.createElement("option", { key: v, value: v }, l))),
@@ -1997,7 +2064,7 @@ const HistoryViewer = ({ goBack }) => {
             React.createElement("input", { value: fl.who, onChange: e => setFl(f => ({ ...f, who: e.target.value })), placeholder: "Filter by player name...", className: "p-2 rounded-lg bg-purple-950/80 border border-cyan-500/50 outline-none min-w-[160px]" }),
             React.createElement("select", { value: fl.sort, onChange: e => setFl(f => ({ ...f, sort: e.target.value })), className: "p-2 rounded-lg bg-purple-950/80 border border-purple-500/50" }, [['new', 'Newest'], ['old', 'Oldest'], ['big', 'Most players'], ['score', 'Top score']].map(([v, l]) => React.createElement("option", { key: v, value: v }, l))),
             React.createElement("span", { className: "text-gray-400" }, history.length + ' / ' + allHistory.length + ' games')),
-        tab === 'PRIVACY' ? React.createElement(PrivacyPanel, { allHistory, onChange: () => getGameHistory().then(setHistory) }) : tab === 'PLAYERS' && history.length > 0 ? React.createElement(PlayersPanel, { history }) : tab === 'STATS' && history.length > 0 ? React.createElement(StatsPanel, { history }) : tab === 'LOG' && history.length > 0 ? React.createElement(LogPanel, { history }) : history.length === 0 ? (React.createElement("div", { className: "glass-panel p-12 rounded-3xl w-full flex flex-col items-center justify-center border border-dashed border-purple-500/50" },
+        tab === 'PRIVACY' ? React.createElement(PrivacyPanel, { allHistory, onChange: () => getGameHistory().then(setHistory) }) : tab === 'ART' ? React.createElement(ArtPanel, { history }) : tab === 'PLAYERS' && history.length > 0 ? React.createElement(PlayersPanel, { history }) : tab === 'STATS' && history.length > 0 ? React.createElement(StatsPanel, { history }) : tab === 'LOG' && history.length > 0 ? React.createElement(LogPanel, { history }) : history.length === 0 ? (React.createElement("div", { className: "glass-panel p-12 rounded-3xl w-full flex flex-col items-center justify-center border border-dashed border-purple-500/50" },
             React.createElement("p", { className: "text-3xl text-purple-300 font-bold uppercase tracking-widest mb-4" }, "No history recorded yet."),
             React.createElement("p", { className: "text-gray-400 text-lg" }, "Play some matches, and they will be archived here."))) : (React.createElement("div", { className: "w-full space-y-4" }, history.map(game => {
             var _a;
@@ -3097,7 +3164,9 @@ const StrokesHost = ({ goBack, onGames }) => {
                 const sA = mk(A, m.va, m.ra, m.voters.a), sB = mk(B, m.vb, m.rb, m.voters.b);
                 return { prompt: m.label, players: [pl(A), pl(B)].map(p => ({ userId: p.userId, name: p.name, avatar: p.avatar })), answers: { [A.maker]: sA.answer, [B.maker]: sB.answer }, votes: {}, revealData: { playerStats: [sA, sB], winners: [m.w === A.id ? sA : sB] } };
             }) })).filter(r => r.clashes.length);
-            saveGameHistory({ date: new Date().toISOString(), mode: 'strokes', players: sorted.map(p => ({ ...p, pid: PIDMAP[p.userId] || ('u:' + p.userId), net: NETMAP[p.userId] || null })), rounds, honors: honors.map(x => ({ t: x.t, name: x.name })), memes: st.memes.map(m => ({ id: m.id, r: m.r, maker: nm(m.maker), ...pubM(m), wins: m.wins, votes: m.votes })) });
+            saveGameHistory({ date: new Date().toISOString(), mode: 'strokes', players: sorted.map(p => ({ ...p, pid: PIDMAP[p.userId] || ('u:' + p.userId), net: NETMAP[p.userId] || null })), rounds, honors: honors.map(x => ({ t: x.t, name: x.name })), memes: st.memes.map(m => ({ id: m.id, r: m.r, maker: nm(m.maker), designer: nm(m.designer) || null, quoter: nm(m.quoter) || null, did: m.did, qid: m.qid, auto: !!m.auto, ...pubM(m), wins: m.wins, votes: m.votes, bouts: st.matches.filter(x => x.a === m.id || x.b === m.id).length, best: m.best || 0 })),
+                designs: st.designs.map(d => ({ id: d.id, r: d.r, by: nm(d.uid) || null, stock: !!d.stock, used: st.usedD.has(d.id), d: d.d })),
+                quotes: st.quotes.map(q => ({ id: q.id, r: q.r, by: nm(q.uid) || null, x: q.x, used: st.usedQ.has(q.id) })) });
         } catch (e) { console.error('save fail', e); }
     };
     const startGame = (force) => { const st = S.current; if (st.phase !== 'LOBBY') return; if (st.players.length < (force ? 1 : 3)) return; st.started = true; runGame(); };
