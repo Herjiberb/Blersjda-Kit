@@ -2736,8 +2736,8 @@ const SDrawEditor = ({ tid, prompt, dl, total, label, onDone }) => {
     const sw = (i, active, on) => h('button', { key: i, onClick: on, 'aria-label': 'color ' + i, style: { flex: 'none', width: 38, height: 38, borderRadius: '50%', background: SK.PAL[i], border: active ? '4px solid #fff' : '2px solid rgba(255,255,255,.35)', boxShadow: active ? '0 0 0 2px #ec4899' : 'none' } });
     const mini = (s) => h('button', { key: s, onClick: () => setBg('s', s), style: { flex: 'none', width: 56, height: 62, borderRadius: 10, border: doc.current.s === s ? '3px solid #fff' : '2px solid rgba(255,255,255,.25)', background: 'rgba(0,0,0,.3)', color: '#fff', fontSize: 10, fontWeight: 800, padding: 0 } }, h(MiniBg, { s, a: doc.current.a, b: doc.current.b }), SK.BGN[s]);
     return h('div', { style: { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 8px 14px', gap: 8, userSelect: 'none', WebkitUserSelect: 'none' } },
-        h('div', { style: { width: '100%', maxWidth: 560, display: 'flex', alignItems: 'center', gap: 8 } }, h(STimer, { left, total }), h('button', { onClick: submit, style: sBtn('#16a34a', { padding: '8px 14px', minHeight: 44 }) }, 'Done ✓')),
-        h('div', { style: { width: '100%', maxWidth: 560, textAlign: 'center', fontSize: 14, lineHeight: 1.2 } }, h('span', { style: { color: '#22d3ee', fontWeight: 900, fontSize: 11, letterSpacing: '.1em' } }, label + ' · '), h('b', { style: { color: '#fde68a' } }, prompt)),
+        h('div', { style: { width: '100%', maxWidth: 560, display: 'flex', alignItems: 'center', gap: 8 } }, h(STimer, { left, total }), h('button', { onClick: submit, style: sBtn('#16a34a', { padding: '8px 14px', minHeight: 44 }) }, 'No more quips ✓')),
+        h('div', { style: { width: '100%', maxWidth: 560, textAlign: 'center', fontSize: 14, lineHeight: 1.2 } }, h('span', { style: { color: '#22d3ee', fontWeight: 900, fontSize: 11, letterSpacing: '.1em' } }, label + ' · '), h('span', { style: { color: '#f9a8d4', fontWeight: 900, fontSize: 11, letterSpacing: '.08em' } }, 'SUGGESTED PROMPT (optional, only if you need help): '), h('b', { style: { color: '#fde68a' } }, prompt)),
         h('canvas', { ref: cv, width: SK.N, height: SK.N, onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: onUp, style: { width: size, height: size, background: '#fff', borderRadius: 14, touchAction: 'none', boxShadow: '0 6px 24px rgba(0,0,0,.5)', border: '3px solid rgba(255,255,255,.7)', cursor: tool === 'fill' ? 'cell' : 'crosshair' } }),
         h('div', { style: { width: '100%', maxWidth: 560, display: 'flex', gap: 6 } }, tb('pen', '✏️', 'Paint'), tb('fill', '🪣', 'Fill'), tb('hl', '🖍️', 'Glow'), tb('bg', '🎨', 'Backdrop'),
             h('button', { onClick: undo, disabled: !doc.current.ops.length, style: { width: 48, border: 'none', borderRadius: 12, background: 'rgba(255,255,255,.1)', color: '#fff', fontSize: 22, opacity: doc.current.ops.length ? 1 : .35 } }, '↶'),
@@ -2770,11 +2770,11 @@ const SQuoteEditor = ({ tid, theme, dl, total, onAdd, onDone }) => {
         h('div', { style: { fontSize: 14, color: '#fde68a', textAlign: 'center' } }, 'Write funny shirt slogans. As many as you can!'),
         h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', background: 'rgba(255,255,255,.08)', borderRadius: 12, padding: '6px 12px' } }, h('span', { style: { fontSize: 13, color: '#a5f3fc' } }, 'Need an idea? Try: ', h('b', null, th)), h('button', { onClick: () => setTh(SK.rnd(SK_THEMES)), style: { border: 'none', background: 'none', fontSize: 22 } }, '🎲')),
         !over ? h('div', { style: { width: '100%', maxWidth: 480, display: 'flex', gap: 8 } },
-            h('input', { type: 'text', value: txt, maxLength: 60, autoFocus: true, placeholder: 'Type a slogan…', onChange: e => setTxt(e.target.value), onKeyDown: e => { if (e.key === 'Enter') add(); }, style: { flex: 1, minWidth: 0, padding: '14px 12px', borderRadius: 12, border: '3px solid #ec4899', background: '#1a1033', color: '#fff', fontSize: 16, fontWeight: 700 } }),
-            h('button', { onClick: add, disabled: !txt.trim() || list.length >= 15, style: sBtn('#ec4899', { opacity: !txt.trim() ? .5 : 1 }) }, 'Add'))
+            h('input', { type: 'text', value: txt, maxLength: 60, autoFocus: true, placeholder: 'Type a slogan, then Submit quip', onChange: e => setTxt(e.target.value), onKeyDown: e => { if (e.key === 'Enter') add(); }, style: { flex: 1, minWidth: 0, padding: '14px 12px', borderRadius: 12, border: '3px solid #ec4899', background: '#1a1033', color: '#fff', fontSize: 16, fontWeight: 700 } }),
+            h('button', { onClick: add, disabled: !txt.trim() || list.length >= 15, style: sBtn('#ec4899', { opacity: !txt.trim() ? .5 : 1 }) }, 'Submit quip'))
             : h('div', { style: { color: '#86efac', fontWeight: 900, fontSize: 18 } }, 'Locked in! Waiting for others…'),
-        h('div', { style: { fontSize: 12, color: '#c4b5fd', fontWeight: 800 } }, list.length + ' / 15 quotes'),
-        h('div', { style: { width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 6 } }, list.map((q, i) => h('div', { key: i, style: { background: 'rgba(255,255,255,.1)', borderRadius: 10, padding: '8px 12px', fontWeight: 700, fontSize: 15, textAlign: 'left' } }, '“' + q + '”'))));
+        h('div', { style: { fontSize: 12, color: '#c4b5fd', fontWeight: 800 } }, list.length + ' / 15 quips submitted (each is sent the moment you hit Submit)'),
+        h('div', { style: { width: '100%', maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 6 } }, list.map((q, i) => h('div', { key: i, style: { background: 'rgba(255,255,255,.1)', borderRadius: 10, padding: '8px 12px', fontWeight: 700, fontSize: 15, textAlign: 'left' } }, '✓ Submitted  “' + q + '”'))));
 };
 
 /* ---------- Meme locker ---------- */
@@ -2914,7 +2914,7 @@ const StrokesHost = ({ goBack, onGames }) => {
         else if (data.k === 'q' && isP && c.type === 'S_QUOTE') { const x = cleanAnswer(data.x).slice(0, 60).trim(); const arr = st.qsub[u] = st.qsub[u] || []; if (x && arr.length < 15 && !arr.some(y => y.toLowerCase() === x.toLowerCase())) arr.push(x); }
         else if (data.k === 'qd' && isP && c.type === 'S_QUOTE') st.qdone[u] = 1;
         else if (data.k === 'm' && isP && c.type === 'S_MEME') { const pool = st.pools[u]; if (!pool) return; const di = pool.ds.find(x => x.id === data.di), qi = pool.qs.find(x => x.id === data.qi); if (di && qi) { st.mm[u] = { did: di.id, qid: qi.id, st: Math.max(0, Math.min(53, data.st | 0)) }; st.lockTs = Date.now(); } }
-        else if (data.k === 'v' && c.type === 'S_VOTE') { if ((data.v === 'a' || data.v === 'b') && !st.entrants.includes(u) && (isP || st.audience.some(a => a.userId === u))) st.votes[u] = data.v; }
+        else if (data.k === 'v' && c.type === 'S_VOTE') { if ((data.v === 'a' || data.v === 'b') && (isP || st.audience.some(a => a.userId === u))) st.votes[u] = data.v; }
         setTick(x => x + 1);
     };
     const handleClientMessage = (data, conn) => {
@@ -2989,7 +2989,7 @@ const StrokesHost = ({ goBack, onGames }) => {
     };
     const memeStep = async (r) => {
         const st = S.current; chk(); st.mm = {}; st.lockTs = 0;
-        const dd = deal(st.designs, 4, st.usedD, stockD), qq = deal(st.quotes, 6, st.usedQ, stockQ); st.pools = {};
+        const dd = deal(st.designs.filter(d => d.r === r), r === 1 ? 4 : 2, st.usedD, stockD), qq = deal(st.quotes.filter(q => q.r === r), r === 1 ? 6 : 4, st.usedQ, stockQ); st.pools = {};
         st.players.forEach(p => { st.pools[p.userId] = { ds: dd[p.userId], qs: qq[p.userId] }; });
         setPhase('MEME'); setInfo({ title: 'MEME LOCKER', sub: 'Mix a design with a quote. No repeats!' }); speak('Meme locker! Build the perfect meme!');
         openTask('S_MEME', 60, (u, aud) => { const pl = st.pools[u]; return aud || !pl ? null : { ds: pl.ds.map(x => ({ i: x.id, d: x.d })), qs: pl.qs.map(x => ({ i: x.id, x: x.x })) }; }, 'Players are building memes!');
@@ -3012,66 +3012,65 @@ const StrokesHost = ({ goBack, onGames }) => {
     };
     const applyGain = (gain) => setPlayers(prev => prev.map(p => gain[p.userId] ? { ...p, score: p.score + gain[p.userId] } : p));
     const runMatch = async (a, b, mult, label, idx, total) => {
-        const st = S.current; chk(); setPhase('VOTING'); st.votes = {}; st.entrants = [a.maker, b.maker];
-        const connEl = () => st.players.filter(p => !st.entrants.includes(p.userId) && conns.current[p.userId] && conns.current[p.userId].open).length + st.audience.filter(x => conns.current[x.userId] && conns.current[x.userId].open).length;
-        setInfo({ kind: 'match', a, b, label, idx, total }); speak(idx === total ? 'The final showdown!' : 'Vote for the funniest meme!');
+        const st = S.current; chk(); setPhase('VOTING'); st.votes = {}; st.entrants = [];
+        const connEl = () => st.players.filter(p => conns.current[p.userId] && conns.current[p.userId].open).length + st.audience.filter(x => conns.current[x.userId] && conns.current[x.userId].open).length;
+        setInfo({ kind: 'match', a, b, label, idx, total }); speak(idx === total ? 'The final showdown!' : 'Vote for the funniest meme! You can vote for your own!');
         const pa = pubM(a), pb = pubM(b);
-        openTask('S_VOTE', 20, (u, aud) => ({ a: pa, b: pb, ro: !aud && st.entrants.includes(u) }));
+        openTask('S_VOTE', 20, (u, aud) => ({ a: pa, b: pb, ro: false }));
         const early = await countdown(20, () => { const e = connEl(); return e > 0 && Object.keys(st.votes).length >= e; }); if (!early) await sleep(1000); chk();
-        const vs = Object.values(st.votes), va = vs.filter(v => v === 'a').length, vb = vs.filter(v => v === 'b').length, tot = va + vb, tie = va === vb;
-        const w = va > vb ? 'a' : vb > va ? 'b' : (Math.random() < .5 ? 'a' : 'b'), base = 1000 * mult, gain = {};
-        const calc = (v, win) => { let pts = tot ? Math.floor(v / tot * base) : 0; if (win) pts += Math.floor(base * .3); const sweep = tot >= 3 && v === tot; if (sweep) pts += Math.floor(base * .2); return { pts, sweep }; };
-        const ra = calc(va, w === 'a'), rb = calc(vb, w === 'b'); award(a, ra.pts, gain); award(b, rb.pts, gain);
-        const wm = w === 'a' ? a : b; wm.wins++; a.votes += va; b.votes += vb; stat(a.maker).votes += va; stat(b.maker).votes += vb; stat(wm.maker).wins++; if (ra.sweep) stat(a.maker).sweeps++; if (rb.sweep) stat(b.maker).sweeps++;
-        applyGain(gain);
+        const vs = Object.values(st.votes), va = vs.filter(v => v === 'a').length, vb = vs.filter(v => v === 'b').length, V = va + vb, tie = va === vb, gain = {};
+        let w, tieNote = '';
+        if (!tie) w = va > vb ? 'a' : 'b';
+        else if (a.streak !== b.streak) { w = a.streak > b.streak ? 'a' : 'b'; tieNote = 'Tie! Higher streak continues!'; }
+        else { w = Math.random() < .5 ? 'a' : 'b'; tieNote = 'Tie! Random pick decides it…'; }
+        const wm = w === 'a' ? a : b, lm = w === 'a' ? b : a; let wp = 0, sp = 0;
+        if (!tie) { wm.streak++; wm.best = Math.max(wm.best, wm.streak); wp = Math.round(mult * 50 * V); sp = wm.streak >= 2 ? Math.round(mult * 40 * V * (wm.streak - 1)) : 0; wm.wp += wp; wm.sp += sp; wm.wins++; stat(wm.maker).wins++; }
+        lm.streak = 0; a.votes += va; b.votes += vb; a.bv += va; b.bv += vb; stat(a.maker).votes += va; stat(b.maker).votes += vb;
+        const ra = { pts: w === 'a' ? wp + sp : 0, sweep: false }, rb = { pts: w === 'b' ? wp + sp : 0, sweep: false };
+        if (wp + sp) award(wm, wp + sp, gain); applyGain(gain);
         const who = (u) => { const p = st.players.find(x => x.userId === u) || st.audience.find(x => x.userId === u); return p ? p.name : 'Audience'; };
         st.matches.push({ r: a.r === b.r ? a.r : 3, label, a: a.id, b: b.id, va, vb, w: wm.id, tie, ra: ra.pts, rb: rb.pts, voters: { a: Object.keys(st.votes).filter(u => st.votes[u] === 'a').map(who), b: Object.keys(st.votes).filter(u => st.votes[u] === 'b').map(who) }, mult });
-        setInfo({ kind: 'reveal', a, b, label, idx, total, w, va, vb, tie, ra, rb, gain }); setPhase('REVEAL');
+        setInfo({ kind: 'reveal', a, b, label, idx, total, w, va, vb, tie, tieNote, ra, rb, gain, streak: wm.streak, wp, sp }); setPhase('REVEAL');
         [...st.players, ...st.audience].forEach(p => send(p.userId, 'S_RES', { w, va, vb, mine: gain[p.userId] || 0 }));
-        sfx(tie ? 'draw.wav' : (ra.sweep || rb.sweep) ? 'victory.wav' : 'squelchy.wav'); speak(`${nm(wm.maker) || 'The winner'} wins${tie ? ' on a coin flip' : ''}!`);
+        sfx(tie ? 'draw.wav' : wm.streak >= 2 ? 'victory.wav' : 'squelchy.wav'); speak(`${nm(wm.maker) || 'The winner'} ${tie ? 'continues' : wm.streak >= 2 ? 'is on a ' + wm.streak + ' win streak' : 'wins'}!`);
         st.cur = null; await sleep(6500); chk(); return wm;
     };
-    const doBye = async (m, mult, label) => { const st = S.current; chk(); const gain = {}; award(m, Math.floor(1000 * mult * .2), gain); applyGain(gain); setPhase('BYE'); setInfo({ m, label }); speak(`${nm(m.maker) || 'A meme'} gets a free pass!`); await sleep(3000); chk(); };
-    const hasSame = (o) => { for (let i = 0; i + 1 < o.length; i += 2) if (o[i].maker === o[i + 1].maker) return true; return false; };
+    /* king-of-the-hill: start with 2 memes, winner stays and faces the next challenger */
     const bracket = async (list, mult, title) => {
-        let alive2 = list.slice(); const total = Math.max(1, alive2.length - 1); let idx = 0; if (alive2.length < 2) return alive2[0];
-        while (alive2.length > 1) {
-            const n = alive2.length, label = title + ' · ' + (n > 4 ? 'Round of ' + n : n > 2 ? 'Semifinals' : 'FINAL');
-            let order = shuffle(alive2); for (let t = 0; t < 30 && hasSame(order); t++) order = shuffle(alive2);
-            const next = []; let bye = null; if (order.length % 2) bye = order.pop();
-            for (let i = 0; i < order.length; i += 2) { idx++; next.push(await runMatch(order[i], order[i + 1], mult, label, idx, total)); }
-            if (bye) { await doBye(bye, mult, label); next.push(bye); }
-            alive2 = next;
-        }
-        return alive2[0];
+        const rank = (m) => m.wp + m.sp;
+        list.forEach(m => { m.streak = 0; m.best = 0; m.wp = 0; m.sp = 0; m.bv = 0; });
+        const order = shuffle(list); if (order.length < 2) return { winner: order[0], runner: null };
+        let champ = order[0]; const total = order.length - 1;
+        for (let i = 1; i < order.length; i++) champ = await runMatch(champ, order[i], mult, title + ' · Challenger ' + i + '/' + total, i, total);
+        const rk = order.slice().sort((x, y) => rank(y) - rank(x) || y.best - x.best || y.bv - x.bv || (y === champ) - (x === champ));
+        return { winner: rk[0], runner: rk[1] || null };
     };
     const roundEnd = async (title) => { chk(); setPhase('ROUND_END'); setInfo({ title }); sfx('victory.wav'); speak(title + ' is over! Here are the scores!'); await sleep(7000); chk(); };
     const runGame = async () => {
         const st = S.current;
         st.designs = []; st.quotes = []; st.memes = []; st.matches = []; st.dmap = {}; st.qmap = {}; st.usedD = new Set(); st.usedQ = new Set(); st.usedP = new Set(); st.usedStockQ = new Set(); st.stat = {}; st.speed = {}; st.inkOps = {}; st.qcount = {}; st.cur = null;
+        const finals = [];
         try {
             for (let r = 1; r <= 2; r++) {
                 setRound(r); await card(r === 1 ? 'ROUND 1' : 'ROUND 2', r === 1 ? 'Three drawings, then quotes, then memes!' : 'One more design, more quotes, bigger points (x1.5)!', 3500, r === 1 ? 'Welcome to Blersjda Strokes! Round one! Get ready to draw!' : 'Round two! Votes are worth fifty percent more!');
                 const nD = r === 1 ? 3 : 1; for (let k = 0; k < nD; k++) await drawStep(r, k, nD);
                 await quoteStep(r); const memes = await memeStep(r);
                 await card('BRACKET TIME', `Round ${r} · ${memes.length} memes enter`, 3000, 'Bracket time! May the funniest meme win!');
-                await bracket(memes, r === 1 ? 1 : 1.5, 'Round ' + r); await roundEnd('Round ' + r);
+                const res = await bracket(memes, r === 1 ? 1 : 1.5, 'Round ' + r); [res.winner, res.runner].forEach(m => m && finals.push(m)); await roundEnd('Round ' + r);
             }
-            setRound(3); let fin = st.memes.filter(m => m.wins > 0).sort((a, b) => b.wins - a.wins || b.votes - a.votes).slice(0, 8);
-            if (fin.length < 2) fin = st.memes.slice().sort((a, b) => b.votes - a.votes).slice(0, 4);
-            let champ = fin[0];
-            if (fin.length >= 2) { await card('GRAND FINAL', `${fin.length} winning memes · double points!`, 3500, 'The grand final! All the winners face off for double points!'); champ = await bracket(fin, 2, 'Grand Final'); }
-            await finish(champ);
+            setRound(3); const fin = finals.filter((m, i, arr) => arr.indexOf(m) === i); let champ = fin[0], runner = fin[1] || null;
+            if (fin.length >= 2) { await card('GRAND FINAL', `${fin.length} round winners & runners-up · double points!`, 3500, 'The grand final! The winners and runners up face off for double points!'); const fr = await bracket(fin, 2, 'Grand Final'); champ = fr.winner; runner = fr.runner; }
+            await finish(champ, runner);
         } catch (e) { if (String(e && e.message) !== 'closed') console.error(e); }
     };
-    const finish = async (champ) => {
+    const finish = async (champ, runner) => {
         const st = S.current, sorted = [...st.players].sort((a, b) => b.score - a.score), P = st.players;
         const cands = [
             ['👑 Meme Lord', 'Most meme-making points', u => stat(u).mk], ['🎨 Picasso of Blersj', 'Best-loved designs', u => stat(u).ds], ['💬 Poet Laureate', 'Funniest quotes', u => stat(u).qt],
             ['⌨️ Quote Machine', 'Wrote the most quotes', u => st.qcount[u] || 0], ['🧲 Crowd Magnet', 'Collected the most votes', u => stat(u).votes], ['💎 Flawless', 'Swept matches with every vote', u => stat(u).sweeps * 100 + stat(u).wins],
             ['🖋️ Ink Marathon', 'Drew the most strokes', u => st.inkOps[u] || 0], ['⚡ Speed Doodler', 'Fastest to finish drawings', u => { const s = st.speed[u]; return s && s.length ? 100000 / (s.reduce((a, b) => a + b, 0) / s.length + 1000) : 0; }]];
         const cnt = {}, honors = []; cands.forEach(([t, d, f]) => { const ranked = P.filter(p => f(p.userId) > 0).sort((a, b) => f(b.userId) - f(a.userId)); if (ranked.length) { const w = ranked.find(p => (cnt[p.userId] || 0) < 2) || ranked[0]; cnt[w.userId] = (cnt[w.userId] || 0) + 1; honors.push({ t, d, u: w.userId, name: w.name, avatar: w.avatar }); } });
-        st.cur = null; setPhase('GAME_END'); setInfo({ champ, honors, sorted }); sfx('victory.wav'); speak(`The game is over! ${sorted[0] ? sorted[0].name : 'Someone'} is the Blersj champion!`);
+        st.cur = null; setPhase('GAME_END'); setInfo({ champ, runner, honors, sorted }); sfx('victory.wav'); speak(`The game is over! ${sorted[0] ? sorted[0].name : 'Someone'} is the Blersj champion!`);
         sorted.forEach((p, i) => { const mine = st.memes.filter(m => m.maker === p.userId).sort((a, b) => b.wins - a.wins || b.votes - a.votes)[0]; send(p.userId, 'S_END', { rank: i + 1, score: p.score, hon: honors.filter(x => x.u === p.userId).map(x => x.t + ' — ' + x.d), meme: mine ? pubM(mine) : null }); });
         st.audience.forEach(a => send(a.userId, 'STATE_WAITING', { msg: 'Game over! Thanks for watching!' }));
         try {
@@ -3099,7 +3098,7 @@ const StrokesHost = ({ goBack, onGames }) => {
         h('h2', { style: { fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 } }, 'Join at ', h('span', { style: { color: '#f472b6' } }, 'herjiberb.github.io/Blersjda-Kit')),
         h('div', { style: { display: 'inline-block', background: 'rgba(88,28,135,.5)', border: '3px solid #f59e0b', borderRadius: 28, padding: '18px 30px', marginBottom: 18, boxShadow: '0 0 40px rgba(245,158,11,.3)' } }, h('div', { style: { color: '#e9d5ff', fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase' } }, 'Room Code'), h('div', { style: { fontFamily: 'monospace', background: '#fff', color: '#000', padding: '6px 28px', borderRadius: 14, fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, letterSpacing: '.2em' } }, roomCode || '...')),
         h('div', { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' } }, h(SDisc, { g: SGAMES[1], size: 64 }), h('b', { style: { ...sFont, fontSize: 30, letterSpacing: '.08em', color: '#fbbf24' } }, 'BLERSJDA STROKES')),
-        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · 2 brackets · grand final')),
+        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
         h('div', { style: { ...glass, padding: 24, minHeight: 200, marginBottom: 16 } }, h('h3', { style: { color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 14, fontSize: 22 } }, `Players (${players.length}) - Needs 3+`),
             h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' } }, players.map(p => h('div', { key: p.userId, className: 'animate-bounce', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', animationDuration: (1.5 + Math.random() * .5) + 's' } }, h(MonsterAvatar, { attributes: p.avatar, size: 80 }), h('div', { style: { marginTop: 6, background: 'rgba(107,33,168,.8)', padding: '3px 12px', borderRadius: 99, fontWeight: 800, fontSize: 14 } }, p.name))), !players.length && h('div', { style: { color: '#c084fc', fontWeight: 800, letterSpacing: '.1em' } }, 'WAITING FOR PLAYERS…'))),
         h('button', { onClick: () => startGame(false), disabled: players.length < 3, style: sBtn(players.length < 3 ? '#4b5563' : '#ec4899', { width: '100%', maxWidth: 440, minHeight: 72, fontSize: 24 }) }, players.length < 3 ? `Waiting for ${3 - players.length} more…` : `Start Game (${players.length} ready)`),
@@ -3114,10 +3113,10 @@ const StrokesHost = ({ goBack, onGames }) => {
             return h('div', { key: k, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: lose ? .55 : 1, transition: 'all .4s', transform: win ? 'scale(1.05)' : 'none' } },
                 h('div', { style: { ...sFont, fontSize: 30, color: k === 'a' ? '#f472b6' : '#60a5fa' } }, k.toUpperCase()),
                 h('div', { style: { padding: 6, borderRadius: 18, background: win ? '#4ade80' : 'rgba(255,255,255,.15)', boxShadow: win ? '0 0 50px rgba(74,222,128,.6)' : 'none', lineHeight: 0 } }, h(SMeme, { d: st.dmap[m.did].d, x: st.qmap[m.qid].x, st: m.st, size: mSize })),
-                rv && h('div', { className: 'scale-in', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 } }, p && h(MonsterAvatar, { attributes: p.avatar, size: 60 }), h('div', { style: { fontWeight: 900, fontSize: 22 } }, p ? p.name : ''), h('div', { style: { fontWeight: 900, fontSize: 28, color: '#67e8f9' } }, (k === 'a' ? info.va : info.vb) + ' votes'), h('div', { style: { color: '#fde68a', fontWeight: 800 } }, '+' + (k === 'a' ? info.ra.pts : info.rb.pts) + ' (split w/ art & quote)'), credit(m)));
+                rv && h('div', { className: 'scale-in', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 } }, p && h(MonsterAvatar, { attributes: p.avatar, size: 60 }), h('div', { style: { fontWeight: 900, fontSize: 22 } }, p ? p.name : ''), h('div', { style: { fontWeight: 900, fontSize: 28, color: '#67e8f9' } }, (k === 'a' ? info.va : info.vb) + ' votes'), h('div', { style: { color: '#fde68a', fontWeight: 800 } }, '+' + (k === 'a' ? info.ra.pts : info.rb.pts) + (info.tie ? ' (ties give no win points)' : ' (win + streak, split w/ art & quote)')), credit(m)));
         };
-        body = h('div', { className: 'scale-in', style: { width: '100%' } }, h('div', { style: { fontWeight: 900, letterSpacing: '.15em', color: '#22d3ee', fontSize: 'clamp(16px,2.4vw,26px)', textTransform: 'uppercase' } }, `${info.label} · match ${info.idx}/${info.total}`),
-            rv && info.tie && h('div', { style: { color: '#fde68a', fontWeight: 900, fontSize: 22 } }, 'TIE! Coin flip decides it…'),
+        body = h('div', { className: 'scale-in', style: { width: '100%' } }, h('div', { style: { fontWeight: 900, letterSpacing: '.15em', color: '#22d3ee', fontSize: 'clamp(16px,2.4vw,26px)', textTransform: 'uppercase' } }, `${info.label} · vote on anything, even your own!`),
+            rv && info.tie && h('div', { style: { color: '#fde68a', fontWeight: 900, fontSize: 22 } }, info.tieNote || 'TIE!'),
             h('div', { style: { display: 'flex', gap: 'clamp(12px,4vw,60px)', justifyContent: 'center', alignItems: 'flex-start', margin: '14px 0', flexWrap: 'wrap' } }, side('a', info.a), h('div', { style: { ...sFont, fontSize: 40, alignSelf: 'center', color: '#fbbf24' } }, 'VS'), side('b', info.b)),
             !rv && h('div', null, h('div', { style: { fontFamily: 'monospace', fontWeight: 900, fontSize: 80, lineHeight: 1, color: timer <= 5 ? '#f87171' : '#fff' } }, timer), h('div', { style: { display: 'inline-block', marginTop: 6, background: 'rgba(0,0,0,.35)', padding: '6px 22px', borderRadius: 99, fontWeight: 800, letterSpacing: '.1em' } }, 'VOTES: ' + Object.keys(st.votes || {}).length + (audience.length ? ' (audience included)' : ''))));
     }
@@ -3127,6 +3126,7 @@ const StrokesHost = ({ goBack, onGames }) => {
         const ch = info.champ, cm = ch && st.dmap[ch.did];
         body = h('div', { className: 'scale-in', style: { width: '100%' } }, h('h2', { className: 'sweep-text', style: { ...sFont, fontSize: 'clamp(44px,8vw,96px)', margin: '0 0 10px' } }, 'FINAL SCORES'),
             ch && cm && h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: 20 } }, h('div', { style: { fontWeight: 900, letterSpacing: '.15em', color: '#facc15' } }, '👑 GRAND CHAMPION MEME'), h('div', { className: 'bouncing-win', style: { lineHeight: 0, border: '5px solid #facc15', borderRadius: 18, boxShadow: '0 0 60px rgba(250,204,21,.6)' } }, h(SMeme, { d: cm.d, x: st.qmap[ch.qid].x, st: ch.st, size: mSize + 40 })), h('div', { style: { fontWeight: 800, fontSize: 20 } }, 'by ' + (nm(ch.maker) || '?'))),
+            info.runner && h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: 20 } }, h('div', { style: { fontWeight: 900, letterSpacing: '.15em', color: '#cbd5e1' } }, '🥈 RUNNER-UP MEME'), h('div', { style: { lineHeight: 0, border: '4px solid #cbd5e1', borderRadius: 18 } }, h(SMeme, { d: st.dmap[info.runner.did].d, x: st.qmap[info.runner.qid].x, st: info.runner.st, size: mSize })), h('div', { style: { fontWeight: 800, fontSize: 18 } }, 'by ' + (nm(info.runner.maker) || '?'))),
             board(info.sorted || [], true),
             h('h3', { style: { ...sFont, fontSize: 36, color: '#f472b6', margin: '30px 0 12px', letterSpacing: '.1em' } }, 'HONORS'),
             h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14, maxWidth: 980, margin: '0 auto' } }, (info.honors || []).map((x, i) => h('div', { key: i, className: 'scale-in', style: { ...glass, padding: 14, border: '2px solid #facc15', animationDelay: i * .15 + 's' } }, h('div', { style: { fontWeight: 900, fontSize: 20, color: '#fde68a' } }, x.t), h('div', { style: { display: 'flex', justifyContent: 'center', margin: '6px 0' } }, h(MonsterAvatar, { attributes: x.avatar, size: 60 })), h('div', { style: { fontWeight: 900, fontSize: 18 } }, x.name), h('div', { style: { color: '#c4b5fd', fontSize: 13, fontWeight: 700 } }, x.d)))),
