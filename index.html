@@ -2877,9 +2877,9 @@ const GamesMenu = ({ current, onPick, onClose }) => {
 const StrokesHost = ({ goBack, onGames }) => {
     const h = React.createElement;
     const [roomCode, setRoomCode] = useState(''), [players, setPlayers] = useState([]), [audience, setAudience] = useState([]), [tts, setTts] = useState(true);
-    const [phase, setPhase] = useState('LOBBY'), [info, setInfo] = useState({}), [timer, setTimer] = useState(0), [, setTick] = useState(0), [round, setRound] = useState(1), [showKick, setShowKick] = useState(false);
+    const [phase, setPhase] = useState('LOBBY'), [cap, setCap] = useState(0), [info, setInfo] = useState({}), [timer, setTimer] = useState(0), [, setTick] = useState(0), [round, setRound] = useState(1), [showKick, setShowKick] = useState(false);
     const conns = useRef({}), S = useRef({ tidc: 0, idc: 0 }), alive = useRef(true), audioRef = useRef(null), mqttRef = useRef(null);
-    S.current.players = players; S.current.audience = audience; S.current.tts = tts; S.current.phase = phase;
+    S.current.players = players; S.current.cap = cap; S.current.audience = audience; S.current.tts = tts; S.current.phase = phase;
     if (!audioRef.current && typeof Audio !== 'undefined') audioRef.current = new Audio('music.wav');
     const sfx = (f) => { try { new Audio(f).play(); } catch (e) { } };
     const speak = (t) => { try { speakText(t, S.current.tts); } catch (e) { } };
@@ -2921,7 +2921,7 @@ const StrokesHost = ({ goBack, onGames }) => {
             conns.current[userId] = conn;
             const ex = st.players.find(p => p.userId === userId);
             if (ex) { setPlayers(prev => prev.map(p => p.userId === userId ? { ...p, name, connected: true } : p)); conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar: ex.avatar }); if (st.phase !== 'LOBBY') setTimeout(() => resend(userId, false), 700); return; }
-            if (st.phase === 'LOBBY') {
+            if (st.phase === 'LOBBY' && !(st.cap && st.players.length >= st.cap)) {
                 const avatar = generateAvatar(st.players.map(p => p.avatar)); let fn = name; if (st.players.some(p => p.name.toLowerCase() === name.toLowerCase())) fn = name + ' ' + Math.floor(Math.random() * 100);
                 conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar }); setPlayers(prev => prev.some(p => p.userId === userId) ? prev : [...prev, { userId, name: fn, score: 0, avatar, connected: true }]); return;
             }
@@ -3094,8 +3094,8 @@ const StrokesHost = ({ goBack, onGames }) => {
         h('h2', { style: { fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 } }, 'Join at ', h('span', { style: { color: '#f472b6' } }, 'herjiberb.github.io/Blersjda-Kit')),
         h('div', { style: { display: 'inline-block', background: 'rgba(88,28,135,.5)', border: '3px solid #f59e0b', borderRadius: 28, padding: '18px 30px', marginBottom: 18, boxShadow: '0 0 40px rgba(245,158,11,.3)' } }, h('div', { style: { color: '#e9d5ff', fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase' } }, 'Room Code'), h('div', { style: { fontFamily: 'monospace', background: '#fff', color: '#000', padding: '6px 28px', borderRadius: 14, fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, letterSpacing: '.2em' } }, roomCode || '...')),
         h('div', { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' } }, h(SDisc, { g: SGAMES[1], size: 64 }), h('b', { style: { ...sFont, fontSize: 30, letterSpacing: '.08em', color: '#fbbf24' } }, 'BLERSJDA STROKES')),
-        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
-        h('div', { style: { ...glass, padding: 24, minHeight: 200, marginBottom: 16 } }, h('h3', { style: { color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 14, fontSize: 22 } }, `Players (${players.length}) - Needs 3+`),
+        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h('label', { style: { display: 'flex', alignItems: 'center', gap: 10 } }, 'Player cap', h('select', { value: cap, onChange: e => setCap(+e.target.value), style: { background: '#1a1033', color: '#fff', border: '2px solid #ec4899', borderRadius: 10, padding: '4px 8px', fontWeight: 800, fontSize: 16 } }, h('option', { value: 0 }, 'No limit'), Array.from({ length: 14 }, (_, i) => i + 3).map(n => h('option', { key: n, value: n, disabled: n < players.length }, n)))), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
+        h('div', { style: { ...glass, padding: 24, minHeight: 200, marginBottom: 16 } }, h('h3', { style: { color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 14, fontSize: 22 } }, `Players (${players.length}) - Needs 3+` + (cap ? ` (cap ${cap})` : '')),
             h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' } }, players.map(p => h('div', { key: p.userId, className: 'animate-bounce', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', animationDuration: (1.5 + Math.random() * .5) + 's' } }, h(MonsterAvatar, { attributes: p.avatar, size: 80 }), h('div', { style: { marginTop: 6, background: 'rgba(107,33,168,.8)', padding: '3px 12px', borderRadius: 99, fontWeight: 800, fontSize: 14 } }, p.name))), !players.length && h('div', { style: { color: '#c084fc', fontWeight: 800, letterSpacing: '.1em' } }, 'WAITING FOR PLAYERS…'))),
         h('button', { onClick: () => startGame(false), disabled: players.length < 3, style: sBtn(players.length < 3 ? '#4b5563' : '#ec4899', { width: '100%', maxWidth: 440, minHeight: 72, fontSize: 24 }) }, players.length < 3 ? `Waiting for ${3 - players.length} more…` : `Start Game (${players.length} ready)`),
         h('div', { style: { display: 'flex', gap: 24, justifyContent: 'center', marginTop: 18, flexWrap: 'wrap' } },
@@ -3331,7 +3331,7 @@ const OnlineHost = ({ goBack, onGames }) => {
     const [roomCode, setRoomCode] = useState('');
     const [players, setPlayers] = useState([]);
     const [audience, setAudience] = useState([]);
-    const [settings, setSettings] = useState({ familyFriendly: false, tts: true, useOldMusic: false, autoProgress: true, underdogEnabled: {} });
+    const [settings, setSettings] = useState({ familyFriendly: false, tts: true, useOldMusic: false, autoProgress: true, underdogEnabled: {}, cap: 0 });
     const [showKickMenu, setShowKickMenu] = useState(false);
     const [gameState, setGameState] = useState('LOBBY');
     const [round, setRound] = useState(1);
@@ -3574,6 +3574,7 @@ const OnlineHost = ({ goBack, onGames }) => {
             NAMEMAP[userId] = name;
             try { hostPub().then(pk => sendToClient(userId, 'IDENT_REQ', { pk })).catch(() => { }); } catch (e) { }
             connectionsRef.current[userId] = conn;
+            const lobbyFull = () => { const c = stateRef.current.settings.cap; return !!c && stateRef.current.players.length >= c; };
             setPlayers(prevPlayers => {
                 const existingPlayer = prevPlayers.find(p => p.userId === userId);
                 if (existingPlayer) {
@@ -3582,7 +3583,7 @@ const OnlineHost = ({ goBack, onGames }) => {
                     setTimeout(() => syncPlayerState(userId, false), 500);
                     return [...prevPlayers];
                 }
-                if (stateRef.current.gameState === 'LOBBY') {
+                if (stateRef.current.gameState === 'LOBBY' && !(stateRef.current.settings.cap && prevPlayers.length >= stateRef.current.settings.cap)) {
                     let finalName = name;
                     if (prevPlayers.some(p => p.name.toLowerCase() === name.toLowerCase())) {
                         finalName = name + ` ${Math.floor(Math.random() * 100)}`;
@@ -3593,7 +3594,7 @@ const OnlineHost = ({ goBack, onGames }) => {
                 }
                 return prevPlayers;
             });
-            if (stateRef.current.gameState !== 'LOBBY') {
+            if (stateRef.current.gameState !== 'LOBBY' || lobbyFull()) {
                 const isExistingPlayer = stateRef.current.players.some(p => p.userId === userId);
                 if (!isExistingPlayer) {
                     setAudience(prev => {
@@ -3609,7 +3610,7 @@ const OnlineHost = ({ goBack, onGames }) => {
                     setTimeout(() => syncPlayerState(userId, true), 500);
                 }
             }
-            if (stateRef.current.gameState !== 'LOBBY') {
+            if (stateRef.current.gameState !== 'LOBBY' || lobbyFull()) {
                 const isExistingPlayer = stateRef.current.players.some(p => p.userId === userId);
                 if (!isExistingPlayer) {
                     setAudience(prev => {
@@ -3995,12 +3996,17 @@ const OnlineHost = ({ goBack, onGames }) => {
                 React.createElement("div", { className: "w-px h-8 bg-white/20" }),
                 React.createElement("label", { className: "flex items-center gap-3 cursor-pointer hover:text-pink-300 transition-colors" },
                     React.createElement("input", { type: "checkbox", checked: settings.autoProgress, onChange: e => setSettings(s => ({ ...s, autoProgress: e.target.checked })), className: "w-6 h-6 accent-pink-500" }),
-                    "Auto Progress")),
+                    "Auto Progress"),
+                React.createElement("div", { className: "w-px h-8 bg-white/20" }),
+                React.createElement("label", { className: "flex items-center gap-3" }, "Player cap",
+                    React.createElement("select", { value: settings.cap || 0, onChange: e => setSettings(s => ({ ...s, cap: +e.target.value })), className: "bg-purple-950 border-2 border-pink-500 rounded-lg px-2 py-1 text-white font-bold" },
+                        React.createElement("option", { value: 0 }, "No limit"),
+                        Array.from({ length: 13 }, (_, i) => i + 4).map(n => React.createElement("option", { key: n, value: n, disabled: n < players.length }, n))))),
             React.createElement("div", { className: "glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30" },
                 React.createElement("h3", { className: "text-2xl mb-6 text-pink-300 font-bold uppercase tracking-widest" },
                     "Players (",
                     players.length,
-                    ") - Needs 4+"),
+                    settings.cap ? ") - Needs 4+ (cap " + settings.cap + ")" : ") - Needs 4+"),
                 React.createElement("div", { className: "flex flex-wrap gap-6 justify-center" },
                     players.map(p => (React.createElement("div", { key: p.userId, className: "flex flex-col items-center animate-bounce", style: { animationDuration: `${Math.random() * 0.5 + 1.5}s` } },
                         React.createElement(MonsterAvatar, { attributes: p.avatar, size: 80 }),
