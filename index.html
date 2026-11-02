@@ -2292,10 +2292,7 @@ const HistoryViewer = ({ goBack }) => {
                 React.createElement("div", { className: "space-y-6" }, r.clashes.map((c, idx) => {
                     var _a, _b;
                     return (React.createElement("div", { key: idx, className: "glass-panel p-8 rounded-3xl border-l-8 border-pink-500 text-left relative overflow-hidden" },
-                        React.createElement("h4", { className: "text-3xl font-bold text-white mb-8 drop-shadow-md z-10 relative" },
-                            "\"",
-                            c.prompt,
-                            "\""),
+                        React.createElement(CapHistH4, { c }),
                         React.createElement("div", { className: "grid gap-6 md:grid-cols-2" }, (_b = (_a = c.revealData) === null || _a === void 0 ? void 0 : _a.playerStats) === null || _b === void 0 ? void 0 : _b.map(stat => {
                             const isWinner = c.revealData.winners.some(w => w.userId === stat.userId);
                             return (React.createElement("div", { key: stat.userId, className: `p-6 rounded-2xl relative transition-all ${isWinner ? 'bg-green-900/40 border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-purple-950/60 border border-purple-800'}` },
@@ -3196,13 +3193,14 @@ const StrokesClient = () => {
 (() => { const s = document.createElement('style'); s.textContent = '@keyframes blDiscSpin{to{transform:rotate(360deg)}}@keyframes blDiscFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}.bl-disc-btn{background:none;border:none;color:#fff;display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px;border-radius:24px;transition:transform .2s,background .2s;animation:blDiscFloat 3s ease-in-out infinite}.bl-disc-btn:hover{transform:scale(1.07);background:rgba(255,255,255,.08)}.bl-disc-btn.on{background:rgba(255,255,255,.12);box-shadow:0 0 0 3px #22d3ee}.bl-disc-spin .bl-disc{animation:blDiscSpin 8s linear infinite}.bl-disc-btn:hover .bl-disc-spin .bl-disc{animation-duration:2s}.bl-disc-btn:hover .bl-disc,.bl-disc-btn.on .bl-disc{animation:blDiscSpin 3s linear infinite}'; document.head.appendChild(s); })();
 const SGAMES = [
     { id: 'madness', name: 'Blersjda Madness', tag: 'Answer · Clash · Vote', a: '#ec4899', b: '#3b82f6', def: true },
-    { id: 'strokes', name: 'Blersjda Strokes', tag: 'Draw · Quote · Meme · Bracket', a: '#f59e0b', b: '#14b8a6' }];
+    { id: 'strokes', name: 'Blersjda Strokes', tag: 'Draw · Quote · Meme · Bracket', a: '#f59e0b', b: '#14b8a6' },
+    { id: 'cap', name: 'Blersjda Cap', tag: 'Caption · Vote · Laugh', a: '#22c55e', b: '#a855f7' }];
 const SDisc = ({ g, size = 120 }) => {
     const h = React.createElement, c = size / 2;
     return h('div', { className: 'bl-disc', style: { width: size, height: size, borderRadius: '50%', position: 'relative', background: `conic-gradient(from 20deg,${g.a},#ffffffcc,${g.b},#ffffff88,${g.a},#ffffffcc,${g.b},#ffffff88,${g.a})`, boxShadow: `0 0 ${size / 4}px ${g.a}88, inset 0 0 ${size / 6}px rgba(0,0,0,.35)` } },
         h('div', { style: { position: 'absolute', inset: size * .06, borderRadius: '50%', border: '2px solid rgba(255,255,255,.35)' } }),
         h('div', { style: { position: 'absolute', inset: size * .27, borderRadius: '50%', background: `linear-gradient(135deg,${g.a},${g.b})`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 3px rgba(255,255,255,.6)' } },
-            h('svg', { viewBox: '0 0 32 32', width: size * .3, height: size * .3, fill: 'none', stroke: '#fff', strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round' }, g.id === 'madness' ? h('path', { d: 'M18 3 L7 18 H15 L13 29 L25 13 H17 Z', fill: '#fff' }) : h('path', { d: 'M4 26 C8 10 12 28 16 14 C19 4 22 20 28 6' }))),
+            h('svg', { viewBox: '0 0 32 32', width: size * .3, height: size * .3, fill: 'none', stroke: '#fff', strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round' }, g.id === 'cap' ? h('path', { d: 'M4 6 H28 V22 H16 L9 28 V22 H4 Z', fill: '#fff' }) : g.id === 'madness' ? h('path', { d: 'M18 3 L7 18 H15 L13 29 L25 13 H17 Z', fill: '#fff' }) : h('path', { d: 'M4 26 C8 10 12 28 16 14 C19 4 22 20 28 6' }))),
         h('div', { style: { position: 'absolute', left: c - size * .05, top: c - size * .05, width: size * .1, height: size * .1, borderRadius: '50%', background: '#0f0a29', boxShadow: '0 0 0 2px rgba(255,255,255,.7)' } }));
 };
 const GamesMenu = ({ current, onPick, onClose }) => {
@@ -3491,6 +3489,864 @@ const StrokesHost = ({ goBack, onGames }) => {
             h('button', { onClick: () => setShowKick(false), style: sBtn('#4b5563', { width: '100%', marginTop: 10 }) }, 'Close'))), document.body));
 };
 
+
+/* ================= Blersjda Cap (caption mode) ================= */
+const CAP_EXTS = ['png', 'jpg', 'jpeg', 'webp', 'PNG', 'JPG', 'JPEG'];
+const capUrl = (im) => 'images/' + im.id + '.' + im.ext;
+const capTry = (id, i = 0) => new Promise(res => { if (i >= CAP_EXTS.length) return res(null); const im = new Image(); im.onload = () => { im.src = ''; res(CAP_EXTS[i]); }; im.onerror = () => res(capTry(id, i + 1)); im.src = 'images/' + id + '.' + CAP_EXTS[i]; });
+const capProbe = async () => {
+    if (window.__capList) return window.__capList;
+    if (window.__capProbing) return window.__capProbing;
+    window.__capProbing = (async () => {
+        try { const c = JSON.parse(sessionStorage.getItem('bl_cap_list')); if (c && c.length) return (window.__capList = c); } catch (e) { }
+        const out = []; let miss = 0, n = 1;
+        while (miss < 25 && n < 3000) {
+            const batch = []; for (let k = 0; k < 16; k++) batch.push(n + k); n += 16;
+            const res = await Promise.all(batch.map(async k => { let e = await capTry(String(k)); if (e) return { id: String(k), ext: e, adult: false }; e = await capTry(k + 'a'); return e ? { id: k + 'a', ext: e, adult: true } : null; }));
+            res.forEach(r => { if (r) { out.push(r); miss = 0; } else miss++; });
+        }
+        window.__capList = out; try { sessionStorage.setItem('bl_cap_list', JSON.stringify(out)); } catch (e) { }
+        return out;
+    })();
+    const l = await window.__capProbing; window.__capProbing = null; return l;
+};
+const capUsedGet = () => { try { return JSON.parse(localStorage.getItem('bl_cap_used') || '[]'); } catch (e) { return []; } };
+const capUsedSave = (l) => { try { localStorage.setItem('bl_cap_used', JSON.stringify(l)); } catch (e) { } };
+const CapImg = ({ im, size, style, onClick, lazy }) => {
+    const [i, setI] = useState(0);
+    useEffect(() => setI(0), [im && im.id]);
+    if (!im) return null;
+    const exts = [im.ext, ...CAP_EXTS.filter(e => e !== im.ext)];
+    return React.createElement('img', { key: im.id + i, src: 'images/' + im.id + '.' + exts[i], onError: () => setI(x => x + 1 < exts.length ? x + 1 : x), decoding: 'async', loading: lazy ? 'lazy' : 'eager', alt: 'Image to caption', draggable: false, onClick, style: { width: size, height: size, objectFit: 'contain', borderRadius: 16, background: '#000', display: 'block', margin: '0 auto', ...style } });
+};
+window.CapImg = CapImg;
+const capPrompt = (label, im, kind, cls) => {
+    const h = React.createElement;
+    if (!im) return h('h3', { className: cls }, label);
+    const s = kind === 'r' ? 'min(58vw,22dvh)' : kind === 'v' ? 'min(86vw,36dvh)' : 'min(84vw,34dvh)';
+    return h('div', { className: 'mb-4' }, h(CapImg, { im, size: s, style: { boxShadow: '0 0 30px rgba(236,72,153,.5)', border: '3px solid rgba(255,255,255,.2)' } }),
+        kind !== 'r' && h('p', { className: 'mt-2 text-sm font-black uppercase tracking-widest text-cyan-300' }, kind === 'a' ? 'Write a funny caption!' : 'Which caption is funnier?'));
+};
+const capHostPrompt = (clash) => {
+    const h = React.createElement;
+    if (!clash || !clash.img) return h('h2', { className: 'text-4xl md:text-5xl font-black mb-10 text-cyan-300 leading-tight p-6 glass-panel rounded-3xl mx-auto max-w-4xl border-l-8 border-pink-500 shadow-2xl' }, clash ? clash.prompt : '');
+    return h('div', { className: 'mb-6' }, h(CapImg, { im: clash.img, size: 'min(36vh,70vw)', style: { boxShadow: '0 0 40px rgba(236,72,153,.5)', border: '4px solid rgba(255,255,255,.25)' } }));
+};
+const CapHistH4 = ({ c }) => {
+    const h = React.createElement, [big, setBig] = useState(false);
+    if (!c.img) return h('h4', { className: 'text-3xl font-bold text-white mb-8 drop-shadow-md z-10 relative' }, '"', c.prompt, '"');
+    return h('div', { className: 'mb-8 flex items-center gap-4 relative z-10' },
+        h(CapImg, { im: c.img, size: 'min(40vw,180px)', lazy: true, onClick: () => setBig(true), style: { cursor: 'zoom-in', margin: 0, flexShrink: 0, border: '2px solid rgba(255,255,255,.25)' } }),
+        h('div', null, h('h4', { className: 'text-2xl font-bold text-white' }, c.prompt), h('p', { className: 'text-xs text-cyan-300 uppercase tracking-widest font-bold' }, 'Tap image to enlarge')),
+        big && ReactDOM.createPortal(h('div', { onClick: () => setBig(false), style: { position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out' } }, h(CapImg, { im: c.img, size: 'min(94vw,90vh)', style: { borderRadius: 8 } })), document.body));
+};
+
+const CapHost = ({ goBack, onGames }) => {
+    var _a, _b;
+    const [roomCode, setRoomCode] = useState('');
+    const [players, setPlayers] = useState([]);
+    const [audience, setAudience] = useState([]);
+    const [settings, setSettings] = useState({ familyFriendly: false, tts: true, useOldMusic: false, autoProgress: true, underdogEnabled: {}, cap: 0 });
+    const [showKickMenu, setShowKickMenu] = useState(false);
+    const [gameState, setGameState] = useState('LOBBY');
+    const [round, setRound] = useState(1);
+    const [capN, setCapN] = useState(-1);
+    useEffect(() => { let on = true; capProbe().then(l => on && setCapN(l.length)); return () => { on = false; }; }, []);
+    const [clashes, setClashes] = useState([]);
+    const [currentClashIndex, setCurrentClashIndex] = useState(0);
+    const [timer, setTimer] = useState(0);
+    const [usedPrompts, setUsedPrompts] = useState([]);
+    const connectionsRef = useRef({});
+    const stateRef = useRef();
+    const allRoundsHistory = useRef([]);
+    const prevPlayerCount = useRef(0);
+    useEffect(() => {
+        if (players.length === 4 && prevPlayerCount.current === 3 && gameState === 'LOBBY') {
+            try {
+                new Audio('gong.wav').play();
+            }
+            catch (e) {
+                console.log("Audio play prevented");
+            }
+        }
+        prevPlayerCount.current = players.length;
+    }, [players.length, gameState]);
+    const audioRef = useRef(null);
+    if (!audioRef.current && typeof Audio !== "undefined") {
+        audioRef.current = new Audio('music.wav');
+    }
+    useEffect(() => () => {
+        // Closing the room: stop and release all music/sfx
+        const a = audioRef.current;
+        if (a) { try { a.pause(); a.removeAttribute('src'); a.load(); } catch (e) { } }
+        (window.__blAudios || []).forEach(x => { try { x.pause(); } catch (e) { } });
+        window.__blAudios = [];
+        try { speechSynthesis.cancel(); } catch (e) { }
+    }, []);
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            e.preventDefault();
+            e.returnValue = "Are you sure you want to leave? This will destroy the current game!";
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, []);
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio)
+            return;
+        let fadeInterval;
+        if (gameState === 'LOBBY') {
+            if (!audio.src.endsWith('menu.wav'))
+                audio.src = 'menu.wav';
+            audio.loop = true;
+            audio.volume = 0;
+            audio.play().catch(e => console.log("Audio play prevented:", e));
+            let vol = 0;
+            fadeInterval = setInterval(() => {
+                vol += 0.05;
+                if (vol >= 0.5) {
+                    vol = 0.5;
+                    clearInterval(fadeInterval);
+                }
+                audio.volume = vol;
+            }, 100);
+        }
+        else if (gameState === 'ANSWERING') {
+            let track = settings.useOldMusic ? 'music_old.wav' : 'music.wav';
+            if (round === 2)
+                track = settings.useOldMusic ? 'music_2_old.wav' : 'music_2.wav';
+            if (round === 3)
+                track = settings.useOldMusic ? 'music_3_old.wav' : 'music_3.wav';
+            if (!audio.src.endsWith(track))
+                audio.src = track;
+            audio.loop = true;
+            audio.volume = 0;
+            audio.play().catch(e => console.log("Audio play prevented:", e));
+            let vol = 0;
+            fadeInterval = setInterval(() => {
+                vol += 0.05;
+                if (vol >= 0.5) {
+                    vol = 0.5;
+                    clearInterval(fadeInterval);
+                }
+                audio.volume = vol;
+            }, 100);
+        }
+        else if (gameState === 'VOTING') {
+            let track = 'voting.wav';
+            if (!audio.src.endsWith(track)) {
+                audio.src = track;
+                audio.currentTime = 0;
+            }
+            audio.loop = true;
+            audio.play().catch(e => console.log("Audio play prevented:", e));
+            let vol = audio.volume || 0;
+            fadeInterval = setInterval(() => {
+                vol += 0.05;
+                if (vol >= 0.8) {
+                    vol = 0.8;
+                    clearInterval(fadeInterval);
+                }
+                audio.volume = vol;
+            }, 100);
+        }
+        else if (audio.volume > 0) {
+            let vol = audio.volume;
+            fadeInterval = setInterval(() => {
+                vol = Math.max(0, vol - 0.1);
+                if (vol <= 0) {
+                    clearInterval(fadeInterval);
+                    audio.pause();
+                }
+                try {
+                    audio.volume = vol;
+                }
+                catch (e) { }
+            }, 100);
+        }
+        return () => clearInterval(fadeInterval);
+    }, [gameState, round, settings.useOldMusic]);
+    useEffect(() => {
+        let autoTimer;
+        if (gameState === 'ROUND_END' && settings.autoProgress) {
+            autoTimer = setTimeout(() => {
+                nextRoundOrEnd();
+            }, 5000);
+        }
+        return () => clearTimeout(autoTimer);
+    }, [gameState, settings.autoProgress, round, players, usedPrompts]);
+    useEffect(() => {
+        stateRef.current = { players, audience, gameState, round, clashes, currentClashIndex, settings };
+    }, [players, audience, gameState, round, clashes, currentClashIndex, settings]);
+    useEffect(() => {
+        const code = generateCode();
+        setRoomCode(code); BLSND.preload();
+        const mqttClient = mqtt.connect(MQTT_URL + '/' + code, MQTT_OPTS);
+        const mockConnections = {};
+        mqttClient.on('connect', () => {
+            console.log(`Host successfully secured room topic: blersjda/${code}/host`);
+            mqttClient.subscribe(`blersjda/${code}/host`, (err) => {
+                if (err)
+                    console.error("Host subscription routing error:", err);
+            });
+        });
+        mqttClient.on('message', (topic, message) => {
+            try {
+                const data = NET.dec(message);
+                if (data && data.userId) {
+                    const userId = data.userId;
+                    if (!mockConnections[userId]) {
+                        mockConnections[userId] = {
+                            open: true,
+                            metadata: { userId },
+                            send: (payload) => {
+                                publishQ(mqttClient, `blersjda/${code}/client/${userId}`, payload);
+                            }
+                        };
+                    }
+                    handleClientMessage(data, mockConnections[userId]);
+                }
+            }
+            catch (e) {
+                console.error("Failed to parse host MQTT message packet:", e);
+            }
+        });
+        return () => {
+            if (mqttClient)
+                mqttClient.end(true);
+        };
+    }, []);
+    useEffect(() => {
+        const handleHostCmd = (e) => {
+            if (e.detail === 'KICKALL') {
+                Object.keys(connectionsRef.current).forEach(id => kickUser(id));
+            }
+            if (e.detail === 'DEBUGSTART' && stateRef.current.gameState === 'LOBBY') {
+                startGame();
+            }
+        };
+        window.addEventListener('blersjda-host-cmd', handleHostCmd);
+        return () => window.removeEventListener('blersjda-host-cmd', handleHostCmd);
+    }, []);
+    useSpiderSender(['VOTING', 'REVEAL', 'ROUND_END', 'GAME_END'].includes(gameState), () => Object.values(connectionsRef.current));
+    const broadcast = (type, payload) => {
+        Object.values(connectionsRef.current).forEach(conn => {
+            if (conn && conn.open)
+                conn.send({ type, ...payload });
+        });
+    };
+    const sendToClient = (userId, type, payload) => {
+        const conn = connectionsRef.current[userId];
+        if (conn && conn.open)
+            conn.send({ type, ...payload });
+    };
+    const handleClientDisconnect = (userId) => {
+    };
+    const syncPlayerState = (userId, isAudience) => {
+        const { gameState, clashes, currentClashIndex } = stateRef.current;
+        if (gameState === 'ANSWERING' && !isAudience) {
+            const myClashes = clashes.filter(c => c.players.some(p => p.userId === userId));
+            const unanswered = myClashes.filter(c => !c.answers[userId]).map(c => c.prompt);
+            if (unanswered.length > 0) {
+                sendToClient(userId, 'STATE_ANSWERING', { prompts: unanswered, imgs: myClashes.filter(c => !c.answers[userId]).map(c => c.img) });
+            }
+            else {
+                sendToClient(userId, 'STATE_WAITING', { msg: "Answers in! Waiting for others..." });
+            }
+        }
+        else if (gameState === 'VOTING' && clashes[currentClashIndex]) {
+            const clash = clashes[currentClashIndex];
+            if (!isAudience && clash.players.some(p => p.userId === userId)) {
+                sendToClient(userId, 'STATE_VOTING', {
+                    prompt: clash.prompt, img: clash.img,
+                    answers: clash.players.map(p => ({ id: p.userId, text: clash.answers[p.userId] })),
+                    allowPass: false,
+                    readOnly: true,
+                    msg: "Your battle! You can't vote, but watch the results."
+                });
+            }
+            else {
+                sendToClient(userId, 'STATE_VOTING', {
+                    prompt: clash.prompt, img: clash.img,
+                    answers: clash.players.map(p => ({ id: p.userId, text: clash.answers[p.userId] })),
+                    allowPass: isAudience,
+                    readOnly: false
+                });
+            }
+        }
+        else {
+            sendToClient(userId, 'STATE_WAITING', { msg: "Look at the big screen!" });
+        }
+    };
+    const handleClientMessage = (data, conn) => {
+        if (data.type === 'IDENT') {
+            const uid = data.userId;
+            if (uid && _hkp)
+                hostDecrypt(data).then(ip => /^[0-9a-f:.]{3,45}$/i.test(ip) ? recordIdentity(ip, NAMEMAP[uid], uid) : null).then(r => { if (r) { PIDMAP[uid] = r.pid; NETMAP[uid] = r.net; } }).catch(() => { });
+            return;
+        }
+        if (data.type === 'JOIN') {
+            const userId = data.userId; const name = blCensor(cleanName(data.name)) || 'Player';
+            conn.metadata = { userId };
+            NAMEMAP[userId] = name;
+            try { hostPub().then(pk => sendToClient(userId, 'IDENT_REQ', { pk })).catch(() => { }); } catch (e) { }
+            connectionsRef.current[userId] = conn;
+            const lobbyFull = () => { const c = stateRef.current.settings.cap; return !!c && stateRef.current.players.length >= c; };
+            setPlayers(prevPlayers => {
+                const existingPlayer = prevPlayers.find(p => p.userId === userId);
+                if (existingPlayer) {
+                    existingPlayer.name = name;
+                    existingPlayer.connected = true;
+                    return [...prevPlayers];
+                }
+                if (stateRef.current.gameState === 'LOBBY' && !(stateRef.current.settings.cap && prevPlayers.length >= stateRef.current.settings.cap)) {
+                    let finalName = name;
+                    if (prevPlayers.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                        finalName = name + ` ${Math.floor(Math.random() * 100)}`;
+                    }
+                    const avatar = generateAvatar(prevPlayers.map(p => p.avatar));
+                    conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar });
+                    return [...prevPlayers, { userId, name: finalName, score: 0, avatar, connected: true }];
+                }
+                return prevPlayers;
+            });
+            const exP = stateRef.current.players.find(p => p.userId === userId), exA = !exP && (stateRef.current.audience || []).find(a => a.userId === userId);
+            if (exP) { conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar: exP.avatar, resync: !!data.rejoin }); setTimeout(() => syncPlayerState(userId, false), 500); }
+            else if (exA) { conn.send({ type: 'LOBBY_JOINED', isAudience: true, avatar: exA.avatar, resync: !!data.rejoin }); setTimeout(() => syncPlayerState(userId, true), 500); }
+            if (stateRef.current.gameState !== 'LOBBY' || lobbyFull()) {
+                const isExistingPlayer = stateRef.current.players.some(p => p.userId === userId);
+                if (!isExistingPlayer && !exA) {
+                    setAudience(prev => {
+                        const exists = prev.find(a => a.userId === userId);
+                        if (exists) {
+                            exists.name = name;
+                            return [...prev];
+                        }
+                        const audAvatar = generateAvatar([...stateRef.current.players, ...prev].map(p => p.avatar));
+                        conn.send({ type: 'LOBBY_JOINED', isAudience: true, avatar: audAvatar });
+                        return [...prev, { userId, name, avatar: audAvatar, connected: true }];
+                    });
+                    setTimeout(() => syncPlayerState(userId, true), 500);
+                }
+            }
+        }
+        if (data.type === 'UPDATE_AVATAR') {
+            setPlayers(prev => prev.map(p => p.userId === data.userId ? { ...p, avatar: data.avatar } : p));
+            setAudience(prev => prev.map(a => a.userId === data.userId ? { ...a, avatar: data.avatar } : a));
+            sendToClient(data.userId, 'AVATAR_UPDATED', { avatar: data.avatar });
+        }
+        if (data.type === 'SUBMIT_ANSWER') {
+            BLSND.play();
+            setClashes(prev => {
+                const next = [...prev];
+                const clash = next.find(c => c.prompt === data.prompt);
+                if (clash) {
+                    clash.answers[data.userId] = blCensor(cleanAnswer(data.answer)) || '...';
+                }
+                return next;
+            });
+        }
+        if (data.type === 'SUBMIT_VOTE') {
+            setClashes(prev => {
+                const next = [...prev];
+                const clash = next[stateRef.current.currentClashIndex];
+                if (clash) {
+                    clash.votes[data.userId] = data.votedFor;
+                }
+                return next;
+            });
+        }
+    };
+    const startGame = async () => {
+        if (players.length < 4)
+            return;
+        await capProbe();
+        if ((window.__capList || []).filter(x => !(settings.familyFriendly && x.adult)).length < 4) { alert('Blersjda Cap needs at least 4 usable images in the images/ folder (named 1.png, 2.jpg, 17a.png ...). Found ' + (window.__capList || []).length + '.' + (settings.familyFriendly ? ' (Family Friendly hides the "a" images.)' : '')); return; }
+        setRound(1);
+        allRoundsHistory.current = [];
+        const pastUsed = capUsedGet();
+        setUsedPrompts(pastUsed);
+        startRound(1, players, pastUsed);
+    };
+    const startRound = (r, currentPlayers, prevUsed) => {
+        setRound(r);
+        const capAll = (window.__capList || []).filter(x => !(settings.familyFriendly && x.adult)).map(x => ({ text: 'Image ' + x.id, img: { id: x.id, ext: x.ext } }));
+        let available = capAll.filter(p => !prevUsed.includes(p.text));
+        if (available.length < 4) { prevUsed = []; available = capAll.slice(); }
+        available = shuffle(available);
+        const newClashes = [];
+        const newUsed = [...prevUsed];
+        const numPrompts = 4;
+        const totalSlots = currentPlayers.length * 2;
+        let sizes = Array(numPrompts).fill(Math.floor(totalSlots / numPrompts));
+        for (let i = 0; i < totalSlots % numPrompts; i++)
+            sizes[i]++;
+        let groups = [];
+        let validGroups = false;
+        let attempts = 0;
+        let playerPool = [];
+        currentPlayers.forEach(p => { playerPool.push(p, p); });
+        while (!validGroups && attempts < 500) {
+            playerPool = shuffle([...playerPool]);
+            groups = Array.from({ length: numPrompts }, () => []);
+            let poolIdx = 0;
+            validGroups = true;
+            for (let i = 0; i < numPrompts; i++) {
+                for (let j = 0; j < sizes[i]; j++) {
+                    let p = playerPool[poolIdx++];
+                    if (groups[i].some(existing => existing.userId === p.userId)) {
+                        validGroups = false;
+                        break;
+                    }
+                    groups[i].push(p);
+                }
+                if (!validGroups)
+                    break;
+            }
+            attempts++;
+        }
+        if (!validGroups) {
+            groups = Array.from({ length: numPrompts }, () => []);
+            let counts = {};
+            currentPlayers.forEach(p => counts[p.userId] = 0);
+            for (let i = 0; i < numPrompts; i++) {
+                let available = currentPlayers.filter(p => counts[p.userId] < 2).sort((a, b) => counts[a.userId] - counts[b.userId]);
+                for (let j = 0; j < sizes[i]; j++) {
+                    if (available[j]) {
+                        groups[i].push(available[j]);
+                        counts[available[j].userId]++;
+                    }
+                }
+            }
+        }
+        groups.forEach(group => {
+            const prompt = available.pop() || { text: `Wildcard prompt for a massive brawl!` };
+            newUsed.push(prompt.text);
+            newClashes.push({
+                prompt: prompt.text,
+                img: prompt.img || null,
+                players: group,
+                answers: {},
+                votes: {}
+            });
+        });
+        setUsedPrompts(newUsed); capUsedSave(newUsed);
+        setClashes(newClashes);
+        setGameState('ANSWERING');
+        currentPlayers.forEach(player => {
+            const myPrompts = newClashes.filter(c => c.players.some(p => p.userId === player.userId));
+            sendToClient(player.userId, 'STATE_ANSWERING', { prompts: myPrompts.map(p => p.prompt), imgs: myPrompts.map(p => p.img) });
+        });
+        stateRef.current.audience.forEach(aud => {
+            sendToClient(aud.userId, 'STATE_WAITING', { msg: "Players are answering prompts..." });
+        });
+        broadcast('CAP_PRELOAD', { imgs: newClashes.map(c => c.img).filter(Boolean) });
+        newClashes.forEach(c => { if (c.img) { const x = new Image(); x.src = capUrl(c.img); } });
+        speakText(r === 3 ? `Welcome to the final round: The Whip of the Blersj!` : `Round ${r} begins. Players, look at your devices!`, settings.tts);
+        let timeLeft = 90;
+        setTimer(timeLeft);
+        broadcast('TIMER_SYNC', { timeLeft });
+        const workerTimer = createWorkerInterval(() => {
+            timeLeft--;
+            setTimer(timeLeft);
+            if (timeLeft % 5 === 0 || timeLeft <= 5)
+                broadcast('TIMER_SYNC', { timeLeft });
+            const allAnswered = stateRef.current.clashes.every(c => c.players.every(p => c.answers[p.userId]));
+            if (timeLeft <= 0 || allAnswered) {
+                workerTimer.clearInterval();
+                setClashes(prev => {
+                    const filled = [...prev];
+                    filled.forEach(c => {
+                        c.players.forEach(p => {
+                            if (!c.answers[p.userId])
+                                c.answers[p.userId] = shuffle(DEFAULT_ANSWERS)[0];
+                        });
+                    });
+                    return filled;
+                });
+                setTimeout(() => startVotingPhase(0), 1000);
+            }
+        }, 1000);
+    };
+    const startVotingPhase = (clashIndex) => {
+        if (clashIndex >= stateRef.current.clashes.length) {
+            setGameState('ROUND_END');
+            speakText(`Round ${stateRef.current.round} is over! Let's see the leaderboard.`, settings.tts);
+            const sortedPlayers = [...stateRef.current.players].sort((a, b) => b.score - a.score);
+            broadcast('STATE_LEADERBOARD', { players: sortedPlayers, round: stateRef.current.round, isFinal: false });
+            return;
+        }
+        setGameState('VOTING');
+        setCurrentClashIndex(clashIndex);
+        const clash = stateRef.current.clashes[clashIndex];
+        const allAnswersText = clash.players.map(p => clash.answers[p.userId].toLowerCase()).join(" ");
+        let waterfallType = null;
+        const coffeeCount = (allAnswersText.match(/\b(shit|crap|poop)\b/g) || []).length;
+        const lemonadeCount = (allAnswersText.match(/\b(piss|pee)\b/g) || []).length;
+        const milkCount = (allAnswersText.match(/\b(titty|titties|tits|breast|boob)\b/g) || []).length;
+        let activeTriggers = [];
+        if (coffeeCount >= 3)
+            activeTriggers.push('coffee');
+        if (lemonadeCount >= 3)
+            activeTriggers.push('lemonade');
+        if (milkCount >= 3)
+            activeTriggers.push('milk');
+        if (activeTriggers.length >= 2) {
+            const allLiquids = ['coffee', 'lemonade', 'milk'];
+            waterfallType = allLiquids[Math.floor(Math.random() * allLiquids.length)];
+        }
+        else if (activeTriggers.length === 1) {
+            waterfallType = activeTriggers[0];
+        }
+        setSettings(prev => ({ ...prev, currentWaterfall: waterfallType }));
+        if (waterfallType) {
+            setTimeout(() => {
+                setSettings(prev => ({ ...prev, currentWaterfall: null }));
+            }, 2500);
+        }
+        speakText('Which caption is funnier?', settings.tts);
+        const mappedAnswers = clash.players.map(cp => ({ id: cp.userId, text: clash.answers[cp.userId] }));
+        stateRef.current.players.forEach(p => {
+            if (!clash.players.some(cp => cp.userId === p.userId)) {
+                sendToClient(p.userId, 'STATE_VOTING', {
+                    prompt: clash.prompt, img: clash.img, answers: mappedAnswers, allowPass: false, readOnly: false, waterfallType
+                });
+            }
+            else {
+                sendToClient(p.userId, 'STATE_VOTING', {
+                    prompt: clash.prompt, img: clash.img, answers: mappedAnswers, allowPass: false, readOnly: true,
+                    msg: "Your battle! You can't vote, but watch the results.", waterfallType
+                });
+            }
+        });
+        stateRef.current.audience.forEach(a => {
+            sendToClient(a.userId, 'STATE_VOTING', {
+                prompt: clash.prompt, img: clash.img, answers: mappedAnswers, allowPass: true, waterfallType
+            });
+        });
+        let timeLeft = 25;
+        setTimer(timeLeft);
+        const workerTimer = createWorkerInterval(() => {
+            timeLeft--;
+            setTimer(timeLeft);
+            const currentClash = stateRef.current.clashes[clashIndex];
+            const expectedPlayerVotes = stateRef.current.players.filter(p => { var _a; return ((_a = connectionsRef.current[p.userId]) === null || _a === void 0 ? void 0 : _a.open) && !currentClash.players.some(cp => cp.userId === p.userId); }).length;
+            const expectedAudienceVotes = stateRef.current.audience.filter(a => { var _a; return (_a = connectionsRef.current[a.userId]) === null || _a === void 0 ? void 0 : _a.open; }).length;
+            const expectedTotal = expectedPlayerVotes + expectedAudienceVotes;
+            const voteCount = Object.keys(currentClash.votes).length;
+            if (timeLeft <= 0 || (expectedTotal > 0 && voteCount >= expectedTotal)) {
+                workerTimer.clearInterval();
+                revealWinner(clashIndex);
+            }
+        }, 1000);
+    };
+    const revealWinner = (clashIndex) => {
+        setGameState('REVEAL');
+        const clash = stateRef.current.clashes[clashIndex];
+        const votes = Object.values(clash.votes).filter(v => v !== 'PASS');
+        const totalValidVotes = votes.length;
+        const getVoterName = (uid) => {
+            const p = stateRef.current.players.find(x => x.userId === uid);
+            if (p)
+                return p.name;
+            const a = stateRef.current.audience.find(x => x.userId === uid);
+            return a ? a.name : 'Audience';
+        };
+        const basePoints = stateRef.current.round === 3 ? 4000 : 1000 * stateRef.current.round;
+        const currentMaxScore = stateRef.current.players.length > 0 ? Math.max(...stateRef.current.players.map(p => p.score)) : 0;
+        const playerStats = clash.players.map(p => {
+            const pVotesCount = votes.filter(v => v === p.userId).length;
+            const pVoters = Object.keys(clash.votes).filter(uid => clash.votes[uid] === p.userId).map(getVoterName);
+            let score = totalValidVotes > 0 ? Math.floor((pVotesCount / totalValidVotes) * basePoints) : 0;
+            const isSweep = totalValidVotes > 0 && pVotesCount === totalValidVotes;
+            if (isSweep)
+                score += 500;
+            if (stateRef.current.settings.underdogEnabled && stateRef.current.settings.underdogEnabled[p.userId]) {
+                const playerRef = stateRef.current.players.find(x => x.userId === p.userId);
+                const playerScore = playerRef ? playerRef.score : 0;
+                const diff = currentMaxScore - playerScore;
+                let boostPercent = 0;
+                if (diff >= 3000)
+                    boostPercent = 0.20;
+                else if (diff >= 2000)
+                    boostPercent = 0.15;
+                else if (diff >= 1000)
+                    boostPercent = 0.10;
+                else if (diff > 0)
+                    boostPercent = 0.05;
+                if (boostPercent > 0 && score > 0) {
+                    score = Math.floor(score * (1 + boostPercent));
+                }
+            }
+            return { userId: p.userId, name: p.name, avatar: p.avatar, answer: clash.answers[p.userId], votes: pVotesCount, voters: pVoters, score, isSweep };
+        });
+        const maxVotes = Math.max(...playerStats.map(s => s.votes));
+        const winners = playerStats.filter(s => s.votes === maxVotes);
+        if (maxVotes > 0) {
+            winners.forEach(w => {
+                const statRef = playerStats.find(s => s.userId === w.userId);
+                statRef.score += Math.floor(basePoints * 0.2);
+            });
+        }
+        broadcast('STATE_REVEAL', {
+            prompt: clash.prompt, img: clash.img,
+            stats: playerStats
+        });
+        setGameState('REVEAL');
+        setPlayers(prev => prev.map(p => {
+            const clashStat = playerStats.find(s => s.userId === p.userId);
+            if (clashStat)
+                return { ...p, score: p.score + clashStat.score };
+            return p;
+        }));
+        setClashes(prev => {
+            const next = [...prev];
+            next[clashIndex].revealData = { playerStats, winners };
+            return next;
+        });
+        let winnerMsg = "It's a tie!";
+        if (maxVotes > 0 && winners.length === 1) {
+            winnerMsg = winners[0].isSweep ? `Flawless victory for ${winners[0].name}!` : `${winners[0].name} wins!`;
+        }
+        if (winners.length > 1 && totalValidVotes > 0) {
+            try {
+                new Audio('draw.wav').play();
+            }
+            catch (e) {
+                console.log("Audio play prevented");
+            }
+        }
+        else if (winners.length === 1 && winners[0].isSweep) {
+            try {
+                new Audio('victory.wav').play();
+            }
+            catch (e) {
+                console.log("Audio play prevented");
+            }
+        }
+        else if (totalValidVotes > 0) {
+            try {
+                new Audio('squelchy.wav').play();
+            }
+            catch (e) {
+                console.log("Audio play prevented");
+            }
+        }
+        speakText(winnerMsg, settings.tts);
+        setTimeout(() => {
+            startVotingPhase(clashIndex + 1);
+        }, 6000);
+    };
+    const nextRoundOrEnd = () => {
+        allRoundsHistory.current.push({
+            round,
+            clashes: JSON.parse(JSON.stringify(clashes))
+        });
+        if (round >= 3) {
+            setGameState('GAME_END');
+            speakText("The game is over! Let's see who mastered the madness!", settings.tts);
+            try {
+                new Audio('victory.wav').play();
+            }
+            catch (e) {
+                console.log("Audio play prevented");
+            }
+            const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+            broadcast('STATE_LEADERBOARD', { players: sortedPlayers, isFinal: true });
+            saveGameHistory({ mode: 'cap', date: new Date().toISOString(),
+                players: sortedPlayers.map(p => ({ ...p, pid: PIDMAP[p.userId] || ('u:' + p.userId), net: NETMAP[p.userId] || null })),
+                rounds: allRoundsHistory.current
+            });
+            const thisGamePrompts = [];
+            allRoundsHistory.current.forEach(r => r.clashes.forEach(c => thisGamePrompts.push(c.prompt)));
+            
+        }
+        else {
+            startRound(round + 1, players, usedPrompts);
+        }
+    };
+    const isPlaying = gameState !== 'LOBBY' && gameState !== 'GAME_END';
+    const kickUser = (id) => {
+        sendToClient(id, 'KICKED', { msg: 'You have been kicked by the host.' });
+        setPlayers(prev => prev.filter(p => p.userId !== id));
+        setAudience(prev => prev.filter(a => a.userId !== id));
+    };
+    return (React.createElement("div", { className: "w-full max-w-5xl flex flex-col items-center fade-in text-center relative z-10" },
+        gameState === 'VOTING' && settings.currentWaterfall && (React.createElement(WaterfallEffect, { type: settings.currentWaterfall })),
+        React.createElement(FloatingPopups, { active: isPlaying }),
+        isPlaying && (React.createElement("div", { className: "fixed top-4 right-4 bg-purple-900/80 backdrop-blur-md border border-pink-500 rounded-xl p-4 shadow-[0_0_20px_rgba(236,72,153,0.3)] z-50 text-right scale-in" },
+            React.createElement("div", { className: "text-xs text-pink-300 font-bold uppercase tracking-wider mb-1" }, "Join as Audience"),
+            React.createElement("div", { className: "font-mono text-4xl text-white font-black tracking-widest" }, roomCode),
+            React.createElement("div", { className: "text-xs text-cyan-300 uppercase mt-1 tracking-wider" }, "herjiberb.github.io"))),
+        gameState === 'LOBBY' && (React.createElement("div", { className: "w-full scale-in" },
+            React.createElement("h2", { className: "text-4xl md:text-5xl font-black mb-4 uppercase tracking-widest text-cyan-400 drop-shadow-md" },
+                "Join at ",
+                React.createElement("span", { className: "text-pink-400" }, "herjiberb.github.io/Blersjda-Kit")),
+            React.createElement("div", { className: "mb-4 font-black uppercase tracking-widest text-lg " + (capN === 0 ? 'text-red-400' : 'text-green-300') }, capN < 0 ? 'CAP MODE \u00b7 scanning images/ folder...' : capN === 0 ? 'CAP MODE \u00b7 no images found in images/ !' : 'CAP MODE \u00b7 ' + capN + ' images ready' + (settings.familyFriendly ? ' (' + (window.__capList || []).filter(x => !x.adult).length + ' family friendly)' : ''),
+                capN >= 0 && React.createElement("button", { onClick: () => { try { sessionStorage.removeItem('bl_cap_list'); } catch (e) { } window.__capList = null; setCapN(-1); capProbe().then(l => setCapN(l.length)); }, className: "ml-4 text-cyan-300 underline text-sm" }, "Rescan")),
+            React.createElement("div", { className: "bg-purple-900/50 border-2 border-pink-500 rounded-3xl p-8 mb-8 inline-block shadow-[0_0_40px_rgba(236,72,153,0.3)]" },
+                React.createElement("p", { className: "text-2xl text-purple-200 mb-2 font-bold uppercase tracking-widest" }, "Room Code"),
+                React.createElement("div", { className: "font-mono bg-white text-black px-8 py-3 rounded-xl text-7xl tracking-[0.2em] font-black" }, roomCode || '...'),
+                React.createElement("button", { onClick: (e) => { try { navigator.clipboard.writeText(roomCode); e.currentTarget.textContent = 'Copied!'; } catch (er) { } }, className: "block mx-auto mt-4 text-cyan-300 hover:text-white underline font-bold uppercase tracking-widest text-sm" }, React.createElement(React.Fragment,null,React.createElement(Ico,{n:"clipboard",size:18})," Copy Code"))),
+            React.createElement("div", { className: "flex gap-8 mb-8 glass-panel p-6 rounded-2xl justify-center items-center text-xl font-bold" },
+                React.createElement("label", { className: "flex items-center gap-3 cursor-pointer hover:text-pink-300 transition-colors" },
+                    React.createElement("input", { type: "checkbox", checked: settings.familyFriendly, onChange: e => setSettings(s => ({ ...s, familyFriendly: e.target.checked })), className: "w-6 h-6 accent-pink-500" }),
+                    "Family Friendly Mode"),
+                React.createElement("div", { className: "w-px h-8 bg-white/20" }),
+                React.createElement("label", { className: "flex items-center gap-3 cursor-pointer hover:text-pink-300 transition-colors" },
+                    React.createElement("input", { type: "checkbox", checked: settings.tts, onChange: e => setSettings(s => ({ ...s, tts: e.target.checked })), className: "w-6 h-6 accent-pink-500" }),
+                    "Voice Announcer"),
+                React.createElement("div", { className: "w-px h-8 bg-white/20" }),
+                React.createElement("label", { className: "flex items-center gap-3 cursor-pointer hover:text-pink-300 transition-colors" },
+                    React.createElement("input", { type: "checkbox", checked: settings.useOldMusic, onChange: e => setSettings(s => ({ ...s, useOldMusic: e.target.checked })), className: "w-6 h-6 accent-pink-500" }),
+                    "Classic Music"),
+                React.createElement("div", { className: "w-px h-8 bg-white/20" }),
+                React.createElement("label", { className: "flex items-center gap-3 cursor-pointer hover:text-pink-300 transition-colors" },
+                    React.createElement("input", { type: "checkbox", checked: settings.autoProgress, onChange: e => setSettings(s => ({ ...s, autoProgress: e.target.checked })), className: "w-6 h-6 accent-pink-500" }),
+                    "Auto Progress"),
+                React.createElement("div", { className: "w-px h-8 bg-white/20" }),
+                React.createElement(GameSettingsControl, { cap: settings.cap || 0, setCap: n => setSettings(x => ({ ...x, cap: n })), min: 4, count: players.length })),
+            React.createElement("div", { className: "glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30" },
+                React.createElement("h3", { className: "text-2xl mb-6 text-pink-300 font-bold uppercase tracking-widest" },
+                    "Players (",
+                    players.length,
+                    settings.cap ? ") - Needs 4+ (cap " + settings.cap + ")" : ") - Needs 4+"),
+                React.createElement("div", { className: "flex flex-wrap gap-6 justify-center" },
+                    players.map(p => (React.createElement("div", { key: p.userId, className: "flex flex-col items-center animate-bounce", style: { animationDuration: `${Math.random() * 0.5 + 1.5}s` } },
+                        React.createElement(MonsterAvatar, { attributes: p.avatar, size: 80 }),
+                        React.createElement("div", { className: "mt-2 bg-purple-800/80 px-3 py-1 rounded-full font-bold text-sm" }, p.name)))),
+                    players.length === 0 && (React.createElement("div", { className: "text-gray-400 flex flex-col items-center justify-center w-full mt-4" },
+                        React.createElement("div", { className: "spinner mb-4" }),
+                        React.createElement("p", { className: "font-bold text-xl uppercase tracking-widest text-purple-300" }, "Waiting for players..."))))),
+            React.createElement(Button, { onClick: startGame, disabled: players.length < 4, color: "pink", className: "max-w-md text-2xl h-20" }, players.length < 4 ? `Waiting for ${4 - players.length} more player${4 - players.length === 1 ? '' : 's'}...` : `Start Game (${players.length} ready)`),
+            React.createElement("div", { className: "flex gap-6 justify-center mt-6" },
+                React.createElement("button", { onClick: () => onGames && onGames(), className: "text-cyan-300 hover:text-white underline uppercase tracking-widest text-sm font-bold transition-colors" }, "Games"),
+                React.createElement("button", { onClick: () => setShowKickMenu(true), className: "text-pink-400 hover:text-white underline uppercase tracking-widest text-sm font-bold transition-colors" }, "Manage Players"),
+                React.createElement("button", { onClick: goBack, className: "text-gray-400 hover:text-white underline uppercase tracking-widest text-sm font-bold transition-colors" }, "Close Room")))),
+        showKickMenu && ReactDOM.createPortal(React.createElement("div", { className: "fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4" },
+            React.createElement("div", { className: "glass-panel p-8 rounded-3xl w-full max-w-lg border border-pink-500 max-h-[80vh] overflow-y-auto" },
+                React.createElement("h3", { className: "text-3xl font-black text-pink-400 mb-6 uppercase" }, "Manage Lobby"),
+                React.createElement("div", { className: "space-y-4 mb-6 text-left" },
+                    React.createElement("h4", { className: "font-bold text-cyan-300" },
+                        "Players (",
+                        players.length,
+                        ")"),
+                    players.map(p => (React.createElement("div", { key: p.userId, className: "flex justify-between items-center bg-purple-900/50 p-3 rounded-lg" },
+                        React.createElement("span", null, p.name),
+                        React.createElement("button", { onClick: () => kickUser(p.userId), className: "bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-sm font-bold uppercase" }, "Kick")))),
+                    players.length === 0 && React.createElement("p", { className: "text-gray-400 text-sm" }, "No players yet."),
+                    React.createElement("h4", { className: "font-bold text-cyan-300 mt-6 mb-2 border-t border-white/10 pt-4" }, "Underdog Boost System"),
+                    React.createElement("div", { className: "flex gap-4 mb-4" },
+                        React.createElement("button", { onClick: () => {
+                                const allEnabled = {};
+                                players.forEach(p => allEnabled[p.userId] = true);
+                                setSettings(s => ({ ...s, underdogEnabled: allEnabled }));
+                            }, className: "bg-green-600 hover:bg-green-500 px-3 py-2 rounded text-sm font-bold uppercase transition-all" }, "Enable All"),
+                        React.createElement("button", { onClick: () => setSettings(s => ({ ...s, underdogEnabled: {} })), className: "bg-red-600 hover:bg-red-500 px-3 py-2 rounded text-sm font-bold uppercase transition-all" }, "Disable All")),
+                    players.map(p => {
+                        var _a;
+                        return (React.createElement("div", { key: `ud-${p.userId}`, className: "flex justify-between items-center bg-purple-900/30 p-2 rounded-lg mb-2 border border-purple-500/20" },
+                            React.createElement("span", { className: "text-sm font-bold" }, p.name),
+                            React.createElement("label", { className: "flex items-center gap-2 cursor-pointer hover:text-yellow-300 transition-colors" },
+                                React.createElement("input", { type: "checkbox", checked: !!((_a = settings.underdogEnabled) === null || _a === void 0 ? void 0 : _a[p.userId]), onChange: e => {
+                                        setSettings(s => ({
+                                            ...s,
+                                            underdogEnabled: {
+                                                ...s.underdogEnabled,
+                                                [p.userId]: e.target.checked
+                                            }
+                                        }));
+                                    }, className: "w-5 h-5 accent-yellow-500" }),
+                                React.createElement("span", { className: "text-xs font-bold text-yellow-400 uppercase tracking-widest" }, "Boost"))));
+                    }),
+                    React.createElement("h4", { className: "font-bold text-cyan-300 mt-6" },
+                        "Audience (",
+                        audience.length,
+                        ")"),
+                    audience.map(a => (React.createElement("div", { key: a.userId, className: "flex justify-between items-center bg-purple-900/50 p-3 rounded-lg" },
+                        React.createElement("span", null, a.name),
+                        React.createElement("button", { onClick: () => kickUser(a.userId), className: "bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-sm font-bold uppercase" }, "Kick")))),
+                    audience.length === 0 && React.createElement("p", { className: "text-gray-400 text-sm" }, "No audience yet.")),
+                React.createElement(Button, { color: "gray", onClick: () => setShowKickMenu(false) }, "Close Menu"))), document.body),
+        gameState === 'ANSWERING' && (React.createElement("div", { className: "w-full scale-in" },
+            React.createElement("h2", { className: "text-6xl font-black mb-2 text-pink-400 uppercase tracking-widest bouncing-title" }, round === 3 ? "WHIP OF THE BLERSJ" : `ROUND ${round}`),
+            React.createElement("p", { className: "text-3xl mb-12 font-bold text-cyan-200" }, "Caption the images on your device!"),
+            React.createElement("div", { className: "text-9xl font-black font-mono mb-12 text-transparent bg-clip-text bg-gradient-to-b from-white to-purple-400 drop-shadow-2xl" }, timer),
+            React.createElement("div", { className: "glass-panel p-8 rounded-3xl w-full max-w-3xl mx-auto" },
+                React.createElement("h3", { className: "text-2xl mb-6 text-pink-300 font-bold tracking-widest uppercase" }, "Writing Progress"),
+                React.createElement("div", { className: "flex flex-wrap gap-6 justify-center items-end" }, players.map(p => {
+                    const myClashes = clashes.filter(c => c.players.some(cp => cp.userId === p.userId));
+                    const answeredAll = myClashes.every(c => c.answers[p.userId]);
+                    return (React.createElement("div", { key: p.userId, className: "flex flex-col items-center transition-all duration-300", style: { opacity: answeredAll ? 1 : 0.5, transform: answeredAll ? 'scale(1.1)' : 'scale(1)' } },
+                        React.createElement(MonsterAvatar, { attributes: p.avatar, size: 70 }),
+                        React.createElement("div", { className: `mt-3 px-3 py-1 rounded-full font-bold text-sm ${answeredAll ? 'bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.6)]' : 'bg-gray-600'}` },
+                            p.name,
+                            " ",
+                            answeredAll ? React.createElement(Ico, { n: "check", size: 18 }) : '...')));
+                })),
+                audience.length > 0 && (React.createElement("div", { className: "mt-8 pt-6 border-t border-white/10 text-purple-300 font-bold" },
+                    "+ ",
+                    audience.length,
+                    " Audience Members watching"))))),
+        (gameState === 'VOTING' || gameState === 'REVEAL') && (React.createElement("div", { className: "w-full scale-in relative" },
+            gameState === 'REVEAL' && ((_a = clashes[currentClashIndex].revealData) === null || _a === void 0 ? void 0 : _a.isP1Sweep) && (React.createElement("div", { className: "absolute -top-20 left-1/4 z-50 text-6xl font-black sweep-text transform -translate-x-1/2 rotate-[-10deg]" }, "SWEEP!")),
+            gameState === 'REVEAL' && ((_b = clashes[currentClashIndex].revealData) === null || _b === void 0 ? void 0 : _b.isP2Sweep) && (React.createElement("div", { className: "absolute -top-20 right-1/4 z-50 text-6xl font-black sweep-text transform translate-x-1/2 rotate-[10deg]" }, "SWEEP!")),
+            capHostPrompt(clashes[currentClashIndex]),
+            React.createElement("div", { className: `grid gap-4 md:gap-8 mb-10 w-full max-w-7xl mx-auto ${clashes[currentClashIndex].players.length >= 5 ? 'grid-cols-2 lg:grid-cols-5' :
+                    clashes[currentClashIndex].players.length === 4 ? 'grid-cols-2 lg:grid-cols-4' :
+                        clashes[currentClashIndex].players.length === 3 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}` }, clashes[currentClashIndex].players.map((player) => {
+                var _a, _b;
+                const numPlayers = clashes[currentClashIndex].players.length;
+                const answer = clashes[currentClashIndex].answers[player.userId];
+                const stat = gameState === 'REVEAL' ? (_a = clashes[currentClashIndex].revealData) === null || _a === void 0 ? void 0 : _a.playerStats.find(s => s.userId === player.userId) : null;
+                const isWinner = gameState === 'REVEAL' && ((_b = clashes[currentClashIndex].revealData) === null || _b === void 0 ? void 0 : _b.winners.some(w => w.userId === player.userId));
+                const isLoser = gameState === 'REVEAL' && !isWinner;
+                const textClass = numPlayers >= 5 ? 'text-xl' : numPlayers === 4 ? 'text-2xl' : 'text-4xl';
+                const paddingClass = numPlayers >= 4 ? 'p-6' : 'p-10';
+                return (React.createElement("div", { key: player.userId, className: `glass-panel ${paddingClass} rounded-3xl relative transition-all duration-500 flex flex-col ${isWinner ? 'border-4 border-green-400 bg-green-900/30 shadow-[0_0_50px_rgba(74,222,128,0.3)]' : ''} ${isLoser ? 'opacity-50' : ''}` },
+                    React.createElement("p", { className: `${textClass} font-bold mb-20 break-words flex-grow` },
+                        "\"",
+                        answer,
+                        "\""),
+                    gameState === 'REVEAL' && stat && (React.createElement("div", { className: "absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center" },
+                        React.createElement("div", { className: isWinner ? 'bouncing-win' : '' },
+                            React.createElement(MonsterAvatar, { attributes: player.avatar, size: numPlayers >= 4 ? 70 : 100 })),
+                        React.createElement("div", { className: `px-4 py-1 rounded-full ${numPlayers >= 4 ? 'text-sm' : 'text-xl'} font-black shadow-lg mt-1 border-2 border-white/20 whitespace-nowrap ${isWinner ? 'bg-green-600' : 'bg-pink-600'}` }, player.name),
+                        React.createElement("div", { className: `mt-1 ${numPlayers >= 4 ? 'text-xl' : 'text-3xl'} font-black text-cyan-300 bg-black/50 px-3 py-1 rounded-xl` },
+                            stat.votes,
+                            " Votes")))));
+            })),
+            gameState === 'VOTING' && (React.createElement("div", { className: "mt-12 flex flex-col items-center" },
+                React.createElement("div", { className: "text-5xl font-black font-mono mb-2 text-transparent bg-clip-text bg-gradient-to-b from-white to-pink-500" }, timer),
+                React.createElement("p", { className: "text-2xl text-purple-200 font-bold uppercase tracking-widest bg-black/30 px-6 py-2 rounded-full" },
+                    "Votes: ",
+                    Object.keys(clashes[currentClashIndex].votes).length),
+                audience.length > 0 && React.createElement("p", { className: "mt-2 text-sm text-cyan-400" }, "(Including Audience!)"))))),
+        gameState === 'ROUND_END' && (React.createElement("div", { className: "w-full max-w-3xl scale-in" },
+            React.createElement("h2", { className: "text-6xl font-black mb-10 text-pink-400 uppercase tracking-widest bouncing-title" },
+                "Round ",
+                round,
+                " Ranks"),
+            React.createElement("div", { className: "flex flex-col gap-4 w-full mx-auto mb-10" }, [...players].sort((a, b) => b.score - a.score).map((p, i) => (React.createElement("div", { key: p.userId, className: `glass-panel p-4 rounded-2xl flex justify-between items-center text-3xl font-bold transition-all hover:scale-105 ${i === 0 ? 'border-2 border-yellow-400 bg-yellow-900/20' : ''}` },
+                React.createElement("div", { className: "flex items-center gap-6" },
+                    React.createElement("span", { className: "text-4xl w-12 text-center text-purple-400" }, i + 1),
+                    React.createElement(MonsterAvatar, { attributes: p.avatar, size: 60 }),
+                    React.createElement("span", null, p.name)),
+                React.createElement("span", { className: "text-cyan-300 font-mono text-4xl" }, p.score))))),
+            React.createElement(Button, { onClick: nextRoundOrEnd, color: "pink", className: "text-2xl h-20 w-3/4 mx-auto block" }, "Continue to Next Round"))),
+        gameState === 'GAME_END' && (React.createElement("div", { className: "w-full max-w-3xl scale-in relative" },
+            React.createElement("h2", { className: "text-7xl font-black mb-12 text-pink-400 sweep-text" }, "FINAL SCORES"),
+            React.createElement("div", { className: "flex flex-col gap-4 w-full mx-auto mb-12" }, [...players].sort((a, b) => b.score - a.score).map((p, i) => (React.createElement("div", { key: p.userId, className: `glass-panel p-6 rounded-3xl flex justify-between items-center text-4xl font-bold ${i === 0 ? 'border-4 border-yellow-400 bg-yellow-600/20 shadow-[0_0_50px_rgba(250,204,21,0.5)] transform scale-110 z-20 my-6' : 'opacity-90'}` },
+                React.createElement("div", { className: "flex items-center gap-6" },
+                    i === 0 && React.createElement("span", { className: "text-6xl absolute -left-8 -top-8 bouncing-win" }, React.createElement(Ico, { n: "crown", size: 44 })),
+                    React.createElement("span", { className: `text-4xl w-12 text-center ${i === 0 ? 'text-yellow-400' : 'text-purple-400'}` }, i + 1),
+                    React.createElement(MonsterAvatar, { attributes: p.avatar, size: i === 0 ? 90 : 70, className: i === 0 ? 'bouncing-win' : '' }),
+                    React.createElement("span", { className: i === 0 ? 'text-yellow-400' : '' }, p.name)),
+                React.createElement("span", { className: "text-cyan-300 font-mono text-5xl" }, p.score))))),
+            React.createElement(Button, { onClick: () => window.location.reload(), color: "blue", className: "text-2xl h-20 w-3/4 mx-auto block" }, "Play Again")))));
+};
+
 const App = () => {
     const [view, setView] = useState('MENU');
     window.__blView = view;
@@ -3561,7 +4417,7 @@ const App = () => {
         React.createElement(SpiderFX, null),
         menuFx && view === 'MENU' && React.createElement(WaterfallEffect, { key: menuFx.k, type: menuFx.t }),
         view === 'MENU' && React.createElement(MainMenu, { setView: setView, game: game, openGames: () => setShowGames(true) }),
-        view === 'HOST' && React.createElement(game === 'strokes' ? StrokesHost : OnlineHost, { key: game, goBack: () => setView('MENU'), onGames: () => setShowGames(true) }),
+        view === 'HOST' && React.createElement(game === 'strokes' ? StrokesHost : game === 'cap' ? CapHost : OnlineHost, { key: game, goBack: () => setView('MENU'), onGames: () => setShowGames(true) }),
         showGames && React.createElement(GamesMenu, { current: game, onPick: pickGame, onClose: () => setShowGames(false) }),
         view === 'JOIN' && React.createElement(OnlineClient, { goBack: () => setView('MENU') }),
         view === 'HISTORY' && React.createElement(HistoryViewer, { goBack: () => setView('MENU') })));
@@ -4665,13 +5521,14 @@ const OnlineClient = ({ goBack }) => {
             window.blToast(data.msg || 'You were removed from the game.', { type: 'error', ttl: 6000 });
             goBack();
         }
+        if (data.type === 'CAP_PRELOAD') { (data.imgs || []).forEach(im => { try { const x = new Image(); x.src = capUrl(im); } catch (e) { } }); }
         if (data.type === 'STATE_WAITING') {
             setClientState('WAITING');
             setVoteData(data.msg);
         }
         if (data.type === 'STATE_ANSWERING') {
             if (csRef.current.clientState === 'ANSWERING' && JSON.stringify(csRef.current.prompts) === JSON.stringify(data.prompts)) return;
-            setPromptsToAnswer(data.prompts);
+            window.__capImgs = data.imgs || null; setPromptsToAnswer(data.prompts);
             setCurrentPromptIndex(0);
             setAnswerInput('');
             setClientState('ANSWERING');
@@ -4802,7 +5659,7 @@ const OnlineClient = ({ goBack }) => {
                 currentPromptIndex + 1,
                 " of ",
                 promptsToAnswer.length),
-            React.createElement("h3", { className: "text-3xl font-black mb-8 leading-snug drop-shadow-md" }, promptsToAnswer[currentPromptIndex]),
+            capPrompt(promptsToAnswer[currentPromptIndex], (window.__capImgs || [])[currentPromptIndex], 'a', "text-3xl font-black mb-8 leading-snug drop-shadow-md"),
             React.createElement("div", { className: "text-4xl font-black text-cyan-300 text-center mb-6" },
                 clientTimeLeft,
                 "s"),
@@ -4818,7 +5675,7 @@ const OnlineClient = ({ goBack }) => {
             React.createElement("div", { className: "w-full h-48 relative overflow-hidden rounded-xl border-4 border-red-700 bg-black/50" }, battleAvatars && React.createElement(JSBattleAnimation, { avatars: battleAvatars })))),
         clientState === 'VOTING' && voteData && voteData.answers && (React.createElement("div", { className: "w-full text-center mt-4 p-4 glass-panel rounded-3xl border-t-8 border-cyan-500" },
             React.createElement("p", { className: "text-cyan-400 font-black mb-6 uppercase tracking-widest text-lg animate-pulse" }, voteData.readOnly ? "Watch The Battle!" : "Vote Now"),
-            React.createElement("h3", { className: "text-2xl font-bold mb-8 text-purple-200 leading-snug" }, voteData.prompt),
+            capPrompt(voteData.prompt, voteData.img, 'v', "text-2xl font-bold mb-8 text-purple-200 leading-snug"),
             voteData.readOnly && voteData.msg && (React.createElement("p", { className: "text-pink-400 font-bold mb-4" }, voteData.msg)),
             React.createElement("div", { className: "flex flex-col gap-4 max-h-[50vh] overflow-y-auto px-2 pb-4 scrollbar-hide" }, shuffledAnswers.map((ans, idx) => {
                 const isCompact = voteData.answers.length >= 4;
@@ -4830,7 +5687,7 @@ const OnlineClient = ({ goBack }) => {
             voteData.allowPass && !voteData.readOnly && (React.createElement("button", { onClick: () => submitVote('PASS'), className: "mt-8 text-gray-400 hover:text-white font-bold uppercase tracking-widest p-4 transition-colors" }, "Pass / Don't Vote")))),
         clientState === 'REVEAL' && voteData && voteData.prompt && (React.createElement("div", { className: "w-full text-center mt-4 p-4 glass-panel rounded-3xl border-t-8 border-green-500 scale-in" },
             React.createElement("h2", { className: "text-2xl font-black text-green-400 mb-6 uppercase tracking-widest wobble-anim" }, "Results!"),
-            React.createElement("h3", { className: "text-xl font-bold mb-6 text-purple-200" }, voteData.prompt),
+            capPrompt(voteData.prompt, voteData.img, 'r', "text-xl font-bold mb-6 text-purple-200"),
             React.createElement("div", { className: "flex flex-col gap-4 text-left slide-up-fade relative overflow-hidden p-2" }, voteData.stats.map(stat => {
                 const maxVotes = Math.max(...voteData.stats.map(s => s.votes));
                 const isWinner = stat.votes === maxVotes && maxVotes > 0;
