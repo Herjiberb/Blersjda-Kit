@@ -2231,7 +2231,7 @@ const GameSettingsControl = ({ cap, setCap, min, count }) => {
                     card('#22d3ee', 'Player cap', 'min ' + floor + (count > min ? ' (' + count + ' joined)' : ''), h("div", null,
                         h("input", { type: "text", inputMode: "numeric", value: v, placeholder: "No limit", onChange: e => { setV(e.target.value.replace(/[^\d]/g, '').slice(0, 3)); setErr(''); }, onKeyDown: e => { if (e.key === 'Enter') apply(); if (e.key === 'Escape') setOpen(false); }, className: "w-full text-center text-2xl font-black p-2 rounded-xl bg-purple-950 border-2 border-cyan-500/60 outline-none focus:border-cyan-300" }),
                         h("p", { className: "text-xs text-gray-400 mt-1 text-center" }, "Type a number, or leave empty for no limit."))),
-                    ready && card('#f472b6', 'Censor', 'filters names, answers and quotes', h("div", { className: "space-y-2" },
+                    (!ready ? card('#f472b6', 'Censor', 'unavailable', h("p", { className: "text-xs text-gray-300" }, 'censor.js was not found next to this page, so the filter cannot run. Put censor.js in the same folder.')) : null), ready && card('#f472b6', 'Censor', 'filters names, answers and quotes', h("div", { className: "space-y-2" },
                         tog(c.on, on => saveCen({ on }), 'Enable censor'),
                         h("div", { className: "space-y-1.5", style: { opacity: c.on ? 1 : .5 } }, LV.map(([n, t, d]) => h("label", { key: n, className: row(c.level === n) }, h("input", { type: "radio", name: "gscl", checked: c.level === n, onChange: () => saveCen({ level: n }), className: "w-5 h-5 accent-pink-500" }), h("span", null, h("span", { className: "font-bold block" }, t), h("span", { className: "text-xs text-gray-300" }, d))))),
                         h("div", { className: "grid grid-cols-2 gap-2", style: { opacity: c.on ? 1 : .5 } }, [['stars', 'Stars', '*** (default)'], ['replace', 'Replace', 'clean words']].map(([k, t, d]) => h("label", { key: k, className: row(c.style === k) }, h("input", { type: "radio", name: "gscs", checked: c.style === k, onChange: () => saveCen({ style: k }), className: "w-5 h-5 accent-pink-500" }), h("span", null, h("span", { className: "font-bold block" }, t), h("span", { className: "text-xs text-gray-300" }, d))))),
@@ -2244,6 +2244,13 @@ const GameSettingsControl = ({ cap, setCap, min, count }) => {
                 h("div", { className: "flex gap-3 justify-center mt-5" },
                     h("button", { onClick: () => setOpen(false), className: "px-5 py-2 rounded-xl font-bold uppercase tracking-wider border-2 border-purple-500/60" }, "Cancel"),
                     h("button", { onClick: apply, className: "px-6 py-2 rounded-xl font-bold uppercase tracking-wider border-2 bg-pink-600 border-pink-400" }, "Save")))), document.body));
+};
+const AnonymoToggle = ({ on, set }) => React.createElement('button', { onClick: () => set(!on), title: 'Anonymo: use every image/prompt this game, ignoring and not touching the used list', style: { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 14px', borderRadius: 10, fontWeight: 800, fontSize: 16, color: '#fff', background: on ? 'linear-gradient(135deg,#1f2937,#7c3aed)' : '#2e1065', border: '2px solid ' + (on ? '#22d3ee' : '#ec4899'), boxShadow: on ? '0 0 14px rgba(34,211,238,.5)' : 'none' } }, Ic('anonymo', 30), 'Anonymo ' + (on ? 'ON' : 'OFF'));
+const CenQuick = () => {
+    const [ready, setReady] = useState(blCenReady()), [c, setC] = useState(blCenGet());
+    useEffect(() => { if (ready) return; const f = () => setReady(blCenReady()); window.addEventListener('bl-censor-ready', f); return () => window.removeEventListener('bl-censor-ready', f); }, [ready]);
+    const on = ready && c.on;
+    return React.createElement('button', { onClick: () => { if (!ready) { alert('censor.js was not found next to this page, so the censor cannot run. Put censor.js in the same folder.'); return; } const n = { ...c, on: !c.on }; setC(n); blCenSet(n); }, title: ready ? 'Censor names, answers and quotes (level and style in Game Settings)' : 'censor.js not loaded', style: { padding: '4px 14px', borderRadius: 10, fontWeight: 800, fontSize: 16, color: '#fff', background: on ? '#be185d' : '#2e1065', border: '2px solid #ec4899', opacity: ready ? 1 : .55 } }, 'Censor ' + (!ready ? 'N/A' : on ? 'ON' : 'OFF'));
 };
 const LogPanel=({history})=>{
     const [q,setQ]=useState('');const [sort,setSort]=useState('new');const [winsOnly,setWinsOnly]=useState(false);const [limit,setLimit]=useState(50);
@@ -3035,6 +3042,7 @@ const SK = (() => {
 const SK_DRAW_PROMPTS = ["A shirt for a sleepy raccoon accountant", "Your pet as a rock star", "A taco superhero", "The world's worst vacation souvenir", "A haunted toaster", "A dentist who loves candy", "A wizard stuck in traffic", "A shirt for a grumpy cloud", "Your landlord as a dragon", "A fish wearing a business suit", "The last slice of pizza", "A llama learning to skateboard", "A robot's first day of school", "A cactus who needs a hug", "A pirate who is afraid of water", "A ninja banana", "Bigfoot on a selfie", "A shirt for the world's okayest chef", "Grandma's secret superpower", "A squirrel running for mayor", "An alien trying to blend in", "A dinosaur at the gym", "A very confident potato", "The Monday morning monster", "A cat CEO", "A jellyfish disco", "A goose causing chaos", "A shirt for an overworked coffee cup", "A knight who forgot his sword", "A snowman on vacation", "Ghost who is bad at haunting", "A duck with big dreams", "Pigeon mafia boss", "A sloth in a hurry", "Birthday cake gone wrong", "A cowboy frog", "A mermaid in the desert", "A vampire at the beach", "The Wi-Fi password monster", "A unicorn doing taxes"];
 /* ===== Custom coloured SVG icons (replace all emojis) ===== */
 const BL_ICONS = {
+    anonymo: `<ellipse cx="12" cy="7.6" rx="9.2" ry="2" fill="#111827"/><path d="M7 7.6C7 2.8 17 2.8 17 7.6z" fill="#374151"/><path d="M7.1 6.4h9.8" stroke="#ec4899" stroke-width="1.5"/><circle cx="12" cy="11.8" r="3.5" fill="#fcd9a8"/><rect x="7.9" y="10.4" width="3.5" height="2.3" rx="1" fill="#0f172a"/><rect x="12.6" y="10.4" width="3.5" height="2.3" rx="1" fill="#0f172a"/><path d="M11.3 11.2h1.4" stroke="#0f172a" stroke-width="1"/><path d="M8.3 10.8l1 .1" stroke="#67e8f9" stroke-width=".7" stroke-linecap="round"/><path d="M3.5 23C3.5 18 7.5 15.6 12 15.6S20.5 18 20.5 23z" fill="#111827"/><path d="M9.8 15.8L12 19.2l2.2-3.4z" fill="#fff"/><path d="M12 17.2l-1 1.4 1 3.2 1-3.2z" fill="#ec4899"/><path d="M9.8 15.8L8 21M14.2 15.8L16 21" stroke="#374151" stroke-width="1"/>`,
     pen: '<path d="M4 20l1-5L16.5 3.5a2 2 0 0 1 3 0l1 1a2 2 0 0 1 0 3L9 19z" fill="#f59e0b"/><path d="M14.5 5.5l4 4" stroke="#b45309" stroke-width="1.5"/><path d="M4 20l1-5 4 4z" fill="#fde68a"/><path d="M4 20l.6-2.6 2 2z" fill="#334155"/><path d="M16.5 3.5l4 4-1.5 1.5-4-4z" fill="#ec4899"/>',
     bucket: '<path d="M5 10h14l-1.6 9.2a2 2 0 0 1-2 1.8H8.6a2 2 0 0 1-2-1.8z" fill="#3b82f6"/><path d="M5 10h14" stroke="#1e3a8a" stroke-width="2"/><ellipse cx="12" cy="10" rx="7" ry="2.2" fill="#93c5fd"/><path d="M8 8.5C8 3 16 3 16 8.5" fill="none" stroke="#94a3b8" stroke-width="1.6"/><path d="M20.5 13c1.3 1.8 1.6 2.8 0 3.6-1.5-.8-1.3-1.8 0-3.6z" fill="#22d3ee"/>',
     hl: '<path d="M6 21l2-5 8-8 3 3-8 8z" fill="#22c55e"/><path d="M16 8l1.5-1.5a1.6 1.6 0 0 1 2.3 0l.7.7a1.6 1.6 0 0 1 0 2.3L19 11z" fill="#facc15"/><path d="M6 21l1-2.5 1.5 1.5z" fill="#14532d"/><path d="M3 22h7" stroke="#facc15" stroke-width="2" stroke-linecap="round"/>',
@@ -3518,7 +3526,7 @@ const StrokesHost = ({ goBack, onGames }) => {
         h('h2', { style: { fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 } }, 'Join at ', h('span', { style: { color: '#f472b6' } }, 'herjiberb.github.io/Blersjda-Kit')),
         h('div', { style: { display: 'inline-block', background: 'rgba(88,28,135,.5)', border: '3px solid #f59e0b', borderRadius: 28, padding: '18px 30px', marginBottom: 18, boxShadow: '0 0 40px rgba(245,158,11,.3)' } }, h('div', { style: { color: '#e9d5ff', fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase' } }, 'Room Code'), h('div', { style: { fontFamily: 'monospace', background: '#fff', color: '#000', padding: '6px 28px', borderRadius: 14, fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, letterSpacing: '.2em' } }, roomCode || '...')),
         h('div', { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' } }, h(SDisc, { g: SGAMES[1], size: 64 }), h('b', { style: { ...sFont, fontSize: 30, letterSpacing: '.08em', color: '#fbbf24' } }, 'BLERSJDA STROKES')),
-        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h(GameSettingsControl, { cap, setCap, min: 3, count: players.length }), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
+        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h(GameSettingsControl, { cap, setCap, min: 3, count: players.length }), h(CenQuick), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
         h('div', { style: { ...glass, padding: 24, minHeight: 200, marginBottom: 16 } }, h('h3', { style: { color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 14, fontSize: 22 } }, `Players (${players.length}) - Needs 3+` + (cap ? ` (cap ${cap})` : '')),
             h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' } }, players.map(p => h('div', { key: p.userId, className: 'animate-bounce', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', animationDuration: (1.5 + Math.random() * .5) + 's' } }, h(MonsterAvatar, { attributes: p.avatar, size: 80 }), h('div', { style: { marginTop: 6, background: 'rgba(107,33,168,.8)', padding: '3px 12px', borderRadius: 99, fontWeight: 800, fontSize: 14 } }, p.name))), !players.length && h('div', { style: { color: '#c084fc', fontWeight: 800, letterSpacing: '.1em' } }, 'WAITING FOR PLAYERS…'))),
         h('button', { onClick: () => startGame(false), disabled: players.length < 3, style: sBtn(players.length < 3 ? '#4b5563' : '#ec4899', { width: '100%', maxWidth: 440, minHeight: 72, fontSize: 24 }) }, players.length < 3 ? `Waiting for ${3 - players.length} more…` : `Start Game (${players.length} ready)`),
@@ -3943,7 +3951,7 @@ const CapHost = ({ goBack, onGames }) => {
         if ((window.__capList || []).filter(x => !(settings.familyFriendly && x.adult)).length < 4) { alert('Blersjda Cap needs at least 4 usable images in the images/ folder (named 1.png, 2.jpg, 17a.png ...). Found ' + (window.__capList || []).length + '.' + (settings.familyFriendly ? ' (Family Friendly hides the "a" images.)' : '')); return; }
         setRound(1);
         allRoundsHistory.current = [];
-        const pastUsed = capUsedGet();
+        const pastUsed = settings.anonymo ? [] : capUsedGet();
         setUsedPrompts(pastUsed);
         startRound(1, players, pastUsed);
     };
@@ -4009,7 +4017,7 @@ const CapHost = ({ goBack, onGames }) => {
                 votes: {}
             });
         });
-        setUsedPrompts(newUsed); capUsedSave(newUsed);
+        setUsedPrompts(newUsed); if (!settings.anonymo) capUsedSave(newUsed);
         setClashes(newClashes);
         setGameState('ANSWERING');
         currentPlayers.forEach(player => {
@@ -4284,7 +4292,7 @@ const CapHost = ({ goBack, onGames }) => {
                     React.createElement("input", { type: "checkbox", checked: settings.autoProgress, onChange: e => setSettings(s => ({ ...s, autoProgress: e.target.checked })), className: "w-6 h-6 accent-pink-500" }),
                     "Auto Progress"),
                 React.createElement("div", { className: "w-px h-8 bg-white/20" }),
-                React.createElement(GameSettingsControl, { cap: settings.cap || 0, setCap: n => setSettings(x => ({ ...x, cap: n })), min: 4, count: players.length })),
+                React.createElement(GameSettingsControl, { cap: settings.cap || 0, setCap: n => setSettings(x => ({ ...x, cap: n })), min: 4, count: players.length }), React.createElement(CenQuick), React.createElement(AnonymoToggle, { on: !!settings.anonymo, set: v => setSettings(x => ({ ...x, anonymo: v })) })),
             React.createElement("div", { className: "glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30" },
                 React.createElement("h3", { className: "text-2xl mb-6 text-pink-300 font-bold uppercase tracking-widest" },
                     "Players (",
@@ -4944,7 +4952,7 @@ const OnlineHost = ({ goBack, onGames }) => {
             return;
         setRound(1);
         allRoundsHistory.current = [];
-        const pastUsed = await getRecentUsedPrompts();
+        const pastUsed = settings.anonymo ? [] : await getRecentUsedPrompts();
         setUsedPrompts(pastUsed);
         startRound(1, players, pastUsed);
     };
@@ -5241,7 +5249,7 @@ const OnlineHost = ({ goBack, onGames }) => {
             });
             const thisGamePrompts = [];
             allRoundsHistory.current.forEach(r => r.clashes.forEach(c => thisGamePrompts.push(c.prompt)));
-            saveUsedPrompts(thisGamePrompts);
+            if (!settings.anonymo) saveUsedPrompts(thisGamePrompts);
         }
         else {
             startRound(round + 1, players, usedPrompts);
@@ -5285,7 +5293,7 @@ const OnlineHost = ({ goBack, onGames }) => {
                     React.createElement("input", { type: "checkbox", checked: settings.autoProgress, onChange: e => setSettings(s => ({ ...s, autoProgress: e.target.checked })), className: "w-6 h-6 accent-pink-500" }),
                     "Auto Progress"),
                 React.createElement("div", { className: "w-px h-8 bg-white/20" }),
-                React.createElement(GameSettingsControl, { cap: settings.cap || 0, setCap: n => setSettings(x => ({ ...x, cap: n })), min: 4, count: players.length })),
+                React.createElement(GameSettingsControl, { cap: settings.cap || 0, setCap: n => setSettings(x => ({ ...x, cap: n })), min: 4, count: players.length }), React.createElement(AnonymoToggle, { on: !!settings.anonymo, set: v => setSettings(x => ({ ...x, anonymo: v })) })),
             React.createElement("div", { className: "glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30" },
                 React.createElement("h3", { className: "text-2xl mb-6 text-pink-300 font-bold uppercase tracking-widest" },
                     "Players (",
