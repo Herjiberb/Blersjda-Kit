@@ -216,10 +216,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 
 /* ===== FAST ===== */
 [data-theme=fast] *,[data-theme=fast] ::before,[data-theme=fast] ::after{animation:none!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;text-shadow:none!important;filter:none!important;box-shadow:none!important;background-image:none!important;border-radius:4px!important}
-[data-theme=fast] .rounded-full,[data-theme=fast] .bl-cog,[data-theme=fast] .bl-spin{border-radius:9999px!important}
+[data-theme=fast] [aria-label^="color "],[data-theme=fast] .rounded-full,[data-theme=fast] .bl-cog,[data-theme=fast] .bl-spin{border-radius:9999px!important}
 [data-theme=fast] .bl-spin{animation:spin .8s linear infinite!important}
 [data-theme=fast] body{background:#121212!important;font-family:system-ui,Arial,sans-serif!important}
-[data-theme=fast] .sparkle-bg,[data-theme=fast] canvas,[data-theme=fast] .theme-layer,[data-theme=fast] .floating-popup{display:none!important}
+[data-theme=fast] .sparkle-bg,[data-theme=fast] canvas:not([data-keep]),[data-theme=fast] .theme-layer,[data-theme=fast] .floating-popup{display:none!important}
 [data-theme=fast] .glass-panel{background:#1c1c1c!important;border:1px solid #333!important}
 [data-theme=fast] .text-transparent,[data-theme=fast] .sweep-text,[data-theme=fast] .epic-text{color:#fff!important;-webkit-text-fill-color:#fff!important}
 [data-theme=fast] button.border-b-4{border-bottom-width:2px!important}
@@ -3074,7 +3074,7 @@ const SArt = ({ d, size = 240, style }) => {
     const r = useRef();
     useEffect(() => { const c = r.current; if (!c) return; const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.clearRect(0, 0, c.width, c.height); try { g.drawImage(SK.render(d), 0, 0, c.width, c.height); } catch (e) { } }, [d]);
     const px = size > 300 ? 512 : 320;
-    return React.createElement('canvas', { ref: r, width: px, height: px, style: { width: size, height: size, display: 'block', ...style } });
+    return React.createElement('canvas', { 'data-keep': '1', ref: r, width: px, height: px, style: { width: size, height: size, display: 'block', ...style } });
 };
 const SMeme = ({ d, x, st = 0, size = 240, style }) => {
     const h = React.createElement, pos = st % 3, col = (st / 3 | 0) % 6, sz = (st / 18 | 0) % 3, o = col === 2 ? '#fff' : '#000', sw = Math.max(1, size / 150);
@@ -3129,7 +3129,7 @@ const SDrawEditor = ({ tid, prompt, dl, total, label, onDone }) => {
     return h('div', { style: { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 8px 14px', gap: 8, userSelect: 'none', WebkitUserSelect: 'none' } },
         h('div', { style: { width: '100%', maxWidth: 560, display: 'flex', alignItems: 'center', gap: 8 } }, h(STimer, { left, total }), h('button', { onClick: submit, style: sBtn('#16a34a', { padding: '8px 14px', minHeight: 44 }) }, 'Submit drawing ', Ic('check', 16))),
         h('div', { style: { width: '100%', maxWidth: 560, textAlign: 'center', fontSize: 14, lineHeight: 1.2 } }, h('span', { style: { color: '#22d3ee', fontWeight: 900, fontSize: 11, letterSpacing: '.1em' } }, label + ' · '), h('span', { style: { color: '#f9a8d4', fontWeight: 900, fontSize: 11, letterSpacing: '.08em' } }, 'SUGGESTED PROMPT (optional, only if you need help): '), h('b', { style: { color: '#fde68a' } }, prompt)),
-        h('canvas', { ref: cv, width: SK.N, height: SK.N, onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: onUp, style: { width: size, height: size, background: '#fff', borderRadius: 14, touchAction: 'none', boxShadow: '0 6px 24px rgba(0,0,0,.5)', border: '3px solid rgba(255,255,255,.7)', cursor: tool === 'fill' ? 'cell' : 'crosshair' } }),
+        h('canvas', { 'data-keep': '1', ref: cv, width: SK.N, height: SK.N, onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: onUp, style: { width: size, height: size, background: '#fff', borderRadius: 14, touchAction: 'none', boxShadow: '0 6px 24px rgba(0,0,0,.5)', border: '3px solid rgba(255,255,255,.7)', cursor: tool === 'fill' ? 'cell' : 'crosshair' } }),
         h('div', { style: { width: '100%', maxWidth: 560, display: 'flex', gap: 6 } }, tb('pen', Ic('pen', 26), 'Paint'), tb('fill', Ic('bucket', 26), 'Fill'), tb('hl', Ic('hl', 26), 'Glow'), tb('bg', Ic('palette', 26), 'Backdrop'),
             h('button', { onClick: undo, disabled: !doc.current.ops.length, style: { width: 48, border: 'none', borderRadius: 12, background: 'rgba(255,255,255,.1)', color: '#fff', fontSize: 22, opacity: doc.current.ops.length ? 1 : .35 } }, Ic('undo', 24)),
             h('button', { onClick: redoF, disabled: !redo.current.length, style: { width: 48, border: 'none', borderRadius: 12, background: 'rgba(255,255,255,.1)', color: '#fff', fontSize: 22, opacity: redo.current.length ? 1 : .35 } }, Ic('redo', 24)),
@@ -3145,7 +3145,7 @@ const SDrawEditor = ({ tid, prompt, dl, total, label, onDone }) => {
                 doc.current.s > 0 && h(React.Fragment, null, h('div', { style: { width: '100%', maxWidth: 560, fontSize: 11, color: '#c4b5fd', fontWeight: 800 } }, 'COLOR 2'),
                     h('div', { style: { width: '100%', maxWidth: 560, display: 'flex', gap: 8, overflowX: 'auto', padding: '2px 2px 6px' } }, SK.PAL.map((c, i) => sw(i, doc.current.b === i, () => setBg('b', i)))))));
 };
-const MiniBg = ({ s, a, b }) => { const r = useRef(); useEffect(() => { const c = r.current, g = c.getContext('2d'); g.save(); g.scale(c.width / SK.N, c.height / SK.N); SK.drawBg(g, s, a, b); g.restore(); }, [s, a, b]); return React.createElement('canvas', { ref: r, width: 48, height: 40, style: { width: 48, height: 40, borderRadius: 6, display: 'block', margin: '0 auto 2px' } }); };
+const MiniBg = ({ s, a, b }) => { const r = useRef(); useEffect(() => { const c = r.current, g = c.getContext('2d'); g.save(); g.scale(c.width / SK.N, c.height / SK.N); SK.drawBg(g, s, a, b); g.restore(); }, [s, a, b]); return React.createElement('canvas', { 'data-keep': '1', ref: r, width: 48, height: 40, style: { width: 48, height: 40, borderRadius: 6, display: 'block', margin: '0 auto 2px' } }); };
 
 /* ---------- Quote editor ---------- */
 const SQuoteEditor = ({ tid, theme, dl, total, onAdd, onDone }) => {
@@ -3238,11 +3238,16 @@ const StrokesClient = () => {
     else if (s.m === 'vote') body = h(SVoteView, { key: s.tid, tid: s.tid, a: s.a, b: s.b, ro: s.ro, dl: s.dl, total: s.tot, onVote: (v) => send({ k: 'v', tid: s.tid, v }) });
     else if (s.m === 'res') body = h('div', { style: { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 20, textAlign: 'center' } }, h('h2', { style: { ...sFont, fontSize: 36, color: '#fde68a' } }, s.w === 'a' ? 'A WINS!' : 'B WINS!'), h('div', { style: { fontSize: 22, fontWeight: 900 } }, s.va + ' – ' + s.vb), s.mine != null && h('div', { style: { color: '#4ade80', fontWeight: 900, fontSize: 20 } }, '+' + s.mine + ' points for you!'), h('p', { style: { color: '#c4b5fd' } }, 'Look at the big screen'));
     else if (s.m === 'rank') body = h('div', { style: { minHeight: '100%', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 } }, h('h2', { style: { ...sFont, fontSize: 30, color: '#facc15', textAlign: 'center' } }, (s.title || 'Round') + (s.title === 'Game Over' ? '' : ' RANKS')), h('p', { style: { color: '#c4b5fd', fontWeight: 700, textAlign: 'center' } }, 'Look at the big screen'), h(SRankList, { all: s.all || [], me: uid }));
-    else if (s.m === 'end' && s.full) body = h('div', { style: { minHeight: '100%', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 } }, h('h2', { style: { ...sFont, fontSize: 34, color: '#facc15' } }, 'FINAL RANKS'), h(SRankList, { all: s.all || [], me: s.me, big: true }), h('button', { onClick: () => setS({ ...s, full: false }), style: sBtn('#4b5563', { width: '100%', maxWidth: 420 }) }, 'Back'));
+    else if (s.m === 'end' && s.showFull && s.full && s.full.sorted) { const F = s.full, sz = Math.min(300, window.innerWidth - 40), tg = (n, ic, fb) => h('div', { style: { fontWeight: 700, fontSize: 14, color: '#c4b5fd' } }, Ic(ic, 16), ' ', n || fb), mm = (m, ttl, col, ic) => m && h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 } }, h('div', { style: { fontWeight: 900, letterSpacing: '.12em', color: col } }, Ic(ic, 20), ' ' + ttl), h('div', { style: { lineHeight: 0, border: '4px solid ' + col, borderRadius: 16, overflow: 'hidden' } }, h(SMeme, { d: m.d, x: m.x, st: m.st, size: sz })), tg(m.maker, 'wrench', 'Unknown'), tg(m.designer, 'palette', 'Auto-doodle'), tg(m.quoter, 'chat', 'Stock quote'));
+        body = h('div', { style: { minHeight: '100%', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 } }, h('h2', { style: { ...sFont, fontSize: 34, color: '#facc15', textAlign: 'center' } }, 'THE WINNING MEME'), mm(F.champ, 'GRAND CHAMPION MEME', '#facc15', 'crown'), mm(F.runner, 'RUNNER-UP MEME', '#cbd5e1', 'medal'),
+            h('h3', { style: { ...sFont, fontSize: 30, color: '#facc15' } }, 'FINAL RANKS'), h(SRankList, { all: F.sorted, me: s.me, big: true }),
+            h('h3', { style: { ...sFont, fontSize: 30, color: '#f472b6' } }, 'HONORS'), h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 420 } }, (F.honors || []).map((x, i) => h('div', { key: i, style: { background: 'rgba(250,204,21,.12)', border: '2px solid #facc15', borderRadius: 14, padding: 10, textAlign: 'center' } }, h('div', { style: { fontWeight: 900, color: '#fde68a', display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' } }, Ic(x.ic, 24), x.t), h('div', { style: { display: 'flex', justifyContent: 'center', margin: '6px 0' } }, h(MonsterAvatar, { attributes: x.avatar, size: 52 })), h('div', { style: { fontWeight: 900 } }, x.name), h('div', { style: { color: '#c4b5fd', fontSize: 13, fontWeight: 700 } }, x.d)))),
+            h('button', { onClick: () => setS({ ...s, showFull: false }), style: sBtn('#4b5563', { width: '100%', maxWidth: 420, minHeight: 56 }) }, 'Back')); }
+    else if (s.m === 'end' && s.showFull) body = h('div', { style: { minHeight: '100%', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 } }, h('h2', { style: { ...sFont, fontSize: 34, color: '#facc15' } }, 'FINAL RANKS'), h(SRankList, { all: s.all || [], me: s.me, big: true }), h('button', { onClick: () => setS({ ...s, showFull: false }), style: sBtn('#4b5563', { width: '100%', maxWidth: 420 }) }, 'Back'));
     else if (s.m === 'end') body = h('div', { style: { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 20, textAlign: 'center' } },
         h('div', { style: { fontSize: 56 } }, Ic(s.rank === 1 ? 'crown' : 'trophy', 64)), h('h2', { style: { ...sFont, fontSize: 34, color: '#fde68a' } }, '#' + s.rank + ' · ' + s.score + ' pts'),
         (s.hon || []).length ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 360 } }, h('div', { style: { color: '#f9a8d4', fontWeight: 900, letterSpacing: '.1em' } }, 'YOUR HONORS'), (s.hon || []).map((x, i) => h('div', { key: i, style: { background: 'rgba(250,204,21,.15)', border: '2px solid #facc15', borderRadius: 12, padding: 10, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' } }, Ic(x.ic, 26), h('span', null, x.t + ' — ' + x.d)))) : h('p', { style: { color: '#c4b5fd', fontWeight: 700 } }, 'Thanks for playing!'),
-        s.meme && h(SMeme, { d: s.meme.d, x: s.meme.x, st: s.meme.st, size: Math.min(240, window.innerWidth - 60) }), s.meme && h('div', { style: { color: '#a5f3fc', fontWeight: 700, fontSize: 13 } }, 'Your best meme'), s.all && h('button', { onClick: () => setS({ ...s, full: true }), style: sBtn('#7c3aed', { width: '100%', maxWidth: 420, minHeight: 56 }) }, 'See full ranks'));
+        s.meme && h(SMeme, { d: s.meme.d, x: s.meme.x, st: s.meme.st, size: Math.min(240, window.innerWidth - 60) }), s.meme && h('div', { style: { color: '#a5f3fc', fontWeight: 700, fontSize: 13 } }, 'Your best meme'), s.all && h('button', { onClick: () => setS({ ...s, showFull: true }), style: sBtn('#7c3aed', { width: '100%', maxWidth: 420, minHeight: 56 }) }, 'See full ranks'));
     else body = wait('Hang tight…', 'Look at the big screen');
     return ReactDOM.createPortal(h('div', { style: { position: 'fixed', inset: 0, zIndex: 60, overflowY: 'auto', overflowX: 'hidden', background: 'radial-gradient(circle at 50% 0%,#2a1560 0%,#0f0a29 70%)', color: '#fff', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } }, body), document.body);
 };
@@ -3378,7 +3383,7 @@ const StrokesHost = ({ goBack, onGames }) => {
     const deal = (items, K, used, stock, extra = []) => {
         const st = S.current, taken = new Set(), out = {}, ex = new Set(extra.map(e => e.id)), pool = shuffle(items.filter(i => !used.has(i.id) && !ex.has(i.id)));
         for (let k = 0; k < K; k++) shuffle(st.players).forEach(p => {
-            let it = pool.find(x => !taken.has(x.id) && x.uid !== p.userId) || pool.find(x => !taken.has(x.id)) || stock();
+            let it = pool.find(x => !taken.has(x.id) && x.uid !== p.userId) || stock();
             taken.add(it.id); (out[p.userId] = out[p.userId] || []).push(it);
         });
         if (extra.length) st.players.forEach(p => { out[p.userId] = [...out[p.userId], ...extra.filter(e => !out[p.userId].some(o => o.id === e.id))]; });
@@ -3386,11 +3391,24 @@ const StrokesHost = ({ goBack, onGames }) => {
     };
     const memeStep = async (r) => {
         const st = S.current; chk(); st.mm = {}; st.lockTs = 0;
-        const dd = deal(st.designs.filter(d => d.r <= r), r === 1 ? 4 : 2, st.usedD, stockD, r > 1 ? st.designs.filter(d => d.r < r && !st.usedD.has(d.id)) : []), qq = deal(st.quotes.filter(q => q.r <= r), r === 1 ? 6 : 4, st.usedQ, stockQ, r > 1 ? st.quotes.filter(q => q.r < r && !st.usedQ.has(q.id)) : []); st.pools = {};
-        st.players.forEach(p => { st.pools[p.userId] = { ds: dd[p.userId], qs: qq[p.userId] }; });
+        const prev = st.pools || {}; st.pools = {};
+        if (r === 1) {
+            const dd = deal(st.designs.filter(d => d.r <= r), 4, st.usedD, stockD), qq = deal(st.quotes.filter(q => q.r <= r), 6, st.usedQ, stockQ);
+            st.players.forEach(p => { st.pools[p.userId] = { ds: dd[p.userId], qs: qq[p.userId] }; });
+        } else {
+            /* leftovers: only what each player personally got last time, unused and not their own */
+            const left = {}, nd = {}, nq = {}, cnt = {};
+            st.players.forEach(p => { const pv = prev[p.userId] || { ds: [], qs: [] }; left[p.userId] = { ds: pv.ds.filter(x => !st.usedD.has(x.id) && x.uid !== p.userId && !x.stock), qs: pv.qs.filter(x => !st.usedQ.has(x.id) && x.uid !== p.userId && !x.stock) }; nd[p.userId] = []; nq[p.userId] = []; cnt[p.userId] = 0; });
+            /* +1 new design each, never your own */
+            const takenD = new Set();
+            shuffle(st.players).forEach(p => { const it = shuffle(st.designs.filter(d => d.r === r && !takenD.has(d.id) && d.uid !== p.userId))[0] || stockD(); takenD.add(it.id); nd[p.userId].push(it); });
+            /* new quotes spread evenly, never your own */
+            shuffle(st.quotes.filter(q => q.r === r)).forEach(q => { const c = shuffle(st.players.filter(p => p.userId !== q.uid)).sort((a, b) => cnt[a.userId] - cnt[b.userId])[0]; if (c) { nq[c.userId].push(q); cnt[c.userId]++; } });
+            st.players.forEach(p => { const u = p.userId, qs = [...nq[u], ...left[u].qs], ds = [...nd[u], ...left[u].ds]; if (!qs.length) qs.push(stockQ()); st.pools[u] = { ds, qs }; });
+        }
         setPhase('MEME'); setInfo({ title: 'MEME LOCKER', sub: 'Mix a design with a quote. No repeats!' }); speak('Meme locker! Build the perfect meme!');
         openTask('S_MEME', 60, (u, aud) => { const pl = st.pools[u]; return aud || !pl ? null : { ds: pl.ds.map(x => ({ i: x.id, d: x.d })), qs: pl.qs.map(x => ({ i: x.id, x: x.x })) }; }, 'Players are building memes!');
-        const early = await countdown(60, () => st.players.every(p => st.mm[p.userId]) && Date.now() - st.lockTs > 6000); if (!early) await sleep(1500); chk();
+        const early = await countdown(60, () => st.players.every(p => st.mm[p.userId]) && Date.now() - st.lockTs > 1200); if (!early) await sleep(1500); chk();
         const memes = [];
         st.players.forEach(p => {
             let m = st.mm[p.userId], auto = false; const pl = st.pools[p.userId];
@@ -3468,7 +3486,9 @@ const StrokesHost = ({ goBack, onGames }) => {
             ['ink:Ink Marathon', 'Drew the most strokes', u => st.inkOps[u] || 0], ['bolt:Speed Doodler', 'Fastest to finish drawings', u => { const s = st.speed[u]; return s && s.length ? 100000 / (s.reduce((a, b) => a + b, 0) / s.length + 1000) : 0; }]];
         const cnt = {}, honors = []; cands.forEach(([t0, d, f]) => { const [ic, t] = t0.split(':'); const ranked = P.filter(p => f(p.userId) > 0).sort((a, b) => f(b.userId) - f(a.userId)); if (ranked.length) { const w = ranked.find(p => (cnt[p.userId] || 0) < 2) || ranked[0]; cnt[w.userId] = (cnt[w.userId] || 0) + 1; honors.push({ ic, t, d, u: w.userId, name: w.name, avatar: w.avatar }); } });
         st.cur = null; setPhase('GAME_END'); setInfo({ champ, runner, honors, sorted }); sfx('victory.wav'); speak(`The game is over! ${sorted[0] ? sorted[0].name : 'Someone'} is the Blersj champion!`);
-        sorted.forEach((p, i) => { const mine = st.memes.filter(m => m.maker === p.userId).sort((a, b) => b.wins - a.wins || b.votes - a.votes)[0]; send(p.userId, 'S_END', { all: sorted.map(x => ({ userId: x.userId, name: x.name, avatar: x.avatar, score: x.score })), me: p.userId, rank: i + 1, score: p.score, hon: honors.filter(x => x.u === p.userId).map(x => ({ ic: x.ic, t: x.t, d: x.d })), meme: mine ? pubM(mine) : null }); });
+        const mt = (m) => m ? { ...pubM(m), maker: nm(m.maker), designer: nm(m.designer), quoter: nm(m.quoter) } : null;
+        const fullD = { champ: mt(champ), runner: mt(runner), honors: honors.map(x => ({ ic: x.ic, t: x.t, d: x.d, name: x.name, avatar: x.avatar })), sorted: sorted.map(x => ({ userId: x.userId, name: x.name, avatar: x.avatar, score: x.score })) };
+        sorted.forEach((p, i) => { const mine = st.memes.filter(m => m.maker === p.userId).sort((a, b) => b.wins - a.wins || b.votes - a.votes)[0]; send(p.userId, 'S_END', { all: sorted.map(x => ({ userId: x.userId, name: x.name, avatar: x.avatar, score: x.score })), me: p.userId, rank: i + 1, score: p.score, hon: honors.filter(x => x.u === p.userId).map(x => ({ ic: x.ic, t: x.t, d: x.d })), meme: mine ? pubM(mine) : null, full: fullD }); });
         st.audience.forEach(a => send(a.userId, 'S_RANK', { title: 'Game Over', all: sorted.map(x => ({ userId: x.userId, name: x.name, avatar: x.avatar, score: x.score })) }));
         try {
             const rounds = [1, 2, 3].map(r => ({ round: r, clashes: st.matches.filter(m => m.r === r).map(m => {
