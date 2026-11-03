@@ -22,8 +22,66 @@ window.BLERSJDA_SERVER = 'wss://blersjda-server.bryantreitzel.workers.dev';
    Provides mqtt.connect(url, opts) with on/subscribe/publish/end, auto-reconnect and resubscribe. */
 (function () {
   var te = new TextEncoder(), td = new TextDecoder();
+  function b64e(u) { var s = '', i; for (i = 0; i < u.length; i += 8192) s += String.fromCharCode.apply(null, u.subarray(i, i + 8192)); return btoa(s); }
+  function b64d(b) { var s = atob(b), u = new Uint8Array(s.length), i; for (i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
+  /* HTTPS mode: same client API, but plain https fetch + long-polling (no WebSocket) */
+  function connectHttp(url, opts) {
+    var base = url.replace(/^wss:/i, 'https:').replace(/^ws:/i, 'http:'), handlers = {}, topics = [], sid = null, ended = false, fails = 0, chain = Promise.resolve(), ready = null;
+    var client = {
+      connected: false,
+      on: function (ev, fn) { (handlers[ev] = handlers[ev] || []).push(fn); return client; },
+      subscribe: function (topic, cb) {
+        if (topics.indexOf(topic) < 0) topics.push(topic);
+        if (sid) post('/http/sub', { sid: sid, topic: topic }).catch(function () {});
+        if (typeof cb === 'function') setTimeout(function () { cb(null); }, 0);
+        return client;
+      },
+      publish: function (topic, payload, o, cb) {
+        if (typeof o === 'function') cb = o;
+        var body = typeof payload === 'string' ? te.encode(payload) : new Uint8Array(payload), b = b64e(body);
+        chain = chain.then(function () { return ready; }).then(function () { return post('/http/pub', { sid: sid, topic: topic, b64: b }); }).catch(function () {});
+        if (typeof cb === 'function') setTimeout(function () { cb(null); }, 0);
+        return client;
+      },
+      end: function () { ended = true; client.connected = false; return client; }
+    };
+    function emit(ev, a, b) { (handlers[ev] || []).slice().forEach(function (fn) { try { fn(a, b); } catch (e) { console.error(e); } }); }
+    function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+    function post(path, body) {
+      return fetch(base + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { if (!r.ok) { var e = new Error('http ' + r.status); e.status = r.status; throw e; } return r.json(); });
+    }
+    function openSession() {
+      return post('/http/open', {}).then(function (r) {
+        sid = r.sid;
+        return Promise.all(topics.map(function (t) { return post('/http/sub', { sid: sid, topic: t }); }));
+      }).then(function () { client.connected = true; fails = 0; emit('connect'); });
+    }
+    async function loop() {
+      var wasUp = false;
+      ready = new Promise(function (res) { client._ready = res; });
+      while (!ended) {
+        try {
+          if (!sid) { await openSession(); wasUp = true; client._ready && client._ready(); }
+          var r = await fetch(base + '/http/poll?sid=' + encodeURIComponent(sid));
+          if (r.status === 404) { sid = null; continue; }
+          if (!r.ok) throw new Error('http ' + r.status);
+          var j = await r.json(); fails = 0;
+          if (!client.connected) { client.connected = true; emit('connect'); }
+          (j.msgs || []).forEach(function (m) { emit('message', m.topic, b64d(m.b64)); });
+        } catch (e) {
+          fails++;
+          if (client.connected && fails >= 2) { client.connected = false; emit('close'); emit('offline'); }
+          if (!wasUp && fails >= 2) emit('error', e);
+          await sleep(opts.reconnectPeriod || 2000);
+        }
+      }
+    }
+    loop();
+    return client;
+  }
   function connect(url, opts) {
     opts = opts || {};
+    try { if (localStorage.getItem('bl_https') === '1') return connectHttp(url, opts); } catch (e) {}
     var handlers = {}, topics = [], queue = [];
     var ws = null, ended = false, retryTimer = null, pingTimer = null, openTimer = null;
     var client = {
@@ -3220,7 +3278,7 @@ const StrokesHost = ({ goBack, onGames }) => {
     const h = React.createElement;
     const [roomCode, setRoomCode] = useState(''), [players, setPlayers] = useState([]), [audience, setAudience] = useState([]), [tts, setTts] = useState(true);
     const [phase, setPhase] = useState('LOBBY'), [cap, setCap] = useState(0), [info, setInfo] = useState({}), [timer, setTimer] = useState(0), [, setTick] = useState(0), [round, setRound] = useState(1), [showKick, setShowKick] = useState(false);
-    const conns = useRef({}), S = useRef({ tidc: 0, idc: 0 }), alive = useRef(true), audioRef = useRef(null), mqttRef = useRef(null);
+    const conns = useRef({}), S = useRef({ tidc: Math.floor(Date.now() / 1000), idc: 0 }), alive = useRef(true), audioRef = useRef(null), mqttRef = useRef(null);
     S.current.players = players; S.current.cap = cap; S.current.audience = audience; S.current.tts = tts; S.current.phase = phase;
     if (!audioRef.current && typeof Audio !== 'undefined') audioRef.current = new Audio('music.wav');
     const sfx = (f) => { try { new Audio(f).play(); } catch (e) { } };
@@ -5450,6 +5508,7 @@ const OnlineClient = ({ goBack }) => {
         const au = !!(ov && ov.auto), jc = au ? ov.code : code, jn = au ? ov.name : name;
         if (!jc || !cleanName(jn)) return;
         const roomCode = jc.toUpperCase().trim();
+        try { if (localStorage.getItem('blersjda_code') !== roomCode) Object.keys(localStorage).filter(k => /^bls_[a-z]+_/.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) { }
         try { localStorage.setItem('blersjda_code', roomCode); localStorage.setItem('blersjda_name', jn); navigator.vibrate && navigator.vibrate(30); } catch (e) { }
         const att = ++attemptRef.current;
         joinedRef.current = false; setJoinErr(''); setJoinStatus('connecting');
@@ -5483,10 +5542,11 @@ const OnlineClient = ({ goBack }) => {
             catch (e) { console.error("Failed to parse client inbound MQTT packet:", e); }
         });
     };
+    const savedCodeRef = useRef('');
     useEffect(() => {
         try {
             const ss = JSON.parse(localStorage.getItem('blersjda_session') || 'null'), urlRoom = new URLSearchParams(location.search).get('room');
-            if (ss && ss.code && ss.name && Date.now() - ss.ts < 4 * 3600e3 && (!urlRoom || urlRoom.toUpperCase() === ss.code)) { autoRef.current = true; setCode(ss.code); setName(ss.name); setTimeout(() => joinGame({ auto: true, code: ss.code, name: ss.name }), 250); }
+            if (ss && ss.code && Date.now() - ss.ts < 4 * 3600e3 && (!urlRoom || urlRoom.toUpperCase() === ss.code)) { savedCodeRef.current = ss.code; setCode(c => c || ss.code); if (ss.name) setName(n => n || ss.name); }
         } catch (e) { }
     }, []);
     useEffect(() => {
@@ -5622,7 +5682,7 @@ const OnlineClient = ({ goBack }) => {
             React.createElement("p", { className: "text-xs text-gray-400 mb-4 flex items-center gap-2 justify-center" }, React.createElement(Ico, { n: "lock", size: 16 }), "Your connection is end-to-end encrypted to the host for stats."),
             joinErr && joinStatus === 'failed' && React.createElement("div", { className: "bl-join-err", role: "alert" }, "\u26A0\uFE0F ", joinErr),
             (joinStatus === 'connecting' || joinStatus === 'joining') && React.createElement("div", { className: "bl-join-busy" }, React.createElement("span", { className: "bl-spin" }), joinStatus === 'connecting' ? "Connecting to the server\u2026" : "Asking the host to let you in\u2026"),
-            React.createElement(Button, { onClick: joinGame, color: (joinStatus === 'connecting' || joinStatus === 'joining') ? "gray" : "pink", disabled: !cleanName(name) || code.length !== 4 || joinStatus === 'connecting' || joinStatus === 'joining', className: "h-16" }, joinStatus === 'connecting' ? "Connecting\u2026" : joinStatus === 'joining' ? "Joining\u2026" : joinStatus === 'failed' ? "Try Again" : "Enter Game"),
+            React.createElement(Button, { onClick: joinGame, color: (joinStatus === 'connecting' || joinStatus === 'joining') ? "gray" : "pink", disabled: !cleanName(name) || code.length !== 4 || joinStatus === 'connecting' || joinStatus === 'joining', className: "h-16" }, joinStatus === 'connecting' ? "Connecting\u2026" : joinStatus === 'joining' ? "Joining\u2026" : joinStatus === 'failed' ? "Try Again" : (savedCodeRef.current && code === savedCodeRef.current) ? "Reconnect" : "Enter Game"),
             React.createElement("button", { onClick: goBack, className: "block mx-auto mt-6 text-gray-400 font-bold uppercase tracking-widest text-sm hover:text-white transition-colors" }, "Cancel"))),
         clientState === 'WAITING_LOBBY' && !isEditingAvatar && (React.createElement("div", { className: "w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in" },
             React.createElement("h2", { className: "text-4xl font-black text-pink-400 uppercase tracking-widest mb-4" }, "You're In!"),
@@ -5888,6 +5948,8 @@ const UIExtras = () => {
         upd({ unlocked: false, k: '', theme: ['tunnel', 'beta'].includes(s.theme) ? 'standard' : s.theme });
         window.blToast('Secret themes relocked', { ttl: 2000 });
     };
+    const [https, setHttps] = useState(() => { try { return localStorage.getItem('bl_https') === '1'; } catch (e) { return false; } });
+    const toggleHttps = () => { const n = !https; setHttps(n); try { localStorage.setItem('bl_https', n ? '1' : '0'); } catch (e) { } window.blToast(n ? 'HTTPS mode on. Applies to the next room you host or join.' : 'HTTPS mode off. Applies to the next room you host or join.', { type: 'success', ttl: 3500 }); };
     const fs = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) { window.blToast('Fullscreen not supported here', { type: 'error' }); } };
     const activeTheme = (ALL.find(x => x.id === s.theme) || BL_THEMES[0]).id;
     return RE(React.Fragment, null,
@@ -5918,6 +5980,8 @@ const UIExtras = () => {
                 [['calm', 'Reduce motion', 'Calmer animations'], ['perf', 'Performance mode', 'Drops blur & sparkles for smooth play'], ['contrast', 'High contrast', 'Sharper panels & text'], ['sound', 'Sound FX', 'Soft clicks on buttons']].map(([k, t, d]) =>
                     RE('button', { key: k, className: 'bl-sw-row', role: 'switch', 'aria-checked': !!s[k], onClick: () => upd({ [k]: !s[k] }) },
                         RE('span', null, RE('b', null, t), RE('small', null, d)), RE('i', { className: 'bl-knob' + (s[k] ? ' on' : '') })))),
+            RE('div', { className: 'bl-sec' }, RE('h4', null, 'Connection'),
+                RE('button', { className: 'bl-sw-row', role: 'switch', 'aria-checked': https, onClick: toggleHttps }, RE('span', null, RE('b', null, 'HTTPS mode'), RE('small', null, 'No WebSockets, for school / strict WiFi. Used for hosting and joining. Slightly slower.')), RE('i', { className: 'bl-knob' + (https ? ' on' : '') }))),
             RE('div', { className: 'bl-sec' }, RE('h4', null, 'Shortcuts'), RE('div', { className: 'bl-keys' }, [['S','Settings'],['F','Fullscreen'],['K','Skip narration'],['?','Help'],['Esc','Close']].map(([k,v])=>[RE('kbd',{key:'k'+k},k),RE('span',{key:'v'+k},v)]))),
             RE('div', { className: 'bl-sec' }, RE('h4', null, 'Quick actions'), RE('div', { className: 'bl-seg' }, RE('button', { onClick: fs }, 'Fullscreen (F)'), RE('button', { onClick: () => { try { speechSynthesis.cancel(); } catch (e) { } } }, 'Skip narration (K)'))),
             RE('div', { className: 'bl-ft' }, RE('span', null, 'Saved on this device'), RE('button', { onClick: () => { setS({ theme: 'standard', text: 100, calm: false, sound: true, perf: false, contrast: false, unlocked: s.unlocked, k: s.k }); window.blToast('UI settings reset', { ttl: 1800 }); } }, 'Reset'))),
