@@ -10,6 +10,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
 <script>
+/* ============================================================
+   >>> SET THIS AFTER YOU DEPLOY YOUR CLOUDFLARE WORKER <<<
+   Use wss:// (not https://), no trailing slash. Example:
+   window.BLERSJDA_SERVER = 'wss://blersjda-server.janedoe.workers.dev';
+   ============================================================ */
 window.BLERSJDA_SERVER = 'wss://blersjda-server.bryantreitzel.workers.dev';
 </script>
 <script>
@@ -425,7 +430,7 @@ const NET = (() => {
 const MQTT_URL = window.BLERSJDA_SERVER + '/room';
 const MQTT_OPTS = { keepalive: 45, reconnectPeriod: 2000, connectTimeout: 8000, clean: true, resubscribe: true };
 const publishQ = (client, topic, payload) => client.publish(topic, NET.enc(payload), { qos: 0 });
-const PROMPTS = [ // Most AI Generated
+const PROMPTS = [
 { text: "A terrible name for a pet goldfish.", family: true },
 { text: "What really happens when you flush an airplane toilet.", family: true },
 { text: "A secret use for belly button fluff.", family: true },
@@ -2197,7 +2202,7 @@ const useSpiderSender = (active, getConns) => {
 /* ---------- Unified Game Settings (player cap + censor + arachnid scare) ---------- */
 const GameSettingsControl = ({ cap, setCap, min, count, anon, setAnon }) => {
     const h = React.createElement; const [open, setOpen] = useState(false); const [v, setV] = useState(''); const [err, setErr] = useState('');
-    const [ready, setReady] = useState(blCenReady()); const [c, setC] = useState(blCenGet()); const [sp, setSp] = useState(blSpiderOn());
+    const [ready, setReady] = useState(blCenReady()); const [c, setC] = useState(blCenGet()); const [sp, setSp] = useState(blSpiderOn()); const [bv, setBv] = useState(blBattleGet());
     useEffect(() => { if (ready) return; const f = () => setReady(blCenReady()); window.addEventListener('bl-censor-ready', f); return () => window.removeEventListener('bl-censor-ready', f); }, [ready]);
     const floor = Math.max(min, count), MAXC = 200;
     const openIt = () => { setV(cap ? String(cap) : ''); setErr(''); setC(blCenGet()); setSp(blSpiderOn()); setOpen(true); };
@@ -2241,6 +2246,7 @@ const GameSettingsControl = ({ cap, setCap, min, count, anon, setAnon }) => {
                         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } }, h('div', { style: { fontSize: 11, fontWeight: 800, letterSpacing: '.1em', color: '#f9a8d4' } }, 'STRENGTH'), seg(LV.map(([n, t, d]) => [n, t, d]), c.level, n => saveCen({ level: n }), !c.on),
                             h('div', { style: { fontSize: 11, fontWeight: 800, letterSpacing: '.1em', color: '#f9a8d4' } }, 'STYLE'), seg([['stars', 'Stars', '*** (default)'], ['replace', 'Replace', 'clean words']], c.style, k => saveCen({ style: k }), !c.on)),
                         c.on && h('div', { style: { padding: '8px 12px', borderRadius: 12, background: 'rgba(0,0,0,.4)', fontSize: 13, color: '#a5f3fc', textAlign: 'left', wordBreak: 'break-word' } }, h('span', { style: { color: '#9ca3af' } }, 'Preview: '), sample)) : note('censor.js was not found next to this page, so the filter cannot run. Put censor.js in the same folder.')),
+                    sec('#f97316', Ic('trophy', 30), 'Answers In! screen', bv === 'old' ? 'Classic fireball brawl' : 'New Rumble', null, h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } }, seg([['new', 'New Rumble', 'Headbutts, lightning, fire eyes'], ['old', 'Classic', 'Original brawl']], bv, k => { setBv(k); blBattleSet(k); }), note('The fight players see on their phones after submitting answers. Random winners and rounds every time. Applies live.'))),
                     sec('#ef4444', Ic('spider', 30), 'Arachnid scare', 'Jump-scare for players', sw(sp, on => { setSp(on); blSpiderSet(on); }), h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
                         note('While voting and during results, a spider randomly drops, lunges or skitters across some players\' screens. Tap it to squish it. Off by default; may startle people with arachnophobia.'),
                         h('button', { onClick: () => window.dispatchEvent(new CustomEvent('bl-host-msg', { detail: { type: 'FX_SPIDER', mode: ['drop', 'lunge', 'skitter', 'swarm'][Math.floor(Math.random() * 4)] } })), style: { alignSelf: 'flex-start', padding: '7px 14px', borderRadius: 12, fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: '.06em', color: '#fff', background: 'rgba(239,68,68,.15)', border: '2px solid rgba(239,68,68,.7)', cursor: 'pointer' } }, 'Preview on this screen')))),
@@ -2355,7 +2361,7 @@ const HistoryViewer = ({ goBack }) => {
                     React.createElement("span", { className: "text-cyan-400 font-mono text-2xl font-black bg-cyan-900/30 px-3 py-1 rounded-lg mt-2" },
                         p.score,
                         " pts")))))),
-            (selectedGame.memes || selectedGame.quotes) ? React.createElement("div",{className:"w-full mb-12"},React.createElement(ArtPanel,{history:[selectedGame],compact:true})) : null, React.createElement("div", { className: "w-full space-y-12" }, selectedGame.rounds.map(r => (React.createElement("div", { key: r.round, className: "w-full" },
+            (selectedGame.burn ? React.createElement(BurnPanel, { g: selectedGame }) : null), (selectedGame.memes || selectedGame.quotes) ? React.createElement("div",{className:"w-full mb-12"},React.createElement(ArtPanel,{history:[selectedGame],compact:true})) : null, React.createElement("div", { className: "w-full space-y-12" }, selectedGame.rounds.map(r => (React.createElement("div", { key: r.round, className: "w-full" },
                 React.createElement("h3", { className: "text-4xl font-black text-purple-300 uppercase mb-6 border-b-2 border-purple-500/50 pb-2 text-left" },
                     "Round ",
                     r.round),
@@ -3161,7 +3167,7 @@ const SDrawEditor = ({ tid, prompt, dl, total, label, onDone }) => {
                 doc.current.s > 0 && h(React.Fragment, null, h('div', { style: { width: '100%', maxWidth: 560, fontSize: 11, color: '#c4b5fd', fontWeight: 800 } }, 'COLOR 2'),
                     h('div', { style: { width: '100%', maxWidth: 560, display: 'flex', gap: 8, overflowX: 'auto', padding: '2px 2px 6px' } }, SK.PAL.map((c, i) => sw(i, doc.current.b === i, () => setBg('b', i)))))));
 };
-const MiniBg = ({ s, a, b }) => { const r = useRef(); useEffect(() => { const c = r.current, g = c.getContext('2d'); g.save(); g.scale(c.width / SK.N, c.height / SK.N); SK.drawBg(g, s, a, b); g.restore(); }, [s, a, b]); return React.createElement('canvas', { 'data-keep': '1', ref: r, width: 48, height: 40, style: { width: 48, height: 40, borderRadius: 6, display: 'block', margin: '0 auto 2px' } }); };
+const MiniBg = ({ s, a, b }) => { const r = useRef(); useEffect(() => { const c = r.current, g = c.getContext('2d'); g.save(); g.scale(c.width / SK.N, c.height / SK.N); SK.drawBg(g, s, a, b); g.restore(); }, [s, a, b]); return React.createElement('canvas', { 'data-keep': '1', 'data-keep': '1', ref: r, width: 48, height: 40, style: { width: 48, height: 40, borderRadius: 6, display: 'block', margin: '0 auto 2px' } }); };
 
 /* ---------- Quote editor ---------- */
 const SQuoteEditor = ({ tid, theme, dl, total, onAdd, onDone }) => {
@@ -3265,7 +3271,7 @@ const StrokesClient = () => {
         (s.hon || []).length ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 360 } }, h('div', { style: { color: '#f9a8d4', fontWeight: 900, letterSpacing: '.1em' } }, 'YOUR HONORS'), (s.hon || []).map((x, i) => h('div', { key: i, style: { background: 'rgba(250,204,21,.15)', border: '2px solid #facc15', borderRadius: 12, padding: 10, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' } }, Ic(x.ic, 26), h('span', null, x.t + ' — ' + x.d)))) : h('p', { style: { color: '#c4b5fd', fontWeight: 700 } }, 'Thanks for playing!'),
         s.meme && h(SMeme, { d: s.meme.d, x: s.meme.x, st: s.meme.st, size: Math.min(240, window.innerWidth - 60) }), s.meme && h('div', { style: { color: '#a5f3fc', fontWeight: 700, fontSize: 13 } }, 'Your best meme'), s.all && h('button', { onClick: () => setS({ ...s, showFull: true }), style: sBtn('#7c3aed', { width: '100%', maxWidth: 420, minHeight: 56 }) }, 'See full ranks'));
     else body = wait('Hang tight…', 'Look at the big screen');
-    return ReactDOM.createPortal(h('div', { style: { position: 'fixed', inset: 0, zIndex: 60, overflowY: 'auto', overflowX: 'hidden', background: 'radial-gradient(circle at 50% 0%,#2a1560 0%,#0f0a29 70%)', color: '#fff', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } }, body), document.body);
+    return ReactDOM.createPortal(h('div', { className: 's-ovl', style: { position: 'fixed', inset: 0, zIndex: 60, overflowY: 'auto', overflowX: 'hidden', background: 'radial-gradient(circle at 50% 0%,#2a1560 0%,#0f0a29 70%)', color: '#fff', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } }, body), document.body);
 };
 
 /* ================= Games menu ================= */
@@ -3273,13 +3279,14 @@ const StrokesClient = () => {
 const SGAMES = [
     { id: 'madness', name: 'Blersjda Madness', tag: 'Answer · Clash · Vote', a: '#ec4899', b: '#3b82f6', def: true },
     { id: 'strokes', name: 'Blersjda Strokes', tag: 'Draw · Quote · Meme · Bracket', a: '#f59e0b', b: '#14b8a6' },
-    { id: 'cap', name: 'Blersjda Cap', tag: 'Caption · Vote · Laugh', a: '#22c55e', b: '#a855f7' }];
+    { id: 'cap', name: 'Blersjda Cap', tag: 'Caption · Vote · Laugh', a: '#22c55e', b: '#a855f7' },
+    { id: 'burn', name: 'Blersjda Burn', tag: 'Write · Burn · Reply', a: '#f97316', b: '#dc2626' }];
 const SDisc = ({ g, size = 120 }) => {
     const h = React.createElement, c = size / 2;
     return h('div', { className: 'bl-disc', style: { width: size, height: size, borderRadius: '50%', position: 'relative', background: `conic-gradient(from 20deg,${g.a},#ffffffcc,${g.b},#ffffff88,${g.a},#ffffffcc,${g.b},#ffffff88,${g.a})`, boxShadow: `0 0 ${size / 4}px ${g.a}88, inset 0 0 ${size / 6}px rgba(0,0,0,.35)` } },
         h('div', { style: { position: 'absolute', inset: size * .06, borderRadius: '50%', border: '2px solid rgba(255,255,255,.35)' } }),
         h('div', { style: { position: 'absolute', inset: size * .27, borderRadius: '50%', background: `linear-gradient(135deg,${g.a},${g.b})`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 3px rgba(255,255,255,.6)' } },
-            h('svg', { viewBox: '0 0 32 32', width: size * .3, height: size * .3, fill: 'none', stroke: '#fff', strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round' }, g.id === 'cap' ? h('path', { d: 'M4 6 H28 V22 H16 L9 28 V22 H4 Z', fill: '#fff' }) : g.id === 'madness' ? h('path', { d: 'M18 3 L7 18 H15 L13 29 L25 13 H17 Z', fill: '#fff' }) : h('path', { d: 'M4 26 C8 10 12 28 16 14 C19 4 22 20 28 6' }))),
+            h('svg', { viewBox: '0 0 32 32', width: size * .3, height: size * .3, fill: 'none', stroke: '#fff', strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round' }, g.id === 'burn' ? h('path', { d: 'M16 3 C18 9 25 11 25 19 A9 9 0 0 1 7 19 C7 15 9 13 10 11 C11 14 12 15 14 15 C14 10 13 7 16 3 Z', fill: '#fff' }) : g.id === 'cap' ? h('path', { d: 'M4 6 H28 V22 H16 L9 28 V22 H4 Z', fill: '#fff' }) : g.id === 'madness' ? h('path', { d: 'M18 3 L7 18 H15 L13 29 L25 13 H17 Z', fill: '#fff' }) : h('path', { d: 'M4 26 C8 10 12 28 16 14 C19 4 22 20 28 6' }))),
         h('div', { style: { position: 'absolute', left: c - size * .05, top: c - size * .05, width: size * .1, height: size * .1, borderRadius: '50%', background: '#0f0a29', boxShadow: '0 0 0 2px rgba(255,255,255,.7)' } }));
 };
 const GamesMenu = ({ current, onPick, onClose }) => {
@@ -3317,6 +3324,7 @@ const StrokesHost = ({ goBack, onGames }) => {
     }, [phase, round]);
     /* net */
     useSpiderSender(['VOTING', 'REVEAL', 'ROUND_END', 'GAME_END'].includes(phase), () => Object.values(conns.current));
+    useBattleSender(() => Object.values(conns.current));
     const send = (uid, type, payload) => { const c = conns.current[uid]; if (c && c.open) c.send({ type, ...payload }); };
     const resend = (uid, aud) => {
         const c = S.current.cur; if (!c) { send(uid, 'STATE_WAITING', { msg: 'Look at the big screen!' }); return; }
@@ -3824,6 +3832,7 @@ const CapHost = ({ goBack, onGames }) => {
         return () => window.removeEventListener('blersjda-host-cmd', handleHostCmd);
     }, []);
     useSpiderSender(['VOTING', 'REVEAL', 'ROUND_END', 'GAME_END'].includes(gameState), () => Object.values(connectionsRef.current));
+    useBattleSender(() => Object.values(connectionsRef.current));
     const broadcast = (type, payload) => {
         Object.values(connectionsRef.current).forEach(conn => {
             if (conn && conn.open)
@@ -4441,6 +4450,638 @@ const CapHost = ({ goBack, onGames }) => {
             React.createElement(Button, { onClick: () => window.location.reload(), color: "blue", className: "text-2xl h-20 w-3/4 mx-auto block" }, "Play Again")))));
 };
 
+/* ================= Answers In! v2: Rumble arena + host toggle ================= */
+const blBattleGet = () => { try { return localStorage.getItem('bl_battle_v') === 'old' ? 'old' : 'new'; } catch (e) { return 'new'; } };
+const blBattleSet = (v) => { try { localStorage.setItem('bl_battle_v', v); } catch (e) { } try { window.dispatchEvent(new CustomEvent('bl-battle-set')); } catch (e) { } };
+try { window.addEventListener('bl-host-msg', e => { const d = e.detail; if (d && d.type === 'FX_BATTLE') window.__blBattleV = d.v === 'old' ? 'old' : 'new'; }); } catch (e) { }
+const useBattleSender = (getConns) => {
+    const ref = useRef(getConns); ref.current = getConns;
+    useEffect(() => {
+        const send = () => { const v = blBattleGet(); (ref.current() || []).filter(c => c && c.open).forEach(c => { try { c.send({ type: 'FX_BATTLE', v }); } catch (e) { } }); };
+        send(); const id = setInterval(send, 4000); window.addEventListener('bl-battle-set', send);
+        return () => { clearInterval(id); window.removeEventListener('bl-battle-set', send); };
+    }, []);
+};
+(() => { const s = document.createElement('style'); s.textContent = `
+.bn-eye{position:absolute;width:15%;height:15%;border-radius:50%;background:radial-gradient(circle,#fff 0,#fde047 30%,#ef4444 65%,transparent 72%);box-shadow:0 0 10px #f97316,0 0 22px #ef4444;opacity:0;pointer-events:none}
+.bn-p{position:absolute;left:0;top:0;border-radius:50%;pointer-events:none;opacity:0;will-change:transform,opacity}
+.bn-arena{position:relative;width:100%;height:100%;overflow:hidden;border-radius:14px;background:linear-gradient(#150a33,#2a0f3d 70%,#3b1d2a);border:3px solid #7f1d1d}
+.bn-floor{position:absolute;left:0;right:0;bottom:0;height:14%;background:linear-gradient(#4a2a1a,#241109)}
+.bn-fl{position:absolute;bottom:-6px;width:26px;height:38px;border-radius:50% 50% 50% 50%/65% 65% 35% 35%;background:radial-gradient(circle at 50% 70%,#fff7a8 0,#ffb400 35%,#ff4500 70%,transparent 72%);animation:bnFlame .7s infinite ease-out}
+@keyframes bnFlame{0%{transform:translateY(0) scale(1,1);opacity:.95}50%{transform:translateY(-14px) scale(.8,1.25);opacity:.9}100%{transform:translateY(-34px) scale(.3,1.5);opacity:0}}
+@keyframes bnChar{0%{filter:none;transform:none}40%{filter:brightness(.6) sepia(1) saturate(4)}100%{filter:grayscale(1) brightness(.25);transform:translateY(14px) rotate(3deg) scale(.96);opacity:.55}}
+.bn-burning{animation:bnChar 2.4s forwards}
+@keyframes bnEmber{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),-130px) scale(.2);opacity:0}}
+.bn-ember{position:absolute;bottom:18%;width:7px;height:7px;border-radius:50%;background:#ffb347;box-shadow:0 0 8px #ff6a00;animation:bnEmber 1.6s infinite ease-out;pointer-events:none}
+@keyframes bnPop{0%{transform:scale(.2) rotate(-8deg);opacity:0}60%{transform:scale(1.25) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(-4deg);opacity:1}}
+.bn-stamp{animation:bnPop .5s forwards}
+@keyframes bnConf{0%{transform:translateY(-10vh) rotate(0)}100%{transform:translateY(112vh) rotate(720deg)}}
+.bn-conf{position:fixed;top:0;width:10px;height:16px;z-index:40;animation:bnConf 3s linear forwards;pointer-events:none}
+@keyframes bnFlash{0%,100%{opacity:0}10%,30%{opacity:.8}20%{opacity:.15}}
+.bn-lightning{position:fixed;inset:0;background:#fff;pointer-events:none;z-index:45;animation:bnFlash .9s forwards}
+@keyframes bnGold{0%,100%{box-shadow:0 0 25px rgba(250,204,21,.6)}50%{box-shadow:0 0 70px rgba(250,204,21,1)}}
+.bn-gold{animation:bnGold 1.2s infinite}
+@keyframes bnRise{0%{transform:translateY(30px) scale(.8);opacity:0}100%{transform:none;opacity:1}}
+.bn-rise{animation:bnRise .5s both}
+[data-theme=fast] .bn-arena{background:#241334!important}[data-theme=fast] .bn-floor{background:#3a2314!important}
+[data-theme=fast] .bn-fl{background:#f97316!important;border-radius:50% 50% 50% 50%/65% 65% 35% 35%!important}
+[data-theme=fast] .bn-ember,[data-theme=fast] .bn-conf,[data-theme=fast] .bn-lightning{display:none!important}
+[data-theme=fast] .from-yellow-300.to-red-500{background-color:#f97316!important}
+[data-theme=fast] .s-ovl{background:#121212!important}
+[data-theme=fast] .s-ovl button{box-shadow:none!important;border-radius:8px!important}
+[data-theme=fast] .s-ovl canvas{border:2px solid #555!important;border-radius:6px!important}
+[data-theme=fast] .bn-card{background:#1c1c1c!important;border:2px solid #444!important}
+`; document.head.appendChild(s); })();
+
+const RumbleArena = ({ avatars }) => {
+    const h = React.createElement, NP = 40;
+    const root = useRef(), stage = useRef(), fr = useRef([]), inn = useRef([]), eyes = useRef([[], []]), hp = useRef([]), pr = useRef([]), svg = useRef(), b1 = useRef(), b2 = useRef(), bl1 = useRef(), bl2 = useRef(), flash = useRef(), dark = useRef();
+    const [ui, setUi] = useState({ round: 1, banner: 'ROUND 1', sub: '', wins: [0, 0] });
+    useEffect(() => {
+        const el = root.current; if (!el) return;
+        const rnd = (a, b) => a + Math.random() * (b - a), pick = a => a[Math.floor(Math.random() * a.length)];
+        const E = { lin: t => t, in: t => t * t * t, out: t => 1 - Math.pow(1 - t, 3), io: t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2 };
+        let W = 300, H = 190, S = 80, k = .8, GY = 0, cx = 150, hL = 0, hR = 0;
+        const measure = () => { W = el.clientWidth || W; H = el.clientHeight || H; S = Math.max(54, Math.min(H * .46, 110, W * .22)); k = S / 100; GY = H - S - H * .1; cx = W / 2; hL = W * .15; hR = W - W * .15 - S; };
+        const F = [{ x: 0, y: 0, r: 0, sx: 1, sy: 1, fx: '', eyes: 0, dir: 1 }, { x: 0, y: 0, r: 0, sx: 1, sy: 1, fx: '', eyes: 0, dir: -1 }];
+        const hpv = [100, 100]; let ps = [], shake = 0, bolt = null, beam = null, tally = [0, 0], round = 0, last = '';
+        let phase = 'intro', pt0 = performance.now(), bout = null, evi = 0, from = null, raf, dead = false;
+        const spawn = (kind, x, y, n, o = {}) => { for (let i = 0; i < n; i++) { if (ps.length >= NP) ps.shift(); const a = rnd(0, 6.28), sp = rnd(.4, 1) * (o.sp || 4); ps.push({ kind, x: x + rnd(-4, 4), y: y + rnd(-4, 4), vx: o.up ? rnd(-1, 1) : Math.cos(a) * sp, vy: o.up ? -rnd(1, 3) : Math.sin(a) * sp - (o.lift || 0), life: 0, max: o.max || rnd(.4, .8), size: o.size || rnd(5, 10), g: o.g == null ? .15 : o.g, c: o.c || pick(['#fde047', '#fff', '#fb923c']) }); } };
+        const zig = (x1, y1, x2, y2, seg, j) => { let p = x1 + ',' + y1; for (let i = 1; i < seg; i++) { const t = i / seg; p += ' ' + (x1 + (x2 - x1) * t + rnd(-j, j)) + ',' + (y1 + (y2 - y1) * t + rnd(-j, j)); } return p + ' ' + x2 + ',' + y2; };
+        const ctr = (i) => [F[i].x + S / 2, GY + F[i].y + S / 2];
+        /* pose helpers: x is the left edge in px; positions defined from a meeting point m and gap g */
+        const pL = (m, g, o) => ({ x: m - g / 2 - S, y: 0, r: 0, sx: 1, sy: 1, ...o }), pR = (m, g, o) => ({ x: m + g / 2, y: 0, r: 0, sx: 1, sy: 1, ...o });
+        const sample = (kf, u) => { let a = kf[0], b = kf[kf.length - 1]; if (u <= a.t) return a; if (u >= b.t) return b; for (let i = 0; i < kf.length - 1; i++) { if (u >= kf[i].t && u <= kf[i + 1].t) { a = kf[i]; b = kf[i + 1]; break; } } const l = (u - a.t) / Math.max(1e-6, b.t - a.t), e = (E[b.e] || E.io)(l), m = (p) => a[p] + (b[p] - a[p]) * e; return { x: m('x'), y: m('y'), r: m('r'), sx: m('sx'), sy: m('sy') }; };
+        const impact = (x, y, big) => { spawn('spark', x, y, big ? 14 : 8, { sp: big ? 6 : 4 }); spawn('ring', x, y, 1, { size: 10, max: .35, g: 0, c: '#fff' }); shake = Math.max(shake, big ? 12 : 7); };
+        const hit = (i, dmg) => { hpv[i] = Math.max(i === bout.l ? 4 : 8, hpv[i] - dmg); };
+        const mk = (type) => {
+            const w = Math.random() < .5 ? 0 : 1, l = 1 - w, ev = [], K = [[], []], dur = rnd(5.2, 6.6), push = (i, t, p, e) => K[i].push({ t, e: e || 'io', ...p });
+            const ko = (t) => ev.push({ t, f: () => { hpv[l] = 0; F[w].eyes = 1; } });
+            const o = { type, w, l, dur, ev, K, draw: null };
+            const homes = () => { push(0, 0, pL(cx, S * 2.4, {}), 'io'); push(1, 0, pR(cx, S * 2.4, {}), 'io'); };
+            if (type === 'headbutt') {
+                const n = 3 + (Math.random() * 2 | 0), bl = .76 / n; push(0, 0, { x: hL, y: 0, r: 0, sx: 1, sy: 1 }); push(1, 0, { x: hR, y: 0, r: 0, sx: 1, sy: 1 });
+                for (let q = 0; q < n; q++) {
+                    const t0 = .08 + q * bl, gapW = S * rnd(1.4, 2.1), last = q === n - 1, m = cx + (w === 0 ? 1 : -1) * q * 6;
+                    const kbL = (l === 0 ? S * (.55 + .3 * q) : S * .2), kbR = (l === 1 ? S * (.55 + .3 * q) : S * .2);
+                    push(0, t0 + bl * .4, pL(m, gapW, { r: -14, sx: .94, sy: 1.06 })); push(1, t0 + bl * .4, pR(m, gapW, { r: 14, sx: .94, sy: 1.06 }));
+                    push(0, t0 + bl * .62, pL(m, -S * .14, { r: 18, y: -S * .08, sx: 1.12, sy: .9 }), 'in'); push(1, t0 + bl * .62, pR(m, -S * .14, { r: -18, y: -S * .08, sx: 1.12, sy: .9 }), 'in');
+                    push(0, t0 + bl * .7, pL(m, -S * .2, { r: 12, sx: 1.18, sy: .82 }), 'lin'); push(1, t0 + bl * .7, pR(m, -S * .2, { r: -12, sx: 1.18, sy: .82 }), 'lin');
+                    ev.push({ t: t0 + bl * .62, f: () => { const [ax, ay] = ctr(0), [bx] = ctr(1); impact((ax + bx) / 2, ay - S * .1, last); hit(l, last ? 100 : 100 / n * rnd(.8, 1.1)); hit(w, rnd(4, 12)); spawn('star', (ax + bx) / 2, ay - S * .45, 4, { sp: 3, lift: 2, c: '#fde047' }); if (q === 1) { F[w].eyes = 1; } } });
+                    if (!last) { push(0, t0 + bl, pL(m, 0, { x: pL(m, 0, {}).x - kbL, r: l === 0 ? -22 : -6, sx: 1, sy: 1 }), 'out'); push(1, t0 + bl, pR(m, 0, { x: pR(m, 0, {}).x + kbR, r: l === 1 ? 22 : 6, sx: 1, sy: 1 }), 'out'); }
+                    else {
+                        const fl = (i) => { const d = i === 0 ? -1 : 1; return { x: i === 0 ? W * .04 : W - W * .04 - S, d }; };
+                        push(l, t0 + bl * .86, { x: fl(l).x + fl(l).d * 0, y: -H * .5, r: l === 0 ? -300 : 300, sx: 1, sy: 1 }, 'out'); push(l, t0 + bl, { x: fl(l).x, y: 0, r: l === 0 ? -90 : 90, sx: 1.05, sy: .9 }, 'in');
+                        push(w, t0 + bl * .86, pL(m, 0, {}).x !== undefined && w === 0 ? pL(m, 0, { x: cx - S * .9, y: -S * .5, r: 8 }) : pR(m, 0, { x: cx - S * .1, y: -S * .5, r: -8 }), 'out'); push(w, t0 + bl, w === 0 ? pL(m, 0, { x: cx - S * .9 }) : pR(m, 0, { x: cx - S * .1 }), 'in');
+                        ev.push({ t: t0 + bl, f: () => { const [x, y] = ctr(l); impact(x, y + S * .3, true); spawn('dust', x, y + S * .5, 8, { sp: 3, size: 12, c: '#d6b88a', g: -.02, max: 1 }); } });
+                        push(w, .97, w === 0 ? pL(cx, S * .6, { y: -S * .3, sy: 1.1, x: cx - S * 1.1 }) : pR(cx, S * .6, { y: -S * .3, sy: 1.1, x: cx + S * .1 }), 'io'); push(w, 1, w === 0 ? pL(cx, S * .6, { x: cx - S * 1.1 }) : pR(cx, S * .6, { x: cx + S * .1 }), 'in'); push(l, 1, { x: fl(l).x, y: 0, r: l === 0 ? -90 : 90, sx: 1.05, sy: .9 }, 'lin');
+                        ko(t0 + bl);
+                    }
+                }
+            } else if (type === 'lightning') {
+                homes(); push(0, 1, pL(cx, S * 2.4, {}), 'lin'); push(1, 1, pR(cx, S * 2.4, {}), 'lin'); K[0].length = 0; K[1].length = 0;
+                const ns = 5 + (Math.random() * 2 | 0); push(0, 0, { x: hL, y: 0, r: 0, sx: 1, sy: 1 }); push(1, 0, { x: hR, y: 0, r: 0, sx: 1, sy: 1 });
+                const lie = (i) => ({ x: i === 0 ? hL : hR, y: 0, r: i === 0 ? -90 : 90, sx: 1.05, sy: .9 });
+                let tt = .08; const per = .78 / ns;
+                for (let q = 0; q < ns; q++) {
+                    const fin = q === ns - 1, tgt = fin ? l : (Math.random() < .62 ? l : w), arc = !fin && Math.random() < .4, src = 1 - tgt; const t = tt + per * .5; tt += per;
+                    ev.push({ t: t - .03, f: () => { F[src].eyes = .8; } });
+                    ev.push({ t, f: () => { const [tx, ty] = ctr(tgt), [sx, sy] = ctr(src); bolt = { until: performance.now() + (fin ? 380 : 170), x1: arc ? sx : tx + rnd(-30, 30), y1: arc ? sy : 0, x2: tx, y2: ty, big: fin }; flash.current && (flash.current.style.opacity = fin ? .95 : .55); shake = fin ? 14 : 8; F[tgt].fx = fin ? 'char' : 'inv'; setTimeout(() => { if (!fin) F[tgt].fx = ''; }, 140); spawn('spark', tx, ty, fin ? 18 : 9, { sp: 5 }); spawn('smoke', tx, ty - S * .3, fin ? 6 : 2, { up: 1, size: 16, c: '#6b7280', g: -.04, max: 1 }); hit(tgt, fin ? 100 : (tgt === l ? 100 / ns * 1.15 : 5)); } });
+                    push(src, t - .02, { x: src === 0 ? hL + S * .25 : hR - S * .25, y: -S * .1, r: src === 0 ? 14 : -14, sx: 1, sy: 1 }, 'out'); push(src, t + .06, { x: src === 0 ? hL : hR, y: 0, r: 0, sx: 1, sy: 1 }, 'io');
+                    push(tgt, t, { x: (tgt === 0 ? hL : hR) + (tgt === 0 ? -S * .15 : S * .15), y: -S * .12, r: tgt === 0 ? -10 : 10, sx: .9, sy: 1.1 }, 'in'); push(tgt, t + .06, { x: tgt === 0 ? hL : hR, y: 0, r: 0, sx: 1, sy: 1 }, 'io');
+                    if (fin) { push(l, t + .09, lie(l), 'out'); push(l, 1, lie(l), 'lin'); push(w, t + .1, { x: w === 0 ? cx - S * 1.1 : cx + S * .1, y: -S * .35, r: 0, sx: 1, sy: 1.1 }, 'out'); push(w, 1, { x: w === 0 ? cx - S * 1.1 : cx + S * .1, y: 0, r: 0, sx: 1, sy: 1 }, 'in'); ko(t + .09); }
+                }
+                ['0', '1'].forEach(() => { }); o.dark = true;
+                // sort keyframes by t per fighter
+                K.forEach(a => a.sort((p, q) => p.t - q.t));
+            } else if (type === 'fireeyes') {
+                push(0, 0, { x: hL, y: 0, r: 0, sx: 1, sy: 1 }); push(1, 0, { x: hR, y: 0, r: 0, sx: 1, sy: 1 });
+                push(0, .12, pL(cx, S * 1.9, { r: 6 })); push(1, .12, pR(cx, S * 1.9, { r: -6 })); push(0, .8, pL(cx, S * 1.9, { r: 8 }), 'lin'); push(1, .8, pR(cx, S * 1.9, { r: -8 }), 'lin');
+                push(l, .92, { x: l === 0 ? hL - S * .2 : hR + S * .2, y: 0, r: l === 0 ? -80 : 80, sx: 1.05, sy: .9 }, 'out'); push(l, 1, { x: l === 0 ? hL - S * .2 : hR + S * .2, y: 0, r: l === 0 ? -90 : 90, sx: 1.05, sy: .9 }, 'lin');
+                push(w, .92, w === 0 ? pL(cx, S * 1.9, { r: 8, y: -S * .15 }) : pR(cx, S * 1.9, { r: -8, y: -S * .15 }), 'out'); push(w, 1, w === 0 ? pL(cx, S * 1.9, { r: 0 }) : pR(cx, S * 1.9, { r: 0 }), 'in');
+                const wob = rnd(14, 24); o.draw = (u) => {
+                    const g = Math.min(1, u / .1); F[0].eyes = F[1].eyes = g * (.7 + .3 * Math.sin(u * 60)); const dom = u < .15 ? .5 : u < .85 ? .5 + (w === 0 ? 1 : -1) * (.1 * Math.sin(u * wob) + (u - .15) * .55) : (w === 0 ? .97 : .03);
+                    const [ax, ay] = ctr(0), [bx, by] = ctr(1), ey = ay - S * .1, mx = ax + (bx - ax) * dom; if (u > .08 && u < .93) { beam = { x1: ax, x2: bx, y: ey, mx, wd: 4 + 3 * Math.abs(Math.sin(u * 40)) + (u > .5 ? 3 : 0) }; if (Math.random() < .6) spawn('spark', mx, ey, 1, { sp: 3, c: pick(['#fde047', '#ef4444', '#fff']) }); shake = Math.max(shake, 2.5); } else beam = null;
+                    if (u > .88 && u < .98 && Math.random() < .7) spawn('flame', ctr(l)[0], GY + S * .5, 2, { up: 1, size: 16, c: pick(['#f97316', '#fde047', '#ef4444']), g: -.06, max: .7 });
+                    if (u > .9) F[l].fx = 'char'; else F[l].fx = u > .8 ? 'burn' : '';
+                };
+                o.ev.push({ t: .93, f: () => { hpv[l] = 0; } });
+                o.drawHp = (u) => { const dmg = Math.min(1, Math.max(0, (u - .12) / .78)); hpv[l] = Math.max(0, 100 - dmg * 100); hpv[w] = Math.max(35, 100 - dmg * 40 - 5 * Math.sin(u * 30)); };
+            } else if (type === 'flurry') {
+                push(0, 0, { x: hL, y: 0, r: 0, sx: 1, sy: 1 }); push(1, 0, { x: hR, y: 0, r: 0, sx: 1, sy: 1 });
+                const nj = 9 + (Math.random() * 4 | 0), per = .8 / nj; let t = .08; const gN = S * .5; push(0, t, pL(cx, gN, {})); push(1, t, pR(cx, gN, {}));
+                for (let q = 0; q < nj - 1; q++) {
+                    const att = Math.random() < .62 ? w : l, def = 1 - att, ta = t + per * .35, tb = t + per;
+                    const lunge = att === 0 ? pL(cx, -S * .1, { r: 20, sx: 1.1, sy: .94 }) : pR(cx, -S * .1, { r: -20, sx: 1.1, sy: .94 }), flin = def === 0 ? pL(cx, gN, { x: cx - gN / 2 - S - S * .22, r: -14, sx: .92, sy: 1.08 }) : pR(cx, gN, { x: cx + gN / 2 + S * .22, r: 14, sx: .92, sy: 1.08 });
+                    push(att, ta, lunge, 'in'); push(def, ta, flin, 'out'); push(att, tb, att === 0 ? pL(cx, gN, {}) : pR(cx, gN, {}), 'out'); push(def, tb, def === 0 ? pL(cx, gN, {}) : pR(cx, gN, {}), 'io');
+                    ev.push({ t: ta, f: () => { const [x, y] = ctr(def); impact(x + (def === 0 ? S * .3 : -S * .3), y - S * .15, false); hit(def, def === l ? 100 / nj * 1.5 : 4); if (Math.random() < .25) F[att].eyes = 1; else F[att].eyes = Math.max(0, F[att].eyes - .5); } }); t = tb;
+                }
+                push(w, .9, w === 0 ? pL(cx, -S * .2, { x: cx - S * 1.05, y: -S * .15, r: 10 }) : pR(cx, -S * .2, { x: cx + S * .05, y: -S * .15, r: -10 }), 'in'); push(l, .9, { x: cx + (l === 0 ? -S * 1.05 : S * .05), y: -H * .55, r: l === 0 ? -400 : 400, sx: 1, sy: 1 }, 'out');
+                push(w, 1, w === 0 ? pL(cx, S * 1.2, {}) : pR(cx, S * 1.2, {}), 'io'); push(l, 1, { x: l === 0 ? hL - S * .1 : hR + S * .1, y: 0, r: l === 0 ? -90 : 90, sx: 1.05, sy: .9 }, 'in');
+                ev.push({ t: .9, f: () => { const [x, y] = ctr(l); impact(x, y, true); spawn('star', x, y - S * .3, 6, { sp: 4, lift: 3, c: '#fde047' }); F[w].eyes = 1; } }); ev.push({ t: .99, f: () => { const [x, y] = ctr(l); impact(x, y + S * .3, true); hpv[l] = 0; spawn('dust', x, y + S * .5, 8, { sp: 3, size: 12, c: '#d6b88a', g: -.02, max: 1 }); } });
+            } else { /* sumo shove */
+                push(0, 0, { x: hL, y: 0, r: 0, sx: 1, sy: 1 }); push(1, 0, { x: hR, y: 0, r: 0, sx: 1, sy: 1 });
+                push(0, .1, pL(cx, S * 1.6, { r: -10 })); push(1, .1, pR(cx, S * 1.6, { r: 10 })); push(0, .22, pL(cx, -S * .15, { r: 20, y: -S * .06, sx: 1.12, sy: .9 }), 'in'); push(1, .22, pR(cx, -S * .15, { r: -20, y: -S * .06, sx: 1.12, sy: .9 }), 'in');
+                ev.push({ t: .22, f: () => { const [x, y] = ctr(0); impact(cx, y, true); } });
+                let m = cx; const dr = w === 0 ? 1 : -1, steps = 10; for (let q = 1; q <= steps; q++) { const t = .22 + q * .056, back = q % 3 === 0 ? -1 : 1; m += back * dr * (q > 6 ? S * .5 : S * .14) * (q % 3 === 0 ? .7 : 1) + (q > 3 && q < 7 ? -dr * S * .12 : 0); const mm = clamp(m, W * .12, W * .88); push(0, t, pL(mm, -S * .2, { r: 16 + (q % 2) * 6, sx: 1.1, sy: .92 }), 'io'); push(1, t, pR(mm, -S * .2, { r: -16 - (q % 2) * 6, sx: 1.1, sy: .92 }), 'io'); ev.push({ t, f: () => { spawn('dust', clamp(m, W * .12, W * .88), GY + S * .95, 3, { sp: 2, size: 10, c: '#d6b88a', g: -.02, max: .8 }); shake = Math.max(shake, 3); hit(l, 100 / steps * 1.3); hit(w, 2); } }); }
+                const edge = w === 0 ? W - S * .1 : -S * .9; push(l, .86, { x: edge, y: -S * .2, r: l === 0 ? -200 : 200, sx: 1, sy: 1 }, 'out'); push(l, .97, { x: edge + (w === 0 ? S * .9 : -S * .9), y: -H * .4, r: l === 0 ? -400 : 400, sx: 1, sy: 1 }, 'in'); push(l, 1, { x: edge + (w === 0 ? S * 1.2 : -S * 1.2), y: H * .5, r: l === 0 ? -450 : 450, sx: 1, sy: 1 }, 'in');
+                push(w, .86, w === 0 ? pL(W * .75, 0, { x: W * .7, y: 0, r: 10 }) : pR(W * .25, 0, { x: W * .25 - S, y: 0, r: -10 }), 'out'); push(w, 1, w === 0 ? { x: W * .7, y: -S * .2, r: 0, sx: 1, sy: 1.1 } : { x: W * .25 - S, y: -S * .2, r: 0, sx: 1, sy: 1.1 }, 'io'); ko(.86);
+                const wx = w === 0 ? 1 : 0; void wx;
+            }
+            K.forEach(a => a.sort((p, q) => p.t - q.t));
+            ev.sort((p, q) => p.t - q.t); return o;
+        };
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const style = () => {
+            for (let i = 0; i < 2; i++) { const f = F[i], o = fr.current[i], n = inn.current[i]; if (!o || !n) continue; o.style.transform = `translate(${f.x}px,${GY + f.y}px) scale(${k})`; n.style.transform = `rotate(${f.r}deg) scale(${f.sx * f.dir},${f.sy})`; n.style.filter = f.fx === 'inv' ? 'invert(1) brightness(1.3)' : f.fx === 'char' ? 'grayscale(1) brightness(.35)' : f.fx === 'burn' ? 'sepia(1) saturate(5) brightness(.9)' : ''; eyes.current[i].forEach(e => { if (e) e.style.opacity = Math.max(0, Math.min(1, f.eyes)); }); const bar = hp.current[i]; if (bar) bar.style.width = Math.max(0, hpv[i]) + '%'; }
+            if (stage.current) { stage.current.style.transform = shake > .3 ? `translate(${rnd(-shake, shake)}px,${rnd(-shake, shake) * .6}px)` : ''; shake *= .86; }
+            const now = performance.now(), s = svg.current;
+            if (s) {
+                if (bolt && now < bolt.until) { const p = zig(bolt.x1, bolt.y1, bolt.x2, bolt.y2, 9, bolt.big ? 26 : 16); bl1.current.setAttribute('points', p); bl2.current.setAttribute('points', p); bl1.current.setAttribute('stroke-width', bolt.big ? 14 : 8); bl2.current.setAttribute('stroke-width', bolt.big ? 5 : 3); bl1.current.style.opacity = bl2.current.style.opacity = 1; } else { bl1.current.style.opacity = bl2.current.style.opacity = 0; }
+                if (beam) { const e = (x1, x2) => zig(x1, beam.y, x2, beam.y, 8, 5), pa = e(beam.x1, beam.mx), pb = e(beam.x2, beam.mx); b1.current.setAttribute('points', pa); b2.current.setAttribute('points', pb); b1.current.setAttribute('stroke-width', beam.wd * 2); b2.current.setAttribute('stroke-width', beam.wd * 2); b1.current.style.opacity = b2.current.style.opacity = 1; } else { b1.current.style.opacity = b2.current.style.opacity = 0; }
+            }
+            if (flash.current) flash.current.style.opacity = Math.max(0, (parseFloat(flash.current.style.opacity) || 0) - .08);
+            for (let i = 0; i < NP; i++) { const d = pr.current[i], p = ps[i]; if (!d) continue; if (!p) { d.style.opacity = 0; continue; } const u = p.life / p.max; if (p.kind === 'ring') { d.style.width = d.style.height = '8px'; d.style.background = 'transparent'; d.style.border = '3px solid #fff'; d.style.transform = `translate(${p.x - 4}px,${p.y - 4}px) scale(${1 + u * 7})`; d.style.opacity = 1 - u; } else { const sz = p.kind === 'smoke' ? p.size * (1 + u * 2) : p.kind === 'flame' ? p.size * (1 - u * .6) : p.size * (1 - u * .5); d.style.width = d.style.height = sz + 'px'; d.style.border = '0'; d.style.background = p.kind === 'smoke' ? 'rgba(120,120,120,.7)' : p.kind === 'star' ? p.c : p.c; d.style.borderRadius = p.kind === 'star' ? '2px' : '50%'; d.style.transform = `translate(${p.x - sz / 2}px,${p.y - sz / 2}px) rotate(${p.life * 600}deg)`; d.style.opacity = (p.kind === 'dust' ? .6 : 1) * (1 - u); } }
+        };
+        const tickParts = (dt) => { ps.forEach(p => { p.life += dt; p.x += p.vx * dt * 60; p.y += p.vy * dt * 60; p.vy += p.g * dt * 60; }); ps = ps.filter(p => p.life < p.max); };
+        const setPose = (i, p) => { F[i].x = p.x; F[i].y = p.y; F[i].r = p.r; F[i].sx = p.sx; F[i].sy = p.sy; };
+        let lastT = performance.now(), idle = 0;
+        const loop = (now) => {
+            if (dead) return; raf = requestAnimationFrame(loop); const dt = Math.min(.05, (now - lastT) / 1000); lastT = now; idle += dt; measure();
+            const el0 = (now - pt0) / 1000;
+            if (phase === 'intro') {
+                const u = Math.min(1, el0 / 1.4); if (!from) from = [{ x: F[0].x, y: F[0].y, r: F[0].r, sx: F[0].sx, sy: F[0].sy }, { x: F[1].x, y: F[1].y, r: F[1].r, sx: F[1].sx, sy: F[1].sy }];
+                const t = E.io(Math.min(1, u * 1.4)); const home = [{ x: hL, y: 0, r: 0, sx: 1, sy: 1 }, { x: hR, y: 0, r: 0, sx: 1, sy: 1 }]; for (let i = 0; i < 2; i++) { const a = from[i], b = home[i]; setPose(i, { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t + Math.sin(idle * 4 + i) * 2 * t, r: a.r + (b.r - a.r) * t, sx: a.sx + (b.sx - a.sx) * t, sy: a.sy + (b.sy - a.sy) * t }); F[i].fx = ''; F[i].eyes *= .9; }
+                for (let i = 0; i < 2; i++) hpv[i] += (100 - hpv[i]) * .12; if (el0 > 1.0 && ui_banner !== 'FIGHT!') { ui_banner = 'FIGHT!'; setUi(x => ({ ...x, banner: 'FIGHT!', sub: bout ? bout.label : '' })); }
+                if (el0 > 1.5) { phase = 'bout'; pt0 = now; evi = 0; from = null; setUi(x => ({ ...x, banner: '' })); }
+            } else if (phase === 'bout') {
+                const u = Math.min(1, el0 / bout.dur); for (let i = 0; i < 2; i++) { const p = sample(bout.K[i], u); setPose(i, p); F[i].y += Math.sin(idle * 7 + i * 2) * 1.5; }
+                if (bout.dark && dark.current) dark.current.style.opacity = .55; else if (dark.current) dark.current.style.opacity = 0;
+                while (evi < bout.ev.length && bout.ev[evi].t <= u) { try { bout.ev[evi].f(); } catch (e) { } evi++; } if (bout.draw) bout.draw(u); if (bout.drawHp) bout.drawHp(u);
+                if (u >= 1) { phase = 'outro'; pt0 = now; beam = null; tally[bout.w]++; hpv[bout.l] = 0; shake = 10; spawn('star', ctr(bout.l)[0], ctr(bout.l)[1] - S * .3, 8, { sp: 4, lift: 3, c: '#fde047' }); setUi(x => ({ ...x, banner: 'K.O.!', sub: 'Round ' + round + ' goes to the ' + (bout.w === 0 ? 'LEFT' : 'RIGHT') + ' fighter', wins: [tally[0], tally[1]] })); }
+            } else {
+                for (let i = 0; i < 2; i++) { if (i === bout.w) { F[i].y = Math.min(0, -Math.abs(Math.sin(el0 * 7)) * S * .25); F[i].eyes = .5 + .5 * Math.sin(el0 * 12); } }
+                if (dark.current) dark.current.style.opacity = Math.max(0, (parseFloat(dark.current.style.opacity) || 0) - .02);
+                if (el0 > 2.1) { round++; let t; do { t = pick(['headbutt', 'headbutt', 'lightning', 'fireeyes', 'flurry', 'sumo']); } while (t === last); last = t; bout = mk(t); bout.label = { headbutt: 'HEADBUTT BRAWL', lightning: 'LIGHTNING STORM', fireeyes: 'FIRE-EYE STARE-DOWN', flurry: 'FLURRY OF BLOWS', sumo: 'SUMO SHOVE' }[t]; phase = 'intro'; pt0 = now; from = null; ui_banner = ''; setUi({ round, banner: 'ROUND ' + round, sub: bout.label, wins: [tally[0], tally[1]] }); }
+            }
+            if (Math.random() < .25 && (F[0].eyes > .3 || F[1].eyes > .3)) { [0, 1].forEach(i => { if (F[i].eyes > .5 && Math.random() < .5 && phase !== 'intro') spawn('flame', ctr(i)[0] + (Math.random() < .5 ? -S * .2 : S * .2), ctr(i)[1] - S * .15, 1, { up: 1, size: 8, c: pick(['#f97316', '#fde047']), g: -.05, max: .45 }); }); }
+            tickParts(dt); style();
+        };
+        let ui_banner = '';
+        round = 1; last = 'headbutt'; measure(); bout = mk('headbutt'); bout.label = 'HEADBUTT BRAWL'; F[0].x = hL; F[1].x = hR; setUi({ round: 1, banner: 'ROUND 1', sub: bout.label, wins: [0, 0] });
+        raf = requestAnimationFrame(loop); return () => { dead = true; cancelAnimationFrame(raf); };
+    }, []);
+    const av = avatars || [], face = (i) => h('div', { key: 'f' + i, ref: e => { fr.current[i] = e; }, style: { position: 'absolute', left: 0, top: 0, width: 100, height: 100, transformOrigin: '0 0', willChange: 'transform', zIndex: 3 } },
+        h('div', { ref: e => { inn.current[i] = e; }, style: { position: 'relative', width: 100, height: 100, transformOrigin: '50% 100%' } }, av[i] ? h(MonsterAvatar, { attributes: av[i], size: 100 }) : h('div', { style: { width: 100, height: 100, borderRadius: '50%', background: i ? '#3b82f6' : '#ec4899' } }),
+            [0, 1].map(j => h('div', { key: j, className: 'bn-eye', ref: e => { eyes.current[i][j] = e; }, style: { left: (j ? 56 : 29) + '%', top: '34%' } }))));
+    const bar = (i) => h('div', { style: { flex: 1, height: 10, background: 'rgba(0,0,0,.6)', borderRadius: 6, overflow: 'hidden', border: '1px solid #fff4', direction: i ? 'rtl' : 'ltr' } }, h('div', { ref: e => { hp.current[i] = e; }, style: { height: '100%', width: '100%', background: 'linear-gradient(90deg,#22c55e,#facc15,#ef4444)', backgroundSize: '100% 100%' } }));
+    return h('div', { ref: root, className: 'bn-arena' }, h('div', { ref: stage, style: { position: 'absolute', inset: 0 } },
+        h('div', { className: 'bn-floor' }), h('div', { ref: dark, style: { position: 'absolute', inset: 0, background: '#0b0b1f', opacity: 0, zIndex: 1, pointerEvents: 'none' } }),
+        fr.current && [0, 1].map(face),
+        Array.from({ length: NP }, (_, i) => h('div', { key: 'p' + i, className: 'bn-p', ref: e => { pr.current[i] = e; }, style: { zIndex: 5 } })),
+        h('svg', { ref: svg, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 6 } },
+            h('polyline', { ref: b1, fill: 'none', stroke: '#ff5a1f', strokeLinejoin: 'round', strokeLinecap: 'round', opacity: 0 }), h('polyline', { ref: b2, fill: 'none', stroke: '#ffb020', strokeLinejoin: 'round', strokeLinecap: 'round', opacity: 0 }),
+            h('polyline', { ref: bl1, fill: 'none', stroke: '#22d3ee', strokeLinejoin: 'round', opacity: 0 }), h('polyline', { ref: bl2, fill: 'none', stroke: '#fff', strokeLinejoin: 'round', opacity: 0 }))),
+        h('div', { ref: flash, style: { position: 'absolute', inset: 0, background: '#fff', opacity: 0, zIndex: 7, pointerEvents: 'none' } }),
+        h('div', { style: { position: 'absolute', top: 6, left: 8, right: 8, display: 'flex', gap: 8, alignItems: 'center', zIndex: 8 } }, bar(0), h('div', { style: { fontWeight: 900, fontSize: 12, letterSpacing: '.08em', color: '#fde68a', whiteSpace: 'nowrap', textShadow: '0 1px 3px #000' } }, 'R' + ui.round + ' · ' + ui.wins[0] + '-' + ui.wins[1]), bar(1)),
+        ui.banner && h('div', { key: ui.banner + ui.round, className: 'bn-stamp', style: { position: 'absolute', left: 0, right: 0, top: '32%', textAlign: 'center', zIndex: 9, pointerEvents: 'none' } }, h('div', { style: { ...sFont, fontSize: 'clamp(26px,8vw,54px)', color: ui.banner === 'K.O.!' ? '#f87171' : '#fde047', letterSpacing: '.08em', textShadow: '0 3px 0 #7f1d1d,0 0 20px #000' } }, ui.banner), ui.sub && h('div', { style: { fontSize: 12, fontWeight: 900, color: '#fff', letterSpacing: '.1em', textShadow: '0 1px 4px #000' } }, ui.sub)));
+};
+const BattleView = ({ avatars, host }) => {
+    const [v, setV] = useState(() => host ? blBattleGet() : (window.__blBattleV || 'new'));
+    useEffect(() => { const f = (e) => { if (host) setV(blBattleGet()); else if (e && e.detail && e.detail.type === 'FX_BATTLE') setV(e.detail.v === 'old' ? 'old' : 'new'); }; window.addEventListener('bl-host-msg', f); window.addEventListener('bl-battle-set', f); return () => { window.removeEventListener('bl-host-msg', f); window.removeEventListener('bl-battle-set', f); }; }, [host]);
+    return v === 'old' ? React.createElement(JSBattleAnimation, { avatars }) : React.createElement(RumbleArena, { key: 'rumble', avatars });
+};
+
+/* ================= Blersjda Burn ================= */
+const BURN_PROMPTS = [
+    { text: "The worst name for a pet goldfish.", family: true },
+    { text: "A terrible thing to yell during a school play.", family: true },
+    { text: "What the dog is really thinking when you leave for work.", family: true },
+    { text: "A suspicious ingredient in grandma's famous soup.", family: true },
+    { text: "The real reason the chicken crossed the road.", family: true },
+    { text: "Something you should never bring to a job interview.", family: true },
+    { text: "A rejected flavor of ice cream.", family: true },
+    { text: "What the moon says when nobody is looking.", family: true },
+    { text: "The worst superpower to get on your birthday.", family: true },
+    { text: "A bad slogan for a dentist's office.", family: true },
+    { text: "What's actually inside the mystery box in the garage.", family: true },
+    { text: "The most useless item in a survival kit.", family: true },
+    { text: "A terrible name for a boat.", family: true },
+    { text: "What you whisper to a pigeon to make it leave.", family: true },
+    { text: "Why the wizard was late to work.", family: true },
+    { text: "The worst thing to say while skydiving.", family: true },
+    { text: "A weird rule at the world's strictest library.", family: true },
+    { text: "What the teacher finds in your lunchbox that nobody can explain.", family: true },
+    { text: "A bad idea for a theme park ride.", family: true },
+    { text: "The title of a very boring autobiography.", family: true },
+    { text: "The last thing a snowman sees.", family: true },
+    { text: "Something that should never be gift-wrapped.", family: true },
+    { text: "What the toaster dreams about.", family: true },
+    { text: "A strange hobby for a medieval knight.", family: true },
+    { text: "The worst thing to find in your cereal.", family: true },
+    { text: "What the GPS says when it gives up on you.", family: true },
+    { text: "A bad name for a rock band made of grandparents.", family: true },
+    { text: "The secret ingredient in a questionable sandwich.", family: true },
+    { text: "A rejected Olympic sport.", family: true },
+    { text: "What a ghost does on its day off.", family: true },
+    { text: "The worst advice from a fortune cookie.", family: true },
+    { text: "A terrible thing to hear from the pilot.", family: true },
+    { text: "What the squirrels are plotting in the park.", family: true },
+    { text: "The most awkward thing to say at a wedding.", family: true },
+    { text: "A better use for a spare traffic cone.", family: true },
+    { text: "Why the dinosaur went extinct, according to a toddler.", family: true },
+    { text: "A cursed item on the school cafeteria menu.", family: true },
+    { text: "What the sloth is doing instead of being on time.", family: true },
+    { text: "The worst place to hide during hide-and-seek.", family: true },
+    { text: "A very bad thing to name your boat's rubber duck.", family: true },
+    { text: "What your cat does at 3 a.m.", family: true },
+    { text: "The least intimidating weapon ever.", family: true },
+    { text: "A terrible bedtime story title.", family: true },
+    { text: "What the clown said to the mirror.", family: true },
+    { text: "The worst thing to bring to a potluck.", family: true },
+    { text: "An excuse for being late that nobody believes.", family: true },
+    { text: "A rule at the haunted house for polite guests.", family: true },
+    { text: "The worst thing to put in a time capsule.", family: true },
+    { text: "What the pirate yelled at the vending machine.", family: true },
+    { text: "A dumb idea for a new emoji.", family: true },
+    { text: "What the robot butler does when nobody is home.", family: true },
+    { text: "A really bad name for a bakery.", family: true },
+    { text: "Something you'd find in a dragon's junk drawer.", family: true },
+    { text: "The worst thing to hear from a hot-air balloon pilot.", family: true },
+    { text: "What the lifeguard is really watching.", family: true },
+    { text: "A weird thing to collect.", family: true },
+    { text: "The worst item to ride like a skateboard.", family: true },
+    { text: "How the alien described Earth in their review.", family: true },
+    { text: "A terrible thing to say to a very large bear.", family: true },
+    { text: "What's under the couch that nobody dares to check.", family: true },
+    { text: "The worst thing to sneeze out.", family: true },
+    { text: "A slogan for a very lazy superhero.", family: true },
+    { text: "The real name of the Loch Ness monster's lawyer.", family: true },
+    { text: "What the cow said to the farmer at dawn.", family: true },
+    { text: "A nickname you do NOT want your boss to give you.", family: true },
+    { text: "A bad thing to find in your shoe.", family: true },
+    { text: "Something grandpa says that makes everyone leave the room.", family: true },
+    { text: "The most dramatic way to eat a banana.", family: true },
+    { text: "A weird side effect of a very cheap sneeze.", family: true },
+    { text: "What the kids' choir sings when the teacher leaves.", family: true },
+    { text: "A terrible reason to call the fire department.", family: true },
+    { text: "What you'd name a pirate who is scared of water.", family: true },
+    { text: "The worst part about being a unicorn.", family: true },
+    { text: "A message in a bottle that nobody wanted.", family: true },
+    { text: "A terrible first line for a love letter.", family: true },
+    { text: "What the wise old turtle would never explain.", family: true },
+    { text: "A rejected Halloween costume.", family: true },
+    { text: "The one thing the farmer forgot at the market.", family: true },
+    { text: "Why the snowman needs therapy.", family: true },
+    { text: "What your shadow does when you're not looking.", family: true },
+    { text: "The worst thing to put on a pizza.", family: true },
+    { text: "A new use for an old trampoline.", family: true },
+    { text: "A secret the mailman knows about your neighborhood.", family: true },
+    { text: "What a cactus would say in a group hug.", family: true },
+    { text: "The title of the worst movie ever made about a sock.", family: true },
+    { text: "The last thing anyone wants to hear from the dentist.", family: true },
+    { text: "A name for a perfume made from regret.", family: true },
+    { text: "The reason the sandwich was arrested.", family: true },
+    { text: "A thing a wizard should never microwave.", family: true },
+    { text: "A word you should never say to a bee.", family: true },
+    { text: "What the principal announces at 8 a.m.", family: true },
+    { text: "A terrible stage name for a magician.", family: true },
+    { text: "The meanest thing a bird could tweet.", family: true },
+    { text: "What's actually in the 'special sauce'.", family: true },
+    { text: "A bad thing to be allergic to at a birthday party.", family: true },
+    { text: "The most awkward thing to hear through a thin hotel wall.", family: false },
+    { text: "A terrible pickup line at a funeral.", family: false },
+    { text: "What your browser history is hoping nobody asks about.", family: false },
+    { text: "A bad thing to say during a first date.", family: false },
+    { text: "The real reason Santa drinks on Christmas Eve.", family: false },
+    { text: "What the bartender is thinking when you order a sad drink.", family: false },
+    { text: "A rejected name for an adult-themed board game.", family: false },
+    { text: "The worst thing to say at the end of a toast.", family: false },
+    { text: "What your inner voice screams at the gym.", family: false },
+    { text: "A shameful thing to confess in an elevator.", family: false },
+    { text: "The worst possible tattoo to get on a dare.", family: false },
+    { text: "What the walls of a college dorm have seen.", family: false },
+    { text: "A bad thing to find in your partner's coat pocket.", family: false },
+    { text: "Something you should never text your boss at 2 a.m.", family: false },
+    { text: "An awful name for a very serious dating app.", family: false },
+];
+const BURN_FALL_A = ["I froze up and said nothing.", "The void.", "A suspiciously warm potato.", "Mumbling, mostly.", "No comment, my lawyer is a goose.", "Dead silence, like at a mime show."];
+const BURN_FALL_P = ["What would a confused wizard say here?", "The thing you should never say out loud.", "Finish this sentence badly.", "Why the penguin is suddenly famous.", "What's really in your grandma's purse?"];
+const bnShuffle = (a) => { const r = [...a]; for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
+const bnMult = (r) => r === 1 ? 1 : r === 2 ? 2 : 4;
+const bnConfetti = (n = 36) => { try { const cols = ['#facc15', '#f472b6', '#22d3ee', '#4ade80', '#fb923c', '#a78bfa']; for (let i = 0; i < n; i++) { const d = document.createElement('div'); d.className = 'bn-conf'; d.style.left = Math.random() * 100 + 'vw'; d.style.background = cols[i % cols.length]; d.style.animationDelay = Math.random() * .8 + 's'; d.style.animationDuration = 2.2 + Math.random() * 1.6 + 's'; document.body.appendChild(d); setTimeout(() => d.remove(), 4800); } } catch (e) { } };
+const bnLightning = () => { try { const d = document.createElement('div'); d.className = 'bn-lightning'; document.body.appendChild(d); setTimeout(() => d.remove(), 1000); } catch (e) { } };
+const BnFlames = ({ n = 7 }) => React.createElement('div', { style: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%', pointerEvents: 'none', overflow: 'visible' } },
+    Array.from({ length: n }, (_, i) => React.createElement('div', { key: 'f' + i, className: 'bn-fl', style: { left: (i * (100 / n) + 2) + '%', animationDelay: (i % 3) * .18 + 's', transform: 'scale(' + (0.8 + (i % 3) * .3) + ')' } })),
+    Array.from({ length: 8 }, (_, i) => React.createElement('div', { key: 'e' + i, className: 'bn-ember', style: { left: (8 + i * 11) + '%', '--dx': ((i % 2 ? 1 : -1) * (10 + i * 4)) + 'px', animationDelay: (i * .17) + 's' } })));
+/* ---------- phone side ---------- */
+const BurnClient = () => {
+    const h = React.createElement, [s, setS] = useState(null), [fin, setFin] = useState({});
+    const uid = (() => { try { return localStorage.getItem('blersjda_uid'); } catch (e) { return ''; } })();
+    const send = (o) => { try { window.__bConn && window.__bConn.send({ type: 'B_SUB', userId: uid, ...o }); } catch (e) { } };
+    const av2 = useMemo(() => [generateAvatar(), generateAvatar()], []);
+    useEffect(() => {
+        const f = (e) => {
+            const d = e.detail || {}, ty = d.type;
+            if (typeof ty === 'string' && ty.startsWith('B_')) {
+                const dl = Date.now() + (d.t || 0) * 1000 - 400;
+                if (ty === 'B_WRITE') setS({ m: 'write', ...d, dl }); else if (ty === 'B_BURN') setS({ m: 'burn', ...d, dl }); else if (ty === 'B_NEW') setS({ m: 'newp', ...d, dl });
+                else if (ty === 'B_VOTE') setS({ m: 'vote', ...d, dl }); else if (ty === 'B_WAIT') setS({ m: 'wait', ...d }); else if (ty === 'B_RES') { setS({ m: 'res', ...d }); if (d.me && d.me.delta > 0) bnConfetti(24); }
+                else if (ty === 'B_RANK') setS({ m: 'rank', ...d }); else if (ty === 'B_END') setS({ m: 'end', ...d });
+            } else if (ty === 'STATE_WAITING' || ty === 'KICKED' || ty === 'LOBBY_JOINED') setS(null);
+        };
+        window.addEventListener('bl-host-msg', f); return () => window.removeEventListener('bl-host-msg', f);
+    }, []);
+    if (!s) return null;
+    const box = { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 16, textAlign: 'center', width: '100%', maxWidth: 520, margin: '0 auto' };
+    const head = (t, c) => h('h2', { style: { ...sFont, fontSize: 30, color: c || '#f472b6', letterSpacing: '.06em' } }, t);
+    const wait = (msg, arena) => h('div', { style: { ...box, justifyContent: 'center' } }, arena ? h(React.Fragment, null, h('h2', { style: { ...sFont, fontSize: 34, color: '#ef4444', letterSpacing: '.1em' } }, 'ANSWERS IN!'), h('div', { style: { width: '100%', height: 200 } }, h(BattleView, { avatars: av2 }))) : h('div', { style: { fontSize: 54 } }, Ic('party', 64)), h('p', { style: { fontWeight: 800, color: '#c4b5fd', fontSize: 18 } }, msg || 'Look at the big screen!'));
+    const Timer = ({ dl, tot }) => { const left = useLeft(dl); return h(STimer, { left, total: tot }); };
+    let body = null;
+    if (s.m === 'wait') body = wait(s.msg, s.bt);
+    else if (s.m === 'write') body = h(BnWrite, { key: s.tid, s, send, wait, Timer, box, head });
+    else if (s.m === 'burn') { const d = fin['b' + s.tid]; body = d ? wait('Burn locked in. Waiting for the others…', false) : h(BnBurn, { key: s.tid, s, send, done: () => setFin(x => ({ ...x, ['b' + s.tid]: 1 })), Timer, box, head }); }
+    else if (s.m === 'newp') { const d = fin['n' + s.tid]; body = d ? wait('Prompt submitted! Waiting…', false) : h(BnNew, { key: s.tid, s, send, done: () => setFin(x => ({ ...x, ['n' + s.tid]: 1 })), Timer, box, head }); }
+    else if (s.m === 'vote') { const d = fin['v' + s.tid]; body = d ? wait('Votes in! Watch the big screen.', false) : h(BnVote, { key: s.tid, s, send, done: () => setFin(x => ({ ...x, ['v' + s.tid]: 1 })), Timer, box, head }); }
+    else if (s.m === 'res') body = h('div', { style: box }, head(s.title || 'RESULTS', '#facc15'), (s.top || []).map((e, i) => h('div', { key: i, className: 'bn-card bn-rise', style: { width: '100%', background: i === 0 ? 'linear-gradient(135deg,#854d0e,#a16207)' : 'rgba(255,255,255,.08)', border: '2px solid ' + (i === 0 ? '#facc15' : '#94a3b8'), borderRadius: 16, padding: 12, animationDelay: (i * .2) + 's' } }, h('div', { style: { fontWeight: 900, color: i === 0 ? '#fef08a' : '#e2e8f0', fontSize: 13 } }, (i === 0 ? '1ST' : '2ND') + ' PLACE'), h('div', { style: { fontWeight: 800, fontSize: 16, color: '#fbcfe8' } }, e.p), h('div', { style: { fontWeight: 900, fontSize: 20 } }, '"' + e.x + '"'), h('div', { style: { fontSize: 12, color: '#a5f3fc', fontWeight: 700 } }, 'Prompt: ' + e.cn + ' · Answer: ' + e.an))),
+        s.me && h('div', { style: { width: '100%', background: 'rgba(255,255,255,.08)', borderRadius: 16, padding: 12, border: '1px solid #fff3' } }, h('div', { style: { fontSize: 32, fontWeight: 900, color: s.me.delta >= 0 ? '#4ade80' : '#f87171' } }, (s.me.delta >= 0 ? '+' : '') + s.me.delta), (s.me.parts || []).map((p, i) => h('div', { key: i, style: { fontSize: 13, fontWeight: 700, color: p.v >= 0 ? '#bbf7d0' : '#fecaca' } }, p.t + ': ' + (p.v >= 0 ? '+' : '') + p.v))));
+    else if (s.m === 'rank') body = h('div', { style: box }, head(s.title || 'LEADERBOARD', '#facc15'), h(BnBoard, { all: s.all, me: uid }), h('div', { style: { color: '#a5f3fc', fontWeight: 800 } }, 'Look at the big screen!'));
+    else if (s.m === 'end') body = h('div', { style: box }, h('div', { style: { fontSize: 56 } }, Ic(s.rank === 1 ? 'crown' : 'trophy', 64)), head('#' + s.rank + ' · ' + s.score + ' pts', '#fde68a'), h(BnBoard, { all: s.all, me: uid, stats: true }),
+        s.mine && h('div', { style: { width: '100%', background: 'rgba(255,255,255,.08)', borderRadius: 16, padding: 12, textAlign: 'left', fontWeight: 700, fontSize: 15, lineHeight: 1.7 } }, h('div', { style: { fontWeight: 900, color: '#f9a8d4', letterSpacing: '.1em' } }, 'YOUR STATS'), [['Answers written', s.mine.w], ['Times burned', s.mine.bn], ['Answers kept', s.mine.kp], ['Prompts created', s.mine.mk], ['1st-place hits', s.mine.p1], ['2nd-place hits', s.mine.p2], ['Points gained', s.mine.gain], ['Points lost to burns', s.mine.lost]].map(([a, b]) => h('div', { key: a, style: { display: 'flex', justifyContent: 'space-between' } }, h('span', null, a), h('b', null, b)))),
+        (s.hon || []).length > 0 && h('div', { style: { width: '100%', display: 'flex', flexDirection: 'column', gap: 8 } }, h('div', { style: { fontWeight: 900, color: '#f9a8d4', letterSpacing: '.1em' } }, 'HONORS'), s.hon.map((x, i) => h('div', { key: i, style: { background: 'rgba(250,204,21,.12)', border: '2px solid #facc15', borderRadius: 12, padding: 8, fontWeight: 800 } }, x))));
+    return ReactDOM.createPortal(h('div', { className: 's-ovl', style: { position: 'fixed', inset: 0, zIndex: 60, overflowY: 'auto', overflowX: 'hidden', background: 'radial-gradient(circle at 50% 0%,#4a1042 0%,#140a29 70%)', color: '#fff', WebkitOverflowScrolling: 'touch' } }, body), document.body);
+};
+const BnBoard = ({ all, me, stats }) => { const h = React.createElement; return h('div', { style: { width: '100%', display: 'flex', flexDirection: 'column', gap: 6 } }, (all || []).map((p, i) => h('div', { key: p.userId, style: { display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 12, background: p.userId === me ? 'rgba(236,72,153,.35)' : 'rgba(255,255,255,.07)', border: i === 0 ? '2px solid #facc15' : '1px solid #fff2', fontWeight: 800 } }, h('span', { style: { width: 24, color: i === 0 ? '#facc15' : '#c084fc' } }, i + 1), h(MonsterAvatar, { attributes: p.avatar, size: 34 }), h('span', { style: { flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, p.name), p.delta ? h('span', { style: { fontSize: 12, color: p.delta > 0 ? '#4ade80' : '#f87171' } }, (p.delta > 0 ? '+' : '') + p.delta) : null, h('span', { style: { color: '#67e8f9' } }, p.score)))); };
+const BnWrite = ({ s, send, wait, Timer, box, head }) => {
+    const h = React.createElement, [i, setI] = useState(0), [t, setT] = useState(''), [done, setDone] = useState(false);
+    if (done) return wait('Answers submitted!', true);
+    const go = () => { const x = cleanAnswer(t); if (!x) return; send({ k: 'a', tid: s.tid, i, x }); if (i === 0) { setI(1); setT(''); } else setDone(true); };
+    return h('div', { style: box }, h(Timer, { dl: s.dl, tot: s.tot }), head('ROUND ' + s.n + (s.mult > 1 ? ' · x' + s.mult : ''), '#22d3ee'), h('div', { style: { fontSize: 12, fontWeight: 900, letterSpacing: '.1em', color: '#fda4af' } }, 'PROMPT ' + (i + 1) + ' OF 2 · BE WITTY'),
+        h('div', { className: 'bn-card', style: { width: '100%', background: 'rgba(255,255,255,.08)', borderRadius: 16, padding: 16, fontWeight: 900, fontSize: 21, color: '#e9d5ff', lineHeight: 1.25 } }, s.prompts[i]),
+        h('textarea', { key: 'ta' + i, autoFocus: true, value: t, maxLength: 300, rows: 3, placeholder: 'Your wittiest answer…', onChange: e => setT(gClamp(e.target.value, 100)), onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); go(); } }, style: { width: '100%', borderRadius: 14, padding: 12, background: 'rgba(0,0,0,.45)', border: '2px solid #a855f7', color: '#fff', fontSize: 18, fontWeight: 700 } }),
+        h('div', { style: { fontFamily: 'monospace', fontWeight: 800, color: gLen(t) >= 90 ? '#f87171' : '#a78bfa' } }, gLen(t) + '/100'), h('button', { onClick: go, disabled: !cleanAnswer(t), style: sBtn('#ec4899', { width: '100%', minHeight: 56, fontSize: 20, opacity: cleanAnswer(t) ? 1 : .5 }) }, 'Submit answer'));
+};
+const BnBurn = ({ s, send, done, Timer, box, head }) => {
+    const h = React.createElement, [b, setB] = useState(null);
+    const go = () => { if (!b) return; send({ k: 'b', tid: s.tid, id: b }); done(); };
+    return h('div', { style: box }, h(Timer, { dl: s.dl, tot: s.tot }), head('BURN ONE!', '#f97316'), h('p', { style: { fontWeight: 800, color: '#fde68a' } }, 'Tap the answer to BURN. The other one you KEEP, then you write a brand new prompt for it.'),
+        s.cards.map(c => { const burn = b === c.id, keep = b && b !== c.id; return h('button', { key: c.id, onClick: () => setB(c.id), className: 'bn-card', style: { position: 'relative', width: '100%', overflow: 'hidden', textAlign: 'center', padding: '22px 14px', borderRadius: 18, fontWeight: 900, fontSize: 22, lineHeight: 1.2, color: '#fff', background: burn ? '#7c2d12' : keep ? '#14532d' : 'rgba(255,255,255,.1)', border: '3px solid ' + (burn ? '#f97316' : keep ? '#4ade80' : '#fff4'), minHeight: 96 } }, '"' + c.x + '"', burn && h(BnFlames, { n: 6 }), (burn || keep) && h('div', { style: { position: 'absolute', top: 4, right: 10, fontSize: 12, letterSpacing: '.1em', color: burn ? '#fdba74' : '#bbf7d0' } }, burn ? 'BURN' : 'KEEP')); }),
+        h('button', { onClick: go, disabled: !b, style: sBtn('#ea580c', { width: '100%', minHeight: 58, fontSize: 20, opacity: b ? 1 : .5 }) }, b ? 'Burn it!' : 'Pick one to burn'));
+};
+const BnNew = ({ s, send, done, Timer, box, head }) => {
+    const h = React.createElement, [t, setT] = useState('');
+    const go = () => { const x = cleanAnswer(t); if (!x) return; send({ k: 'p', tid: s.tid, x }); done(); };
+    return h('div', { style: box }, h(Timer, { dl: s.dl, tot: s.tot }), head('NEW PROMPT!', '#4ade80'), h('p', { style: { fontWeight: 800, color: '#fde68a' } }, 'Write a new prompt that this answer would be a hilarious reply to:'),
+        h('div', { className: 'bn-card', style: { width: '100%', background: '#14532d', border: '3px solid #4ade80', borderRadius: 18, padding: 18, fontWeight: 900, fontSize: 24 } }, '"' + s.x + '"'),
+        h('textarea', { autoFocus: true, value: t, maxLength: 300, rows: 3, placeholder: 'e.g. "The reason I wake up in the mornings."', onChange: e => setT(gClamp(e.target.value, 100)), onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); go(); } }, style: { width: '100%', borderRadius: 14, padding: 12, background: 'rgba(0,0,0,.45)', border: '2px solid #4ade80', color: '#fff', fontSize: 18, fontWeight: 700 } }),
+        h('div', { style: { fontFamily: 'monospace', fontWeight: 800, color: '#a78bfa' } }, gLen(t) + '/100'), h('button', { onClick: go, disabled: !cleanAnswer(t), style: sBtn('#16a34a', { width: '100%', minHeight: 56, fontSize: 20, opacity: cleanAnswer(t) ? 1 : .5 }) }, 'Submit prompt'));
+};
+const BnVote = ({ s, send, done, Timer, box, head }) => {
+    const h = React.createElement, [f, setF] = useState(null), [sc, setSc] = useState(null), ok = s.entries.filter(e => !e.mine), need = Math.min(2, ok.length);
+    const tap = (e) => { if (e.mine) return; if (f === e.id) { setF(null); return; } if (sc === e.id) { setSc(null); return; } if (!f) setF(e.id); else if (!sc) setSc(e.id); else setSc(e.id); };
+    const go = () => { send({ k: 'v', tid: s.tid, f, s: sc }); done(); };
+    const ready = need === 0 ? true : need === 1 ? !!f : (f && sc);
+    return h('div', { style: box }, h(Timer, { dl: s.dl, tot: s.tot }), head('VOTE!', '#facc15'), h('p', { style: { fontWeight: 800, color: '#fde68a', fontSize: 14 } }, 'Tap your FAVORITE first (gold), then your 2nd favorite (silver). You cannot pick your own.'),
+        s.entries.map(e => { const g = f === e.id, sv = sc === e.id; return h('button', { key: e.id, onClick: () => tap(e), disabled: e.mine, className: 'bn-card', style: { width: '100%', textAlign: 'left', padding: 12, borderRadius: 16, color: '#fff', background: g ? '#854d0e' : sv ? '#334155' : 'rgba(255,255,255,.08)', border: '3px solid ' + (g ? '#facc15' : sv ? '#cbd5e1' : '#fff3'), opacity: e.mine ? .35 : 1, position: 'relative' } }, h('div', { style: { fontSize: 13, fontWeight: 800, color: '#fbcfe8' } }, e.p), h('div', { style: { fontSize: 19, fontWeight: 900 } }, '"' + e.x + '"'), (g || sv || e.mine) && h('div', { style: { position: 'absolute', top: 6, right: 10, fontWeight: 900, fontSize: 12, color: g ? '#fde047' : '#e2e8f0' } }, g ? '1ST' : sv ? '2ND' : 'YOURS')); }),
+        h('button', { onClick: go, disabled: !ready, style: sBtn('#7c3aed', { width: '100%', minHeight: 58, fontSize: 20, opacity: ready ? 1 : .5, position: 'sticky', bottom: 8 }) }, 'Lock in votes'));
+};
+/* ---------- history panel ---------- */
+const BurnPanel = ({ g }) => {
+    const h = React.createElement, B = g.burn; if (!B) return null; const pn = (u) => { const p = g.players.find(x => x.userId === u); return p ? p.name : '?'; };
+    const card = { background: 'rgba(0,0,0,.4)', border: '1px solid rgba(255,255,255,.15)', borderRadius: 16, padding: 14, textAlign: 'left' };
+    return h('div', { className: 'w-full mb-12', style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+        h('h3', { className: 'text-3xl font-black text-orange-400 uppercase tracking-widest', style: { textAlign: 'center' } }, 'Burn Stats'),
+        h('div', { style: { ...card, overflowX: 'auto' } }, h('table', { style: { width: '100%', fontWeight: 700, fontSize: 14 } }, h('thead', null, h('tr', { style: { color: '#f9a8d4', textAlign: 'left' } }, ['Player', 'Pts', 'Written', 'Burned', 'Kept', 'Prompts', '1st', '2nd', 'Gain', 'Lost'].map(c => h('th', { key: c, style: { padding: '4px 8px' } }, c)))),
+            h('tbody', null, g.players.map(p => { const s = (B.stats || {})[p.userId] || {}; return h('tr', { key: p.userId, style: { borderTop: '1px solid #fff2' } }, [p.name, p.score, s.w || 0, s.bn || 0, s.kp || 0, s.mk || 0, s.p1 || 0, s.p2 || 0, s.gain || 0, s.lost || 0].map((c, i) => h('td', { key: i, style: { padding: '4px 8px' } }, c))); })))),
+        (B.honors || []).length > 0 && h('div', { style: { ...card, display: 'flex', flexWrap: 'wrap', gap: 8 } }, B.honors.map((x, i) => h('span', { key: i, style: { background: 'rgba(250,204,21,.15)', border: '1px solid #facc15', borderRadius: 99, padding: '4px 12px', fontWeight: 800 } }, x.t + ': ' + x.name))),
+        (B.rounds || []).map((r, ri) => h('div', { key: ri, style: card }, h('div', { style: { fontWeight: 900, color: '#fb923c', marginBottom: 8 } }, (r.round === 3 ? 'WHIP OF THE BLERSJ' : 'ROUND ' + r.round) + ' (x' + r.mult + ')'),
+            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } }, (r.entries || []).map((e, i) => h('div', { key: i, style: { padding: 8, borderRadius: 10, background: e.place === 1 ? 'rgba(250,204,21,.18)' : e.place === 2 ? 'rgba(148,163,184,.18)' : 'rgba(255,255,255,.05)' } }, h('div', { style: { fontSize: 13, color: '#fbcfe8', fontWeight: 800 } }, e.p), h('div', { style: { fontWeight: 900 } }, '"' + e.x + '"'), h('div', { style: { fontSize: 12, color: '#a5f3fc' } }, 'Prompt: ' + pn(e.cr) + ' · Answer: ' + pn(e.an) + ' · 1st votes ' + e.f1 + ' · 2nd votes ' + e.s2 + (e.place ? ' · place ' + e.place : '')))),
+                (r.burns || []).length > 0 && h('div', { style: { marginTop: 4, fontSize: 12, color: '#fdba74', fontWeight: 700 } }, 'Burned: ' + r.burns.map(b => pn(b.by) + ' burned ' + pn(b.au) + ' ("' + b.x + '")').join(' | '))))));
+};
+/* ---------- host ---------- */
+const BurnHost = ({ goBack, onGames }) => {
+    const h = React.createElement;
+    const [roomCode, setRoomCode] = useState(''), [players, setPlayers] = useState([]), [audience, setAudience] = useState([]), [tts, setTts] = useState(true), [fam, setFam] = useState(false);
+    const [phase, setPhase] = useState('LOBBY'), [cap, setCap] = useState(0), [info, setInfo] = useState({}), [timer, setTimer] = useState(0), [, setTick] = useState(0), [round, setRound] = useState(1), [showKick, setShowKick] = useState(false);
+    const conns = useRef({}), S = useRef({ tidc: Math.floor(Date.now() / 1000), stat: {}, sc: {}, hist: [], skip: false }), alive = useRef(true), audioRef = useRef(null), mqttRef = useRef(null);
+    S.current.players = players; S.current.cap = cap; S.current.audience = audience; S.current.tts = tts; S.current.phase = phase; S.current.fam = fam;
+    if (!audioRef.current && typeof Audio !== 'undefined') audioRef.current = new Audio('music.wav');
+    const sfx = (f) => { try { new Audio(f).play(); } catch (e) { } };
+    const speak = (t) => { try { speakText(t, S.current.tts); } catch (e) { } };
+    useEffect(() => () => { alive.current = false; const a = audioRef.current; if (a) { try { a.pause(); a.removeAttribute('src'); a.load(); } catch (e) { } } (window.__blAudios || []).forEach(x => { try { x.pause(); } catch (e) { } }); window.__blAudios = []; try { speechSynthesis.cancel(); } catch (e) { } }, []);
+    useEffect(() => { const f = (e) => { e.preventDefault(); e.returnValue = 'Leaving destroys the game!'; }; window.addEventListener('beforeunload', f); return () => window.removeEventListener('beforeunload', f); }, []);
+    useEffect(() => {
+        const a = audioRef.current; if (!a) return; let fi, track = null, vol = .5;
+        if (phase === 'LOBBY') track = 'menu.wav'; else if (['WRITE', 'BURN', 'NEWP', 'CARD', 'ANS_IN'].includes(phase)) track = round === 2 ? 'music_2.wav' : round === 3 ? 'music_3.wav' : 'music.wav'; else if (phase === 'VOTING') { track = 'voting.wav'; vol = .8; }
+        if (track) { if (!a.src.endsWith(track)) { a.src = track; } a.loop = true; if (a.paused) a.volume = 0; a.play().catch(() => { }); fi = setInterval(() => { const v = Math.min(vol, (a.volume || 0) + .05); try { a.volume = v; } catch (e) { } if (v >= vol) clearInterval(fi); }, 100); }
+        else if (a.volume > 0) { fi = setInterval(() => { const v = Math.max(0, a.volume - .1); try { a.volume = v; } catch (e) { } if (v <= 0) { clearInterval(fi); a.pause(); } }, 100); }
+        return () => clearInterval(fi);
+    }, [phase, round]);
+    useSpiderSender(['VOTING', 'RESULTS', 'ROUND_END', 'GAME_END'].includes(phase), () => Object.values(conns.current));
+    useBattleSender(() => Object.values(conns.current));
+    const send = (uid, type, payload) => { const c = conns.current[uid]; if (c && c.open) c.send({ type, ...payload }); };
+    const sendAll = (type, fn) => { const st = S.current; st.players.forEach(p => send(p.userId, type, fn(p.userId, false))); st.audience.forEach(a => send(a.userId, type, fn(a.userId, true))); };
+    const resend = (uid, aud) => {
+        const c = S.current.cur; if (!c) { send(uid, 'B_WAIT', { msg: 'Look at the big screen!' }); return; }
+        const p = c.make(uid, aud);
+        if (p) send(uid, c.type, { tid: c.tid, t: Math.max(1, Math.ceil((c.dl - Date.now()) / 1000)), tot: c.tot, ...p }); else send(uid, 'B_WAIT', { msg: c.aMsg || 'Look at the big screen!', bt: c.bt && !aud });
+    };
+    const openTask = (type, secs, make, aMsg, bt) => { const st = S.current; const tid = ++st.tidc; st.cur = { tid, type, dl: Date.now() + secs * 1000, start: Date.now(), tot: secs, make, aMsg, bt }; st.players.forEach(p => resend(p.userId, false)); st.audience.forEach(a => resend(a.userId, true)); return tid; };
+    const closeTask = (msg) => { S.current.cur = null; sendAll('B_WAIT', () => ({ msg: msg || 'Look at the big screen!' })); };
+    const stat = (u) => { const st = S.current; return st.stat[u] || (st.stat[u] = { w: 0, bn: 0, kp: 0, mk: 0, p1: 0, p2: 0, gain: 0, lost: 0, f1: 0, s2: 0, vt: 0 }); };
+    const nm = (u) => { const p = S.current.players.find(x => x.userId === u); return p ? p.name : '?'; };
+    const pav = (u) => { const p = S.current.players.find(x => x.userId === u); return p ? p.avatar : null; };
+    const addPts = (u, d) => { const st = S.current, cur = st.sc[u] || 0, nv = Math.max(0, cur + d), real = nv - cur; st.sc[u] = nv; setPlayers(prev => prev.map(p => p.userId === u ? { ...p, score: st.sc[u] } : p)); return real; };
+    const onSub = (data) => {
+        const st = S.current, c = st.cur, u = data.userId; if (!c || data.tid !== c.tid) return;
+        const isP = st.players.some(p => p.userId === u), isA = st.audience.some(a => a.userId === u);
+        if (data.k === 'a' && isP && c.type === 'B_WRITE') { const x = blCensor(cleanAnswer(data.x)); const i = data.i === 1 ? 1 : 0; if (x && st.ans[u] && !st.ans[u][i]) { st.ans[u][i] = x; BLSND.play(); } }
+        else if (data.k === 'b' && isP && c.type === 'B_BURN') { const d = st.dealt[u]; if (d && d.some(x => x.id === data.id) && !st.burn[u]) { st.burn[u] = data.id; BLSND.play(); } }
+        else if (data.k === 'p' && isP && c.type === 'B_NEW') { const x = blCensor(cleanAnswer(data.x)); if (x && !st.np[u]) { st.np[u] = x; BLSND.play(); } }
+        else if (data.k === 'v' && c.type === 'B_VOTE' && (isP || isA)) {
+            const ents = st.entries, ok = ents.filter(e => !isP || (e.cr !== u && e.an !== u)), fe = ents.find(e => e.id === data.f), se = ents.find(e => e.id === data.s);
+            const need = Math.min(2, ok.length); if (need === 0) { st.votes[u] = { f: null, s: null }; }
+            else if (fe && ok.includes(fe) && (need === 1 || (se && ok.includes(se) && se !== fe))) st.votes[u] = { f: fe.id, s: need === 2 ? se.id : null };
+        }
+        setTick(x => x + 1);
+    };
+    const handleClientMessage = (data, conn) => {
+        const t = data.type, st = S.current;
+        if (t === 'IDENT') { const uid = data.userId; if (uid && _hkp) hostDecrypt(data).then(ip => /^[0-9a-f:.]{3,45}$/i.test(ip) ? recordIdentity(ip, NAMEMAP[uid], uid) : null).then(r => { if (r) { PIDMAP[uid] = r.pid; NETMAP[uid] = r.net; } }).catch(() => { }); return; }
+        if (t === 'JOIN') {
+            const userId = data.userId, name = blCensor(cleanName(data.name)) || 'Player'; conn.metadata = { userId }; NAMEMAP[userId] = name;
+            try { hostPub().then(pk => send(userId, 'IDENT_REQ', { pk })).catch(() => { }); } catch (e) { }
+            conns.current[userId] = conn;
+            const ex = st.players.find(p => p.userId === userId);
+            if (ex) { setPlayers(prev => prev.map(p => p.userId === userId ? { ...p, name, connected: true } : p)); conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar: ex.avatar, resync: !!data.rejoin }); if (st.phase !== 'LOBBY') setTimeout(() => resend(userId, false), 700); return; }
+            if (st.phase === 'LOBBY' && !(st.cap && st.players.length >= st.cap)) {
+                const avatar = generateAvatar(st.players.map(p => p.avatar)); let fn = name; if (st.players.some(p => p.name.toLowerCase() === name.toLowerCase())) fn = name + ' ' + Math.floor(Math.random() * 100);
+                conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar }); setPlayers(prev => prev.some(p => p.userId === userId) ? prev : [...prev, { userId, name: fn, score: 0, avatar, connected: true }]); return;
+            }
+            const ea = st.audience.find(a => a.userId === userId), av = ea ? ea.avatar : generateAvatar([...st.players, ...st.audience].map(p => p.avatar));
+            conn.send({ type: 'LOBBY_JOINED', isAudience: true, avatar: av, resync: !!(ea && data.rejoin) }); if (!ea) setAudience(prev => prev.some(a => a.userId === userId) ? prev : [...prev, { userId, name, avatar: av, connected: true }]);
+            setTimeout(() => resend(userId, true), 700); return;
+        }
+        if (t === 'UPDATE_AVATAR') { setPlayers(prev => prev.map(p => p.userId === data.userId ? { ...p, avatar: data.avatar } : p)); setAudience(prev => prev.map(a => a.userId === data.userId ? { ...a, avatar: data.avatar } : a)); send(data.userId, 'AVATAR_UPDATED', { avatar: data.avatar }); return; }
+        if (t === 'B_SUB') onSub(data);
+    };
+    const hcRef = useRef(); hcRef.current = handleClientMessage;
+    useEffect(() => {
+        const code = generateCode(); setRoomCode(code); BLSND.preload();
+        const mq = mqtt.connect(MQTT_URL + '/' + code, MQTT_OPTS); mqttRef.current = mq; const mock = {};
+        mq.on('connect', () => { mq.subscribe(`blersjda/${code}/host`, () => { }); });
+        mq.on('message', (topic, message) => { try { const data = NET.dec(message); if (data && data.userId) { const u = data.userId; if (!mock[u]) mock[u] = { open: true, metadata: { userId: u }, send: (p) => publishQ(mq, `blersjda/${code}/client/${u}`, p) }; hcRef.current(data, mock[u]); } } catch (e) { console.error('host msg', e); } });
+        return () => { try { mq.end(true); } catch (e) { } };
+    }, []);
+    const kick = (id) => { send(id, 'KICKED', { msg: 'You have been kicked by the host.' }); setPlayers(prev => prev.filter(p => p.userId !== id)); setAudience(prev => prev.filter(a => a.userId !== id)); };
+    useEffect(() => { const f = (e) => { if (e.detail === 'KICKALL') Object.keys(conns.current).forEach(kick); if (e.detail === 'DEBUGSTART' && S.current.phase === 'LOBBY') startGame(); }; window.addEventListener('blersjda-host-cmd', f); return () => window.removeEventListener('blersjda-host-cmd', f); }, []);
+    /* ---- flow helpers ---- */
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const chk = () => { if (!alive.current) throw new Error('closed'); };
+    const nap = async (ms) => { S.current.skip = false; const t0 = Date.now(); while (Date.now() - t0 < ms) { await sleep(100); chk(); if (S.current.skip) break; } S.current.skip = false; };
+    const countdown = (secs, isDone) => new Promise(res => { let t = secs; setTimer(t); const w = createWorkerInterval(() => { if (!alive.current) { w.clearInterval(); return res(false); } t--; setTimer(t); setTick(x => x + 1); if (isDone()) { w.clearInterval(); return res(true); } if (t <= 0) { w.clearInterval(); res(false); } }, 1000); });
+    const card = async (title, sub, ms, say) => { chk(); setPhase('CARD'); setInfo({ title, sub }); speak(say || title); await nap(ms); chk(); };
+    const pickPrompts = (n) => { const st = S.current; let pool = BURN_PROMPTS.filter(p => (!st.fam || p.family) && !(st.usedP || []).includes(p.text)); if (pool.length < n) { st.usedP = []; pool = BURN_PROMPTS.filter(p => !st.fam || p.family); } const sorted = bnShuffle(pool).sort((a, b) => (b.family ? 1 : 0) - (a.family ? 1 : 0) + (Math.random() - .5) * 1.6); const out = sorted.slice(0, n).map(p => p.text); st.usedP = [...(st.usedP || []), ...out]; return out; };
+    const dealCards = (cards, ps) => {
+        for (let a = 0; a < 400; a++) { const pool = bnShuffle(cards), d = {}; let ok = true; ps.forEach(p => d[p.userId] = []); for (const c of pool) { const cand = ps.filter(p => p.userId !== c.au && d[p.userId].length < 2 && !d[p.userId].some(x => x.au === c.au)); if (!cand.length) { ok = false; break; } cand.sort((x, y) => d[x.userId].length - d[y.userId].length || Math.random() - .5); d[cand[0].userId].push(c); } if (ok) return d; }
+        const pool = bnShuffle(cards), d = {}; ps.forEach(p => d[p.userId] = []); pool.forEach(c => { const cand = ps.filter(p => d[p.userId].length < 2 && p.userId !== c.au); const t = (cand.length ? cand : ps.filter(p => d[p.userId].length < 2))[0] || ps[0]; d[t.userId].push(c); }); return d;
+    };
+    const startGame = async () => {
+        const st = S.current; if (st.players.length < 3 || st.phase !== 'LOBBY') return; st.sc = {}; st.stat = {}; st.hist = []; st.usedP = []; setPlayers(prev => prev.map(p => ({ ...p, score: 0 }))); st.players.forEach(p => stat(p.userId));
+        try {
+            await playRound(1); await playRound(2); await playRound(3); await endGame();
+        } catch (e) { if (String(e && e.message) !== 'closed') console.error(e); }
+    };
+    const playRound = async (r) => {
+        const st = S.current, ps = [...st.players], N = ps.length, mult = bnMult(r), P = 1000 * mult; setRound(r); st.round = r; st.burnLoss = 0;
+        await card(r === 3 ? 'WHIP OF THE BLERSJ' : 'ROUND ' + r, r === 3 ? 'Final round · points x4' : r === 2 ? 'Points are doubled!' : 'Write · Burn · Reply · Vote', 3500, r === 3 ? 'Welcome to the final round: The Whip of the Blersj!' : 'Round ' + r + '. Write your wittiest answers!');
+        /* WRITE */
+        const pool = pickPrompts(N * 2); st.assign = {}; st.ans = {}; ps.forEach((p, i) => { st.assign[p.userId] = [pool[2 * i], pool[2 * i + 1]]; st.ans[p.userId] = [null, null]; });
+        setPhase('WRITE'); setInfo({ title: 'WRITE!', sub: 'Two private prompts on your device. Be witty!' });
+        openTask('B_WRITE', 90, (u, aud) => aud ? null : (st.ans[u] && !(st.ans[u][0] && st.ans[u][1]) ? { prompts: st.assign[u], n: r, mult } : null), 'Answers submitted!', true);
+        await countdown(90, () => st.players.every(p => st.ans[p.userId] && st.ans[p.userId][0] && st.ans[p.userId][1])); chk();
+        const cards = []; ps.forEach(p => [0, 1].forEach(i => { const raw = st.ans[p.userId][i]; cards.push({ id: 'c' + cards.length, au: p.userId, p: st.assign[p.userId][i], x: raw || BURN_FALL_A[Math.floor(Math.random() * BURN_FALL_A.length)], auto: !raw }); st.stat[p.userId].w += raw ? 1 : 0; }));
+        closeTask('Answers in!'); sendAll('B_WAIT', (u, aud) => ({ msg: 'Answers in! Prepare for the burn…', bt: !aud }));
+        setPhase('ANS_IN'); speak('Answers in!'); sfx('squelchy.wav'); await nap(6500); chk();
+        /* BURN */
+        st.dealt = dealCards(cards, ps); st.burn = {}; setPhase('BURN'); setInfo({ title: 'BURN ONE!', sub: 'Each player holds two answers from others. Burn one, keep one!' }); speak('Time to burn! Choose one answer to burn and one to keep.');
+        openTask('B_BURN', 60, (u, aud) => aud || !st.dealt[u] || st.burn[u] ? null : { cards: st.dealt[u].map(c => ({ id: c.id, x: c.x })), n: r }, 'Burn locked in!');
+        await countdown(60, () => st.players.every(p => st.burn[p.userId])); chk();
+        ps.forEach(p => { if (!st.burn[p.userId]) st.burn[p.userId] = pick1(st.dealt[p.userId]).id; });
+        const kept = {}, burned = {}; ps.forEach(p => { const d = st.dealt[p.userId]; burned[p.userId] = d.find(c => c.id === st.burn[p.userId]); kept[p.userId] = d.find(c => c.id !== st.burn[p.userId]) || d[0]; stat(p.userId).kp += 0; });
+        st.kept = kept; st.np = {}; closeTask('Now write a new prompt for the kept answer!');
+        /* NEW PROMPT */
+        setPhase('NEWP'); setInfo({ title: 'NEW PROMPT!', sub: 'Write a brand new prompt for the answer you kept!' }); speak('Now write a brand new prompt for the answer you kept!');
+        openTask('B_NEW', 75, (u, aud) => aud || !kept[u] || st.np[u] ? null : { x: kept[u].x }, 'Prompt submitted!');
+        await countdown(75, () => st.players.every(p => st.np[p.userId])); chk(); closeTask();
+        const entries = bnShuffle(ps.map((p, i) => ({ id: 'e' + i, cr: p.userId, an: kept[p.userId].au, p: st.np[p.userId] || BURN_FALL_P[Math.floor(Math.random() * BURN_FALL_P.length)], x: kept[p.userId].x, kp: kept[p.userId].p, autoP: !st.np[p.userId] })));
+        entries.forEach(e => { stat(e.cr).mk += 1; stat(e.an).kp += 1; }); st.entries = entries;
+        /* BURN REVEAL */
+        setPhase('BURN_REVEAL'); const burns = [];
+        for (let i = 0; i < ps.length; i++) {
+            const p = ps[i], bc = burned[p.userId], kc = kept[p.userId], loss = 150 * mult, real = addPts(bc.au, -loss); stat(bc.au).bn += 1; stat(bc.au).lost += -real; burns.push({ by: p.userId, au: bc.au, x: bc.x, lost: -real }); chk();
+            setInfo({ by: p.userId, bc, kc, loss: -real, i: i + 1, n: ps.length, k: Math.random() }); sfx(i % 2 ? 'squelchy.wav' : 'draw.wav'); speak(nm(p.userId) + ' burns ' + nm(bc.au) + '!'); sendAll('B_WAIT', (u, aud) => ({ msg: u === p.userId ? 'You burned ' + nm(bc.au) + '!' : u === bc.au ? 'You got BURNED by ' + nm(p.userId) + '!' : 'Watch the big screen!' })); await nap(4800);
+        }
+        /* VOTE */
+        st.votes = {}; setPhase('VOTING'); setInfo({ label: (r === 3 ? 'WHIP OF THE BLERSJ' : 'ROUND ' + r) + ' · VOTE FOR YOUR FAVORITES' }); speak('Vote for your favorite, and then your second favorite. You cannot vote for your own!');
+        openTask('B_VOTE', 50, (u, aud) => st.votes[u] ? null : { entries: entries.map(e => ({ id: e.id, p: e.p, x: e.x, mine: !aud && (e.cr === u || e.an === u) })) }, 'Votes in!');
+        await countdown(50, () => st.players.every(p => st.votes[p.userId]) && true); chk(); closeTask('Counting the votes…');
+        /* SCORE */
+        entries.forEach(e => { e.f1 = 0; e.s2 = 0; }); Object.keys(st.votes).forEach(u => { const v = st.votes[u]; if (v.f) { const e = entries.find(x => x.id === v.f); if (e) e.f1++; } if (v.s) { const e = entries.find(x => x.id === v.s); if (e) e.s2++; } stat(u).vt += 1; });
+        entries.forEach(e => { e.w = e.f1 * 2 + e.s2; });
+        const sorted = [...entries].sort((a, b) => b.w - a.w || b.f1 - a.f1 || Math.random() - .5); let place = 0, prev = null, cnt = 0;
+        sorted.forEach(e => { cnt++; if (!prev || prev.w !== e.w || prev.f1 !== e.f1) place = cnt; e.place = e.w > 0 ? place : 0; prev = e; });
+        const delta = {}; ps.forEach(p => delta[p.userId] = { v: 0, parts: [] }); const add = (u, v, t) => { if (!delta[u]) return; delta[u].v += v; delta[u].parts.push({ t, v }); };
+        sorted.forEach(e => { const cp = (e.place === 1 ? P : e.place === 2 ? P / 2 : 0) + Math.round(e.w * 25 * mult), ap = (e.place === 1 ? P / 2 : e.place === 2 ? P / 4 : 0) + Math.round(e.w * 12.5 * mult); e.cp = cp; e.ap = ap; if (cp) { add(e.cr, cp, 'Prompt "' + e.p.slice(0, 28) + '"'); stat(e.cr).gain += cp; } if (ap) { add(e.an, ap, 'Answer "' + e.x.slice(0, 28) + '"'); stat(e.an).gain += ap; } if (e.place === 1) { stat(e.cr).p1++; stat(e.an).p1++; } if (e.place === 2) { stat(e.cr).p2++; stat(e.an).p2++; } });
+        ps.forEach(p => { const d = delta[p.userId]; if (d.v) addPts(p.userId, d.v); });
+        burns.forEach(b => { if (delta[b.au] && b.lost) { delta[b.au].v -= b.lost; delta[b.au].parts.push({ t: 'Burned by ' + nm(b.by), v: -b.lost }); } });
+        st.hist.push({ round: r, mult, entries: sorted.map(e => ({ id: e.id, cr: e.cr, an: e.an, p: e.p, x: e.x, kp: e.kp, f1: e.f1, s2: e.s2, place: e.place, cp: e.cp, ap: e.ap })), burns });
+        /* RESULTS */
+        const top = sorted.filter(e => e.place === 1 || e.place === 2);
+        sendAll('B_RES', (u, aud) => ({ title: 'RESULTS', top: top.slice(0, 2).map(e => ({ p: e.p, x: e.x, cn: nm(e.cr), an: nm(e.an) })), me: aud ? null : { delta: delta[u] ? delta[u].v : 0, parts: delta[u] ? delta[u].parts : [] } }));
+        const rest = sorted.filter(e => e.place > 2 || e.place === 0), second = sorted.filter(e => e.place === 2), first = sorted.filter(e => e.place === 1);
+        setPhase('RESULTS'); setInfo({ stage: 0, rest, second, first, burns, mult }); speak('The votes are in!'); await nap(3500); chk();
+        if (second.length) { setInfo({ stage: 1, rest, second, first, burns, mult }); sfx('squelchy.wav'); speak('In second place: ' + nm(second[0].cr) + ' and ' + nm(second[0].an)); await nap(5000); chk(); }
+        setInfo({ stage: 2, rest, second, first, burns, mult }); if (first.length) { sfx('victory.wav'); bnConfetti(50); bnLightning(); speak('And in first place: ' + nm(first[0].cr) + ' with ' + nm(first[0].an) + '!'); } else speak('Nobody got any votes. Wow.'); await nap(9000); chk();
+        /* ROUND LEADERBOARD */
+        const board = [...S.current.players].map(p => ({ userId: p.userId, name: p.name, avatar: p.avatar, score: st.sc[p.userId] || 0, delta: delta[p.userId] ? delta[p.userId].v : 0 })).sort((a, b) => b.score - a.score);
+        setPhase('ROUND_END'); setInfo({ title: r === 3 ? 'FINAL' : 'ROUND ' + r, board, burns, mult }); sendAll('B_RANK', (u) => ({ title: r === 3 ? 'FINAL STANDINGS' : 'AFTER ROUND ' + r, all: board })); speak(r === 3 ? 'Final standings incoming!' : 'Round ' + r + ' standings.'); await nap(r === 3 ? 7000 : 9000); chk();
+    };
+    const pick1 = (a) => a[Math.floor(Math.random() * a.length)];
+    const endGame = async () => {
+        const st = S.current, ps = [...st.players], sorted = ps.map(p => ({ ...p, score: st.sc[p.userId] || 0 })).sort((a, b) => b.score - a.score);
+        const best = (fn, minv = 1) => { let b = null, bv = minv - 1; ps.forEach(p => { const v = fn(stat(p.userId), p.userId); if (v > bv) { bv = v; b = p; } }); return b ? { name: b.name, avatar: b.avatar, userId: b.userId, v: bv } : null; };
+        const honors = [['Crispy Critter', 'Most burned', best(s => s.bn)], ['Prompt Pro', 'Most prompt points won', best(s => s.p1 * 2 + s.p2)], ['Quick Wit', 'Most winning answers', best(s => s.p1)], ['Pyromaniac', 'Burned the best answers (most 1st+2nd hits scorched)', null], ['Fireproof', 'Never got burned', (() => { const f = ps.filter(p => stat(p.userId).bn === 0); return f.length && f.length < ps.length ? { name: f[0].name, avatar: f[0].avatar, userId: f[0].userId, v: 0 } : null; })()], ['Comeback Kid', 'Lost the most points but kept going', best(s => s.lost, 100)], ['Point Machine', 'Most points gained', best(s => s.gain, 1)]].filter(x => x[2]).map(x => ({ t: x[0], name: x[2].name, avatar: x[2].avatar, userId: x[2].userId, d: x[1] }));
+        setPhase('GAME_END'); setInfo({ sorted, honors }); speak("The game is over! Let's see who survived the burn!"); sfx('victory.wav'); bnConfetti(60);
+        const honFor = (u) => honors.filter(x => x.userId === u).map(x => x.t + ' (' + x.d + ')');
+        sendAll('B_END', (u, aud) => ({ rank: sorted.findIndex(p => p.userId === u) + 1, score: st.sc[u] || 0, all: sorted.map(p => ({ userId: p.userId, name: p.name, avatar: p.avatar, score: p.score })), mine: aud ? null : stat(u), hon: honFor(u) }));
+        try { await saveGameHistory({ mode: 'burn', date: new Date().toISOString(), players: sorted.map(p => ({ ...p, pid: PIDMAP[p.userId] || ('u:' + p.userId), net: NETMAP[p.userId] || null })), rounds: [], burn: { rounds: st.hist, stats: st.stat, honors: honors.map(x => ({ t: x.t, name: x.name })) } }); } catch (e) { console.error(e); }
+    };
+    /* ---- render ---- */
+    const st = S.current, glass = { background: 'rgba(255,255,255,.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 24 };
+    const pillS = (ok, txt) => h('div', { style: { marginTop: 6, padding: '3px 12px', borderRadius: 99, fontWeight: 800, fontSize: 13, background: ok ? '#16a34a' : 'rgba(255,255,255,.15)' } }, txt);
+    const pgrid = (f) => h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 22, justifyContent: 'center', alignItems: 'flex-end' } }, players.map(p => { const [ok, t] = f(p.userId); return h('div', { key: p.userId, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: ok ? 1 : .65, transform: ok ? 'scale(1.08)' : 'none', transition: 'all .3s' } }, h(MonsterAvatar, { attributes: p.avatar, size: 70 }), h('div', { style: { fontWeight: 800, fontSize: 14, marginTop: 4 } }, p.name), pillS(ok, t)); }));
+    const bigTimer = (c) => h('div', { style: { fontFamily: 'monospace', fontWeight: 900, fontSize: 'clamp(60px,12vw,120px)', lineHeight: 1, color: c || '#fff', textShadow: '0 4px 20px rgba(0,0,0,.6)' } }, timer);
+    const title = (t, c) => h('h2', { className: 'bouncing-title', style: { ...sFont, fontSize: 'clamp(36px,6vw,72px)', letterSpacing: '.08em', color: c || '#f472b6', margin: '0 0 6px' } }, t);
+    const board = (arr, big) => h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 760, margin: '0 auto' } }, arr.map((p, i) => h('div', { key: p.userId, className: 'bn-rise', style: { ...glass, padding: '8px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 800, fontSize: big ? 28 : 22, border: i === 0 ? '3px solid #facc15' : glass.border, animationDelay: i * .08 + 's' } }, h('div', { style: { display: 'flex', alignItems: 'center', gap: 14 } }, h('span', { style: { width: 34, color: i === 0 ? '#facc15' : '#c084fc' } }, i + 1), h(MonsterAvatar, { attributes: p.avatar, size: big && i === 0 ? 64 : 48 }), h('span', null, p.name)), h('div', { style: { display: 'flex', gap: 14, alignItems: 'center' } }, p.delta ? h('span', { style: { fontSize: '.7em', color: p.delta > 0 ? '#4ade80' : '#f87171' } }, (p.delta > 0 ? '+' : '') + p.delta) : null, h('span', { style: { color: '#67e8f9' } }, p.score)))));
+    const ecard = (e, o = {}) => h('div', { key: e.id, className: 'bn-card bn-rise ' + (o.gold ? 'bn-gold' : ''), style: { ...glass, padding: o.big ? 22 : 12, textAlign: 'center', border: '3px solid ' + (o.gold ? '#facc15' : o.silver ? '#cbd5e1' : 'rgba(255,255,255,.15)'), background: o.gold ? 'rgba(133,77,14,.55)' : glass.background, flex: o.big ? '1 1 420px' : '1 1 260px', maxWidth: o.big ? 620 : 380 } },
+        o.tag && h('div', { style: { ...sFont, fontSize: o.big ? 30 : 18, color: o.gold ? '#fde047' : '#e2e8f0', letterSpacing: '.1em' } }, o.tag),
+        h('div', { style: { fontWeight: 800, fontSize: o.big ? 24 : 16, color: '#fbcfe8', lineHeight: 1.2 } }, e.p), h('div', { style: { fontWeight: 900, fontSize: o.big ? 36 : 22, lineHeight: 1.15, margin: '6px 0' } }, '"' + e.x + '"'),
+        o.names && h('div', { style: { display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', fontWeight: 800, fontSize: o.big ? 18 : 13, color: '#a5f3fc' } }, h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6 } }, h(MonsterAvatar, { attributes: pav(e.cr), size: 30 }), 'Prompt: ' + nm(e.cr) + ' +' + (e.cp || 0)), h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6 } }, h(MonsterAvatar, { attributes: pav(e.an), size: 30 }), 'Answer: ' + nm(e.an) + ' +' + (e.ap || 0))),
+        o.votes && h('div', { style: { fontWeight: 900, color: '#facc15', fontSize: o.big ? 20 : 14 } }, e.f1 + ' first-pick' + (e.f1 === 1 ? '' : 's') + ' · ' + e.s2 + ' second-pick' + (e.s2 === 1 ? '' : 's')));
+    let body = null;
+    if (phase === 'LOBBY') body = h('div', { className: 'scale-in', style: { width: '100%' } },
+        h('h2', { style: { fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 } }, 'Join at ', h('span', { style: { color: '#f472b6' } }, 'herjiberb.github.io/Blersjda-Kit')),
+        h('div', { style: { display: 'inline-block', background: 'rgba(88,28,135,.5)', border: '3px solid #f97316', borderRadius: 28, padding: '18px 30px', marginBottom: 18, boxShadow: '0 0 40px rgba(249,115,22,.35)' } }, h('div', { style: { color: '#e9d5ff', fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase' } }, 'Room Code'), h('div', { style: { fontFamily: 'monospace', background: '#fff', color: '#000', padding: '6px 28px', borderRadius: 14, fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, letterSpacing: '.2em' } }, roomCode || '...')),
+        h('div', { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' } }, h(SDisc, { g: SGAMES.find(x => x.id === 'burn'), size: 64 }), h('b', { style: { ...sFont, fontSize: 30, letterSpacing: '.08em', color: '#fb923c' } }, 'BLERSJDA BURN')),
+        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap', alignItems: 'center' } },
+            h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'),
+            h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: fam, onChange: e => setFam(e.target.checked), style: { width: 22, height: 22, accentColor: '#22c55e' } }), 'Family Friendly'),
+            h(GameSettingsControl, { cap, setCap, min: 3, count: players.length }), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, 'Write · Burn · Reply · Vote · 3 rounds (x1, x2, Whip)')),
+        h('div', { style: { ...glass, padding: 24, minHeight: 200, marginBottom: 16 } }, h('h3', { style: { color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 14, fontSize: 22 } }, `Players (${players.length}) - Needs 3+` + (cap ? ` (cap ${cap})` : '')),
+            h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' } }, players.map(p => h('div', { key: p.userId, className: 'animate-bounce', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', animationDuration: (1.5 + Math.random() * .5) + 's' } }, h(MonsterAvatar, { attributes: p.avatar, size: 80 }), h('div', { style: { marginTop: 6, background: 'rgba(107,33,168,.8)', padding: '3px 12px', borderRadius: 99, fontWeight: 800, fontSize: 14 } }, p.name))), !players.length && h('div', { style: { color: '#c084fc', fontWeight: 800, letterSpacing: '.1em' } }, 'WAITING FOR PLAYERS…'))),
+        h('button', { onClick: startGame, disabled: players.length < 3, style: sBtn(players.length < 3 ? '#4b5563' : '#ea580c', { width: '100%', maxWidth: 440, minHeight: 72, fontSize: 24 }) }, players.length < 3 ? `Waiting for ${3 - players.length} more…` : `Start Game (${players.length} ready)`),
+        h('div', { style: { display: 'flex', gap: 24, justifyContent: 'center', marginTop: 18, flexWrap: 'wrap' } }, [['Games', () => onGames && onGames(), '#67e8f9'], ['Manage Players', () => setShowKick(true), '#f472b6'], ['Close Room', goBack, '#9ca3af']].map(([t, f, c]) => h('button', { key: t, onClick: f, style: { background: 'none', border: 'none', color: c, textDecoration: 'underline', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', fontSize: 14 } }, t))));
+    else if (phase === 'CARD') body = h('div', { className: 'scale-in', style: { padding: '8vh 0' } }, title(info.title, '#fb923c'), h('p', { style: { fontSize: 'clamp(18px,3vw,32px)', color: '#a5f3fc', fontWeight: 800 } }, info.sub));
+    else if (phase === 'WRITE') body = h('div', { className: 'scale-in', style: { width: '100%' } }, title('WRITE!', '#22d3ee'), h('p', { style: { fontSize: 22, color: '#fde68a', fontWeight: 800 } }, info.sub), bigTimer(timer <= 10 ? '#f87171' : null), h('div', { style: { ...glass, padding: 24, marginTop: 20 } }, pgrid(u => { const a = st.ans && st.ans[u] ? (st.ans[u][0] ? 1 : 0) + (st.ans[u][1] ? 1 : 0) : 0; return [a >= 2, a >= 2 ? 'DONE' : a + '/2']; })));
+    else if (phase === 'ANS_IN') body = h('div', { className: 'scale-in', style: { width: '100%', maxWidth: 900, margin: '0 auto' } }, title('ANSWERS IN!', '#ef4444'), h('div', { style: { height: 'min(50vh,420px)', width: '100%' } }, h(BattleView, { host: true, avatars: [players[0] && players[0].avatar, players[1] && players[1].avatar] })), h('p', { style: { fontSize: 22, color: '#a5f3fc', fontWeight: 800, marginTop: 10 } }, 'Prepare to burn…'));
+    else if (phase === 'BURN') body = h('div', { className: 'scale-in', style: { width: '100%' } }, title('BURN ONE!', '#f97316'), h('p', { style: { fontSize: 22, color: '#fde68a', fontWeight: 800 } }, 'Burn one answer, keep one. Then write a new prompt for it!'), bigTimer(timer <= 10 ? '#f87171' : null), h('div', { style: { ...glass, padding: 24, marginTop: 20 } }, pgrid(u => [!!(st.burn && st.burn[u]), st.burn && st.burn[u] ? 'BURNED' : 'deciding…'])));
+    else if (phase === 'NEWP') body = h('div', { className: 'scale-in', style: { width: '100%' } }, title('NEW PROMPT!', '#4ade80'), h('p', { style: { fontSize: 22, color: '#fde68a', fontWeight: 800 } }, 'Write a new prompt for the answer you kept!'), bigTimer(timer <= 10 ? '#f87171' : null), h('div', { style: { ...glass, padding: 24, marginTop: 20 } }, pgrid(u => [!!(st.np && st.np[u]), st.np && st.np[u] ? 'DONE' : 'writing…'])));
+    else if (phase === 'BURN_REVEAL') { const bc = info.bc, kc = info.kc; body = bc ? h('div', { key: info.i, className: 'scale-in', style: { width: '100%', maxWidth: 1000, margin: '0 auto' } }, h('div', { style: { fontWeight: 900, letterSpacing: '.15em', color: '#fb923c', fontSize: 20 } }, 'BURN ' + info.i + '/' + info.n),
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, fontWeight: 900, fontSize: 'clamp(22px,4vw,40px)', margin: '8px 0' } }, h(MonsterAvatar, { attributes: pav(info.by), size: 64 }), h('span', null, nm(info.by)), h('span', { style: { color: '#f97316', ...sFont } }, 'BURNS'), h(MonsterAvatar, { attributes: pav(bc.au), size: 64 }), h('span', null, nm(bc.au))),
+        h('div', { style: { display: 'flex', gap: 28, justifyContent: 'center', flexWrap: 'wrap', alignItems: 'flex-start', marginTop: 14 } },
+            h('div', { style: { position: 'relative', flex: '1 1 320px', maxWidth: 440 } }, h('div', { className: 'bn-card bn-burning', style: { ...glass, background: '#7c2d12', border: '4px solid #f97316', padding: 20 } }, h('div', { style: { fontSize: 13, color: '#fdba74', fontWeight: 800 } }, 'Answered: ' + bc.p), h('div', { style: { fontSize: 'clamp(24px,3.6vw,38px)', fontWeight: 900 } }, '"' + bc.x + '"')), h(BnFlames, { n: 9 }), h('div', { className: 'bn-stamp', style: { position: 'absolute', top: -14, right: -6, ...sFont, fontSize: 40, color: '#ef4444', background: '#fff', padding: '0 12px', borderRadius: 8, transform: 'rotate(-6deg)', animationDelay: '.6s', opacity: 0 } }, 'BURNED')),
+            h('div', { style: { flex: '1 1 320px', maxWidth: 440 } }, h('div', { className: 'bn-card', style: { ...glass, background: '#14532d', border: '4px solid #4ade80', padding: 20 } }, h('div', { style: { fontSize: 13, color: '#bbf7d0', fontWeight: 800 } }, 'KEPT'), h('div', { style: { fontSize: 'clamp(24px,3.6vw,38px)', fontWeight: 900 } }, '"' + kc.x + '"')))),
+        h('div', { style: { marginTop: 24, fontWeight: 900, fontSize: 26, color: '#f87171' } }, nm(bc.au) + ' loses ' + info.loss + ' pts'),
+        h('button', { onClick: () => { S.current.skip = true; }, style: sBtn('#4b5563', { marginTop: 14, minHeight: 40, fontSize: 13 }) }, 'Skip')) : null; }
+    else if (phase === 'VOTING') body = h('div', { className: 'scale-in', style: { width: '100%' } }, title('VOTE!', '#facc15'), h('div', { style: { fontWeight: 900, letterSpacing: '.12em', color: '#22d3ee', fontSize: 'clamp(14px,2.2vw,22px)', textTransform: 'uppercase' } }, info.label), h('p', { style: { fontWeight: 800, color: '#fde68a', fontSize: 20 } }, 'Pick your favorite, then your 2nd favorite. You can\'t pick your own!'),
+        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', margin: '14px 0' } }, (st.entries || []).map(e => ecard(e))), h('div', { style: { fontFamily: 'monospace', fontWeight: 900, fontSize: 80, lineHeight: 1, color: timer <= 5 ? '#f87171' : '#fff' } }, timer), h('div', { style: { display: 'inline-block', marginTop: 6, background: 'rgba(0,0,0,.35)', padding: '6px 22px', borderRadius: 99, fontWeight: 800, letterSpacing: '.1em' } }, 'VOTES: ' + Object.keys(st.votes || {}).length + (audience.length ? ' (audience included)' : '')));
+    else if (phase === 'RESULTS') body = h('div', { className: 'scale-in', style: { width: '100%' } }, title('RESULTS', '#facc15'),
+        info.stage >= 1 && info.second && info.second.length > 0 && h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', margin: '10px 0' } }, info.second.map(e => ecard(e, { silver: true, tag: '2ND PLACE', big: info.stage === 1, names: true, votes: true }))),
+        info.stage >= 2 && info.first && info.first.length > 0 && h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', margin: '10px 0' } }, info.first.map(e => ecard(e, { gold: true, tag: '1ST PLACE', big: true, names: true, votes: true }))),
+        info.stage >= 2 && info.first && !info.first.length && h('p', { style: { fontSize: 28, fontWeight: 900, color: '#f87171' } }, 'Nobody got any votes!'),
+        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', margin: '14px 0' } }, (info.rest || []).map(e => ecard(e, { names: info.stage >= 1, votes: true }))),
+        info.stage === 2 && (info.burns || []).length > 0 && h('div', { style: { ...glass, padding: 12, maxWidth: 900, margin: '10px auto', fontWeight: 700, fontSize: 15, color: '#fdba74' } }, h('div', { style: { fontWeight: 900, letterSpacing: '.1em', color: '#fb923c' } }, 'BURN SCARS'), info.burns.map((b, i) => h('div', { key: i }, nm(b.by) + ' burned ' + nm(b.au) + ': "' + b.x + '" (-' + b.lost + ')'))),
+        h('button', { onClick: () => { S.current.skip = true; }, style: sBtn('#4b5563', { minHeight: 40, fontSize: 13 }) }, 'Skip'));
+    else if (phase === 'ROUND_END') body = h('div', { className: 'scale-in', style: { width: '100%' } }, title(info.title + ' STANDINGS'), board(info.board || [], true), h('button', { onClick: () => { S.current.skip = true; }, style: sBtn('#4b5563', { marginTop: 14, minHeight: 40, fontSize: 13 }) }, 'Skip'));
+    else if (phase === 'GAME_END') {
+        const tags = Object.keys(st.stat || {}).map(u => ({ u, s: st.stat[u] }));
+        body = h('div', { className: 'scale-in', style: { width: '100%' } }, h('h2', { className: 'sweep-text', style: { ...sFont, fontSize: 'clamp(44px,8vw,96px)', margin: '0 0 10px' } }, 'FINAL RESULTS'), h('h3', { style: { ...sFont, fontSize: 36, color: '#facc15', margin: '10px 0 12px', letterSpacing: '.1em' } }, 'FINAL RANKS'), board(info.sorted || [], true),
+            h('h3', { style: { ...sFont, fontSize: 36, color: '#f472b6', margin: '30px 0 12px', letterSpacing: '.1em' } }, 'HONORS'),
+            h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14, maxWidth: 980, margin: '0 auto' } }, (info.honors || []).map((x, i) => h('div', { key: i, className: 'scale-in', style: { ...glass, padding: 14, border: '2px solid #facc15', animationDelay: i * .15 + 's' } }, h('div', { style: { fontWeight: 900, fontSize: 20, color: '#fde68a' } }, x.t), h('div', { style: { display: 'flex', justifyContent: 'center', margin: '6px 0' } }, h(MonsterAvatar, { attributes: x.avatar, size: 60 })), h('div', { style: { fontWeight: 900, fontSize: 18 } }, x.name), h('div', { style: { fontSize: 12, color: '#a5f3fc' } }, x.d)))),
+            h('h3', { style: { ...sFont, fontSize: 36, color: '#22d3ee', margin: '30px 0 12px', letterSpacing: '.1em' } }, 'STATS'),
+            h('div', { style: { ...glass, padding: 14, maxWidth: 980, margin: '0 auto', overflowX: 'auto' } }, h('table', { style: { width: '100%', fontWeight: 700, fontSize: 15, textAlign: 'center' } }, h('thead', null, h('tr', { style: { color: '#f9a8d4' } }, ['Player', 'Written', 'Burned', 'Kept', 'Prompts', '1st', '2nd', 'Gained', 'Lost'].map(c => h('th', { key: c, style: { padding: '4px 8px' } }, c)))), h('tbody', null, tags.map(({ u, s }) => h('tr', { key: u, style: { borderTop: '1px solid #fff2' } }, [nm(u), s.w, s.bn, s.kp, s.mk, s.p1, s.p2, s.gain, s.lost].map((c, i) => h('td', { key: i, style: { padding: '4px 8px', textAlign: i ? 'center' : 'left' } }, c))))))),
+            h('div', { style: { display: 'flex', gap: 14, justifyContent: 'center', margin: '28px 0 40px', flexWrap: 'wrap' } }, h('button', { onClick: () => window.location.reload(), style: sBtn('#2563eb', { minHeight: 64, fontSize: 22, padding: '12px 36px' }) }, 'Play Again'), h('button', { onClick: goBack, style: sBtn('#4b5563', { minHeight: 64, fontSize: 22, padding: '12px 36px' }) }, 'Main Menu')));
+    }
+    const playing = phase !== 'LOBBY' && phase !== 'GAME_END';
+    return h('div', { style: { width: '100%', maxWidth: 1100, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', position: 'relative', zIndex: 10 }, className: 'fade-in' },
+        playing && h('div', { className: 'scale-in', style: { position: 'fixed', top: 12, right: 12, zIndex: 50, background: 'rgba(88,28,135,.85)', backdropFilter: 'blur(8px)', border: '1px solid #ec4899', borderRadius: 14, padding: '8px 14px', textAlign: 'right' } }, h('div', { style: { fontSize: 11, color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase' } }, 'Join as Audience'), h('div', { style: { fontFamily: 'monospace', fontSize: 34, fontWeight: 900, letterSpacing: '.15em' } }, roomCode), audience.length > 0 && h('div', { style: { fontSize: 12, color: '#67e8f9', fontWeight: 700 } }, audience.length + ' watching')),
+        body,
+        showKick && ReactDOM.createPortal(h('div', { style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 } }, h('div', { style: { ...glass, padding: 24, width: '100%', maxWidth: 480, maxHeight: '80vh', overflowY: 'auto', border: '1px solid #ec4899', textAlign: 'left' } }, h('h3', { style: { fontSize: 26, fontWeight: 900, color: '#f472b6', marginBottom: 14, textTransform: 'uppercase' } }, 'Manage Lobby'),
+            [...players.map(p => [p, 'Player']), ...audience.map(p => [p, 'Audience'])].map(([p, k]) => h('div', { key: p.userId, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(88,28,135,.5)', padding: 10, borderRadius: 10, marginBottom: 8 } }, h('span', null, p.name + ' · ' + k), h('button', { onClick: () => kick(p.userId), style: sBtn('#dc2626', { padding: '4px 12px', minHeight: 34, fontSize: 13 }) }, 'Kick'))),
+            h('button', { onClick: () => setShowKick(false), style: sBtn('#4b5563', { width: '100%', marginTop: 10 }) }, 'Close'))), document.body));
+};
+
 const App = () => {
     const [view, setView] = useState('MENU');
     window.__blView = view;
@@ -4511,7 +5152,7 @@ const App = () => {
         React.createElement(SpiderFX, null),
         menuFx && view === 'MENU' && React.createElement(WaterfallEffect, { key: menuFx.k, type: menuFx.t }),
         view === 'MENU' && React.createElement(MainMenu, { setView: setView, game: game, openGames: () => setShowGames(true) }),
-        view === 'HOST' && React.createElement(game === 'strokes' ? StrokesHost : game === 'cap' ? CapHost : OnlineHost, { key: game, goBack: () => setView('MENU'), onGames: () => setShowGames(true) }),
+        view === 'HOST' && React.createElement(game === 'strokes' ? StrokesHost : game === 'cap' ? CapHost : game === 'burn' ? BurnHost : OnlineHost, { key: game, goBack: () => setView('MENU'), onGames: () => setShowGames(true) }),
         showGames && React.createElement(GamesMenu, { current: game, onPick: pickGame, onClose: () => setShowGames(false) }),
         view === 'JOIN' && React.createElement(OnlineClient, { goBack: () => setView('MENU') }),
         view === 'HISTORY' && React.createElement(HistoryViewer, { goBack: () => setView('MENU') })));
@@ -4827,6 +5468,7 @@ const OnlineHost = ({ goBack, onGames }) => {
         return () => window.removeEventListener('blersjda-host-cmd', handleHostCmd);
     }, []);
     useSpiderSender(['VOTING', 'REVEAL', 'ROUND_END', 'GAME_END'].includes(gameState), () => Object.values(connectionsRef.current));
+    useBattleSender(() => Object.values(connectionsRef.current));
     const broadcast = (type, payload) => {
         Object.values(connectionsRef.current).forEach(conn => {
             if (conn && conn.open)
@@ -5697,6 +6339,7 @@ const OnlineClient = ({ goBack }) => {
     };
     return (React.createElement("div", { id: "online-client-wrapper", className: "w-full max-w-md flex flex-col items-center scale-in text-center px-4 relative z-10 h-full" },
         React.createElement(StrokesClient, null),
+        React.createElement(BurnClient, null),
         'documentPictureInPicture' in window && (React.createElement("button", { onClick: enablePiP, className: "absolute top-2 right-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-50 transition-colors" }, React.createElement(React.Fragment, null, React.createElement(Ico, { n: "tv", size: 20 }), " Pop-out"))),
         clientState === 'VOTING' && (voteData === null || voteData === void 0 ? void 0 : voteData.waterfallType) && (React.createElement(WaterfallEffect, { type: voteData.waterfallType })),
         clientState === 'REVEAL' && voteData && (((voteData.p1Votes > voteData.p2Votes && (userId === voteData.p1.userId || myVotedFor === voteData.p1.userId)) ||
@@ -5768,7 +6411,7 @@ const OnlineClient = ({ goBack }) => {
         clientState === 'WAITING_BATTLE' && (React.createElement("div", { className: "w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in" },
             React.createElement("h2", { className: "text-3xl font-black text-red-500 mb-2 uppercase tracking-widest animate-pulse" }, "Answers In!"),
             React.createElement("p", { className: "text-lg text-purple-200 font-bold mb-6 text-center" }, "Prepare for absolute carnage..."),
-            React.createElement("div", { className: "w-full h-48 relative overflow-hidden rounded-xl border-4 border-red-700 bg-black/50" }, battleAvatars && React.createElement(JSBattleAnimation, { avatars: battleAvatars })))),
+            React.createElement("div", { className: "w-full h-48 relative overflow-hidden rounded-xl border-4 border-red-700 bg-black/50" }, battleAvatars && React.createElement(BattleView, { avatars: battleAvatars })))),
         clientState === 'VOTING' && voteData && voteData.answers && (React.createElement("div", { className: "w-full text-center mt-4 p-4 glass-panel rounded-3xl border-t-8 border-cyan-500" },
             React.createElement("p", { className: "text-cyan-400 font-black mb-6 uppercase tracking-widest text-lg animate-pulse" }, voteData.readOnly ? "Watch The Battle!" : "Vote Now"),
             capPrompt(voteData.prompt, voteData.img, 'v', "text-2xl font-bold mb-8 text-purple-200 leading-snug"),
