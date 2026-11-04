@@ -430,7 +430,7 @@ const NET = (() => {
 const MQTT_URL = window.BLERSJDA_SERVER + '/room';
 const MQTT_OPTS = { keepalive: 45, reconnectPeriod: 2000, connectTimeout: 8000, clean: true, resubscribe: true };
 const publishQ = (client, topic, payload) => client.publish(topic, NET.enc(payload), { qos: 0 });
-const PROMPTS = [
+const PROMPTS = [ // Most AI Generated
 { text: "A terrible name for a pet goldfish.", family: true },
 { text: "What really happens when you flush an airplane toilet.", family: true },
 { text: "A secret use for belly button fluff.", family: true },
