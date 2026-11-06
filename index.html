@@ -12,11 +12,25 @@
 <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
-<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png">
-<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="57x57" href="icons/apple-touch-icon-57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="icons/apple-touch-icon-60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="icons/apple-touch-icon-72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="icons/apple-touch-icon-76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="icons/apple-touch-icon-114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icons/apple-touch-icon-120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="icons/apple-touch-icon-144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/apple-touch-icon-167.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png">
+<link rel="icon" type="image/png" sizes="64x64" href="icons/icon-64.png">
+<link rel="icon" type="image/png" sizes="96x96" href="icons/icon-96.png">
+<link rel="icon" type="image/png" sizes="128x128" href="icons/icon-128.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="256x256" href="icons/icon-256.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <link rel="mask-icon" href="icons/favicon.svg" color="#ec4899">
-<meta name="msapplication-TileImage" content="icons/tile-150.png"><meta name="msapplication-TileColor" content="#0f0a29">
+<meta name="msapplication-TileImage" content="icons/icon-150.png"><meta name="msapplication-TileColor" content="#0f0a29">
 <script>
 /* Share target + web+blersjda: links pull a 4-char room code into ?room= so the Join screen opens ready */
 (function(){try{var q=new URLSearchParams(location.search),t=[q.get('url'),q.get('text'),q.get('title'),q.get('protocol')].join(' '),m=/room=([A-Za-z0-9]{4})/.exec(t)||/web\+blersjda:\/*([A-Za-z0-9]{4})/i.exec(t);
@@ -325,20 +339,51 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .phone-host-btn .ph-ic{font-size:2.2rem;line-height:1}
 .phone-host-btn b{display:block;font-size:1.25rem;font-weight:900;letter-spacing:.03em}
 .phone-host-btn small{display:block;font-size:.8rem;color:#a5f3fc;font-weight:600;margin-top:2px}
-.phone-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));z-index:9990;max-width:min(92vw,460px)}
+.phone-pill{position:fixed;left:50%;transform:translateX(-50%);width:min(94vw,460px);bottom:calc(10px + env(safe-area-inset-bottom));z-index:9990}
 .pp-row{display:flex;gap:8px;justify-content:center;margin-bottom:8px}.qr-ov{position:fixed;inset:0;z-index:10000;background:rgba(5,3,20,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff;text-align:center;padding:20px}.qr-ov .qr{background:#fff;padding:14px;border-radius:18px}.qr-ov b{font:900 3rem monospace;letter-spacing:.3em}
-.phone-pill span,.phone-pill button{display:block;padding:9px 16px;border-radius:999px;font-weight:800;font-size:.82rem;color:#fff;background:rgba(15,10,41,.92);border:1px solid rgba(34,211,238,.5);text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.phone-pill span,.phone-pill button{display:block;width:100%;box-sizing:border-box;padding:11px 16px;border-radius:14px;font-weight:800;font-size:.82rem;color:#fff;background:rgba(15,10,41,.92);border:1px solid rgba(34,211,238,.5);text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.5)}
 .phone-pill span.ok{border-color:#4ade80;background:rgba(6,50,30,.95)}
 .phone-pill button{background:linear-gradient(90deg,#be185d,#6d28d9);border-color:rgba(255,255,255,.4)}
-.pwa-chip{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top));z-index:9996;display:none;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:999px;background:rgba(15,10,41,.95);border:1px solid #22d3ee;color:#fff;font-weight:800;font-size:.85rem;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.pwa-chip{position:fixed;left:50%;transform:translateX(-50%);width:min(94vw,480px);box-sizing:border-box;top:calc(10px + env(safe-area-inset-top));z-index:9996;display:none;align-items:center;justify-content:space-between;gap:10px;padding:10px 10px 10px 14px;border-radius:14px;background:rgba(15,10,41,.95);border:1px solid #22d3ee;color:#fff;font-weight:800;font-size:.85rem;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .pwa-chip.on{display:flex}
-.pwa-chip button{border:0;border-radius:999px;padding:6px 12px;font-weight:900;font-size:.8rem;background:#ec4899;color:#fff}
+.pwa-chip span{flex:1;min-width:0;line-height:1.3;text-align:left}.pwa-chip button{border:0;border-radius:10px;padding:8px 14px;flex:none;font-weight:900;font-size:.8rem;background:#ec4899;color:#fff}
 .pwa-chip button.x{background:transparent;color:#aaa;padding:6px 8px}
 #wco-bar{display:none;position:fixed;z-index:9999;top:0;left:env(titlebar-area-x,0);width:env(titlebar-area-width,100%);height:env(titlebar-area-height,0px);-webkit-app-region:drag;app-region:drag}
 @media (display-mode:window-controls-overlay){#wco-bar{display:block}body{padding-top:env(titlebar-area-height,0px)}}
 @media (display-mode:standalone){body{-webkit-user-select:none;user-select:none}input,textarea{-webkit-user-select:text;user-select:text}}
 body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 @media (min-width:900px) and (pointer:fine){.phone-host-btn{max-width:420px;margin-inline:auto}}
+
+.ph-card{width:100%;max-width:520px;margin:0 auto 10px;padding:14px 14px 12px;border-radius:20px;background:linear-gradient(160deg,rgba(236,72,153,.18),rgba(34,211,238,.12));border:1px solid rgba(34,211,238,.45);text-align:center;box-sizing:border-box}
+.ph-card-top{display:flex;align-items:center;justify-content:center;gap:8px;color:#a5f3fc;font-weight:800;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+.ph-code{display:flex;justify-content:center;gap:8px;margin:12px 0;cursor:pointer}
+.ph-code i{font:900 clamp(2rem,11vw,3rem)/1 ui-monospace,monospace;font-style:normal;width:1.35em;padding:.2em 0;border-radius:12px;background:#fff;color:#0f0a29;box-shadow:0 4px 0 #c084fc}
+.ph-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ph-actions button{padding:11px 4px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(15,10,41,.7);color:#fff;font-weight:800;font-size:.85rem}
+.ph-actions button:active{background:#ec4899}
+.ph-sub{margin-top:10px;font-size:.8rem;font-weight:700;color:#86efac}
+.ph-fit [data-ph=hide]{display:none!important}
+@media (max-width:820px){
+.ph-fit{padding:0 2px 96px;font-size:15px}
+.ph-fit [data-ph=settings]{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important;padding:12px 14px!important;font-size:15px!important;text-align:left;border-radius:18px!important;margin-bottom:12px!important}
+.ph-fit [data-ph=settings] .w-px{display:none!important}
+.ph-fit [data-ph=settings] label{font-size:15px!important;gap:12px!important;padding:6px 0;min-height:36px}
+.ph-fit [data-ph=settings] input[type=checkbox]{width:22px!important;height:22px!important;flex:none}
+.ph-fit [data-ph=players]{padding:12px!important;min-height:0!important;margin-bottom:12px!important;border-radius:18px!important}
+.ph-fit [data-ph=players] h3{font-size:14px!important;margin-bottom:10px!important}
+.ph-fit [data-ph=players]>div{gap:12px!important}
+.ph-fit [data-ph=players] svg,.ph-fit [data-ph=players] canvas,.ph-fit [data-ph=players] img{width:54px!important;height:54px!important}
+.ph-fit [data-ph=players] .spinner{margin-bottom:6px!important}
+.ph-fit [data-ph=players] p{font-size:14px!important}
+.ph-fit button.h-20,.ph-fit button[style*="min-height: 72px"]{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom));z-index:5;min-height:58px!important;height:auto!important;font-size:18px!important;width:100%!important;max-width:none!important;border-radius:16px!important;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.ph-fit h2.bouncing-title,.ph-fit h2{font-size:clamp(24px,8.5vw,40px)!important;letter-spacing:.04em!important}
+.ph-fit p{font-size:15px!important}
+.ph-fit [style*="gap: 24"]{gap:14px!important}
+.ph-fit [style*="grid-template-columns"]{grid-template-columns:1fr!important}
+.ph-fit [style*="font-family: monospace"]{font-size:clamp(44px,16vw,80px)!important}
+.ph-fit img,.ph-fit canvas{max-width:100%;height:auto}
+.ph-fit .glass-panel{padding:12px!important;border-radius:16px!important}
+}
 </style>
 </head>
 <body>
@@ -3582,11 +3627,11 @@ const StrokesHost = ({ goBack, onGames }) => {
     const credit = (m) => h('div', { style: { fontSize: 14, fontWeight: 700, color: '#c4b5fd', lineHeight: 1.4 } }, h('div', null, Ic('palette', 16), ' ', nm(m.designer) || 'Auto-doodle'), h('div', null, Ic('chat', 16), ' ', nm(m.quoter) || 'Stock quote'));
     let body = null;
     if (phase === 'LOBBY') body = h('div', { className: 'scale-in', style: { width: '100%' } },
-        h('h2', { style: { fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 } }, 'Join at ', h('span', { style: { color: '#f472b6' } }, 'herjiberb.github.io/Blersjda-Kit')),
-        h('div', { style: { display: 'inline-block', background: 'rgba(88,28,135,.5)', border: '3px solid #f59e0b', borderRadius: 28, padding: '18px 30px', marginBottom: 18, boxShadow: '0 0 40px rgba(245,158,11,.3)' } }, h('div', { style: { color: '#e9d5ff', fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase' } }, 'Room Code'), h('div', { style: { fontFamily: 'monospace', background: '#fff', color: '#000', padding: '6px 28px', borderRadius: 14, fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, letterSpacing: '.2em' } }, roomCode || '...')),
+        h('h2', { 'data-ph': 'hide', style: { fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 } }, 'Join at ', h('span', { style: { color: '#f472b6' } }, 'herjiberb.github.io/Blersjda-Kit')),
+        h('div', { 'data-ph': 'hide', style: { display: 'inline-block', background: 'rgba(88,28,135,.5)', border: '3px solid #f59e0b', borderRadius: 28, padding: '18px 30px', marginBottom: 18, boxShadow: '0 0 40px rgba(245,158,11,.3)' } }, h('div', { style: { color: '#e9d5ff', fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase' } }, 'Room Code'), h('div', { style: { fontFamily: 'monospace', background: '#fff', color: '#000', padding: '6px 28px', borderRadius: 14, fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, letterSpacing: '.2em' } }, roomCode || '...')),
         h('div', { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' } }, h(SDisc, { g: SGAMES[1], size: 64 }), h('b', { style: { ...sFont, fontSize: 30, letterSpacing: '.08em', color: '#fbbf24' } }, 'BLERSJDA STROKES')),
-        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h(GameSettingsControl, { cap, setCap, min: 3, count: players.length, noBattle: true }), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
-        h('div', { style: { ...glass, padding: 24, minHeight: 200, marginBottom: 16 } }, h('h3', { style: { color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 14, fontSize: 22 } }, `Players (${players.length}) - Needs 3+` + (cap ? ` (cap ${cap})` : '')),
+        h('div', { 'data-ph': 'settings', style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap' } }, h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'), h(GameSettingsControl, { cap, setCap, min: 3, count: players.length, noBattle: true }), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, '3 draws · quotes · meme locker · streak voting · grand final')),
+        h('div', { 'data-ph': 'players', style: { ...glass, padding: 24, minHeight: 200, marginBottom: 16 } }, h('h3', { style: { color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 14, fontSize: 22 } }, `Players (${players.length}) - Needs 3+` + (cap ? ` (cap ${cap})` : '')),
             h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' } }, players.map(p => h('div', { key: p.userId, className: 'animate-bounce', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', animationDuration: (1.5 + Math.random() * .5) + 's' } }, h(MonsterAvatar, { attributes: p.avatar, size: 80 }), h('div', { style: { marginTop: 6, background: 'rgba(107,33,168,.8)', padding: '3px 12px', borderRadius: 99, fontWeight: 800, fontSize: 14 } }, p.name))), !players.length && h('div', { style: { color: '#c084fc', fontWeight: 800, letterSpacing: '.1em' } }, 'WAITING FOR PLAYERS…'))),
         h('button', { onClick: () => startGame(false), disabled: players.length < 3, style: sBtn(players.length < 3 ? '#4b5563' : '#ec4899', { width: '100%', maxWidth: 440, minHeight: 72, fontSize: 24 }) }, players.length < 3 ? `Waiting for ${3 - players.length} more…` : `Start Game (${players.length} ready)`),
         h('div', { style: { display: 'flex', gap: 24, justifyContent: 'center', marginTop: 18, flexWrap: 'wrap' } },
@@ -4326,16 +4371,16 @@ const CapHost = ({ goBack, onGames }) => {
             React.createElement("div", { className: "font-mono text-4xl text-white font-black tracking-widest" }, roomCode),
             React.createElement("div", { className: "text-xs text-cyan-300 uppercase mt-1 tracking-wider" }, "herjiberb.github.io"))),
         gameState === 'LOBBY' && (React.createElement("div", { className: "w-full scale-in" },
-            React.createElement("h2", { className: "text-4xl md:text-5xl font-black mb-4 uppercase tracking-widest text-cyan-400 drop-shadow-md" },
+            React.createElement("h2", { "data-ph": "hide", className: "text-4xl md:text-5xl font-black mb-4 uppercase tracking-widest text-cyan-400 drop-shadow-md" },
                 "Join at ",
                 React.createElement("span", { className: "text-pink-400" }, "herjiberb.github.io/Blersjda-Kit")),
             React.createElement("div", { className: "mb-4 font-black uppercase tracking-widest text-lg " + (capN === 0 ? 'text-red-400' : 'text-green-300') }, capN < 0 ? 'CAP MODE \u00b7 scanning images/ folder...' : capN === 0 ? 'CAP MODE \u00b7 no images found in images/ !' : 'CAP MODE \u00b7 ' + capN + ' images ready' + (settings.familyFriendly ? ' (' + (window.__capList || []).filter(x => !x.adult).length + ' family friendly)' : ''),
                 capN >= 0 && React.createElement("button", { onClick: () => { try { sessionStorage.removeItem('bl_cap_list'); } catch (e) { } window.__capList = null; setCapN(-1); capProbe().then(l => setCapN(l.length)); }, className: "ml-4 text-cyan-300 underline text-sm" }, "Rescan")),
-            React.createElement("div", { className: "bg-purple-900/50 border-2 border-pink-500 rounded-3xl p-8 mb-8 inline-block shadow-[0_0_40px_rgba(236,72,153,0.3)]" },
+            React.createElement("div", { "data-ph": "hide", className: "bg-purple-900/50 border-2 border-pink-500 rounded-3xl p-8 mb-8 inline-block shadow-[0_0_40px_rgba(236,72,153,0.3)]" },
                 React.createElement("p", { className: "text-2xl text-purple-200 mb-2 font-bold uppercase tracking-widest" }, "Room Code"),
                 React.createElement("div", { className: "font-mono bg-white text-black px-8 py-3 rounded-xl text-7xl tracking-[0.2em] font-black" }, roomCode || '...'),
                 React.createElement("button", { onClick: (e) => { try { navigator.clipboard.writeText(roomCode); e.currentTarget.textContent = 'Copied!'; } catch (er) { } }, className: "block mx-auto mt-4 text-cyan-300 hover:text-white underline font-bold uppercase tracking-widest text-sm" }, React.createElement(React.Fragment,null,React.createElement(Ico,{n:"clipboard",size:18})," Copy Code"))),
-            React.createElement("div", { className: "flex gap-8 mb-8 glass-panel p-6 rounded-2xl justify-center items-center text-xl font-bold" },
+            React.createElement("div", { "data-ph": "settings", className: "flex gap-8 mb-8 glass-panel p-6 rounded-2xl justify-center items-center text-xl font-bold" },
                 React.createElement("label", { className: "flex items-center gap-3 cursor-pointer hover:text-pink-300 transition-colors" },
                     React.createElement("input", { type: "checkbox", checked: settings.familyFriendly, onChange: e => setSettings(s => ({ ...s, familyFriendly: e.target.checked })), className: "w-6 h-6 accent-pink-500" }),
                     "Family Friendly Mode"),
@@ -4353,7 +4398,7 @@ const CapHost = ({ goBack, onGames }) => {
                     "Auto Progress"),
                 React.createElement("div", { className: "w-px h-8 bg-white/20" }),
                 React.createElement(GameSettingsControl, { cap: settings.cap || 0, setCap: n => setSettings(x => ({ ...x, cap: n })), min: 4, count: players.length, anon: !!settings.anonymo, setAnon: v => setSettings(x => ({ ...x, anonymo: v })) }), React.createElement(CenQuick)),
-            React.createElement("div", { className: "glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30" },
+            React.createElement("div", { "data-ph": "players", className: "glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30" },
                 React.createElement("h3", { className: "text-2xl mb-6 text-pink-300 font-bold uppercase tracking-widest" },
                     "Players (",
                     players.length,
@@ -5097,14 +5142,14 @@ const BurnHost = ({ goBack, onGames }) => {
         o.votes && h('div', { style: { fontWeight: 900, color: '#facc15', fontSize: o.big ? 20 : 14 } }, e.f1 + ' first-pick' + (e.f1 === 1 ? '' : 's') + ' · ' + e.s2 + ' second-pick' + (e.s2 === 1 ? '' : 's')));
     let body = null;
     if (phase === 'LOBBY') body = h('div', { className: 'scale-in', style: { width: '100%' } },
-        h('h2', { style: { fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 } }, 'Join at ', h('span', { style: { color: '#f472b6' } }, 'herjiberb.github.io/Blersjda-Kit')),
-        h('div', { style: { display: 'inline-block', background: 'rgba(88,28,135,.5)', border: '3px solid #f97316', borderRadius: 28, padding: '18px 30px', marginBottom: 18, boxShadow: '0 0 40px rgba(249,115,22,.35)' } }, h('div', { style: { color: '#e9d5ff', fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase' } }, 'Room Code'), h('div', { style: { fontFamily: 'monospace', background: '#fff', color: '#000', padding: '6px 28px', borderRadius: 14, fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, letterSpacing: '.2em' } }, roomCode || '...')),
+        h('h2', { 'data-ph': 'hide', style: { fontSize: 'clamp(26px,4vw,48px)', fontWeight: 900, color: '#22d3ee', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 14 } }, 'Join at ', h('span', { style: { color: '#f472b6' } }, 'herjiberb.github.io/Blersjda-Kit')),
+        h('div', { 'data-ph': 'hide', style: { display: 'inline-block', background: 'rgba(88,28,135,.5)', border: '3px solid #f97316', borderRadius: 28, padding: '18px 30px', marginBottom: 18, boxShadow: '0 0 40px rgba(249,115,22,.35)' } }, h('div', { style: { color: '#e9d5ff', fontWeight: 800, letterSpacing: '.15em', textTransform: 'uppercase' } }, 'Room Code'), h('div', { style: { fontFamily: 'monospace', background: '#fff', color: '#000', padding: '6px 28px', borderRadius: 14, fontSize: 'clamp(48px,9vw,96px)', fontWeight: 900, letterSpacing: '.2em' } }, roomCode || '...')),
         h('div', { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' } }, h(SDisc, { g: SGAMES.find(x => x.id === 'burn'), size: 64 }), h('b', { style: { ...sFont, fontSize: 30, letterSpacing: '.08em', color: '#fb923c' } }, 'BLERSJDA BURN')),
-        h('div', { style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap', alignItems: 'center' } },
+        h('div', { 'data-ph': 'settings', style: { ...glass, padding: 14, marginBottom: 16, display: 'flex', gap: 24, justifyContent: 'center', fontWeight: 800, fontSize: 18, flexWrap: 'wrap', alignItems: 'center' } },
             h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: tts, onChange: e => setTts(e.target.checked), style: { width: 22, height: 22, accentColor: '#ec4899' } }), 'Voice Announcer'),
             h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: fam, onChange: e => setFam(e.target.checked), style: { width: 22, height: 22, accentColor: '#22c55e' } }), 'Family Friendly'),
             h(GameSettingsControl, { cap, setCap, min: 3, count: players.length }), h('span', { style: { color: '#a5f3fc', fontSize: 14 } }, 'Write · Burn · Reply · Vote · 3 rounds (x1, x2, Whip)')),
-        h('div', { style: { ...glass, padding: 24, minHeight: 200, marginBottom: 16 } }, h('h3', { style: { color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 14, fontSize: 22 } }, `Players (${players.length}) - Needs 3+` + (cap ? ` (cap ${cap})` : '')),
+        h('div', { 'data-ph': 'players', style: { ...glass, padding: 24, minHeight: 200, marginBottom: 16 } }, h('h3', { style: { color: '#f9a8d4', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 14, fontSize: 22 } }, `Players (${players.length}) - Needs 3+` + (cap ? ` (cap ${cap})` : '')),
             h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' } }, players.map(p => h('div', { key: p.userId, className: 'animate-bounce', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', animationDuration: (1.5 + Math.random() * .5) + 's' } }, h(MonsterAvatar, { attributes: p.avatar, size: 80 }), h('div', { style: { marginTop: 6, background: 'rgba(107,33,168,.8)', padding: '3px 12px', borderRadius: 99, fontWeight: 800, fontSize: 14 } }, p.name))), !players.length && h('div', { style: { color: '#c084fc', fontWeight: 800, letterSpacing: '.1em' } }, 'WAITING FOR PLAYERS…'))),
         h('button', { onClick: startGame, disabled: players.length < 3, style: sBtn(players.length < 3 ? '#4b5563' : '#ea580c', { width: '100%', maxWidth: 440, minHeight: 72, fontSize: 24 }) }, players.length < 3 ? `Waiting for ${3 - players.length} more…` : `Start Game (${players.length} ready)`),
         h('div', { style: { display: 'flex', gap: 24, justifyContent: 'center', marginTop: 18, flexWrap: 'wrap' } }, [['Games', () => onGames && onGames(), '#67e8f9'], ['Manage Players', () => setShowKick(true), '#f472b6'], ['Close Room', goBack, '#9ca3af']].map(([t, f, c]) => h('button', { key: t, onClick: f, style: { background: 'none', border: 'none', color: c, textDecoration: 'underline', fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', fontSize: 14 } }, t))));
@@ -5149,6 +5194,28 @@ const BurnHost = ({ goBack, onGames }) => {
 };
 
 
+const PhoneIcon = ({ size = 28 }) => React.createElement('svg', { width: size, height: size, viewBox: '0 0 64 64', 'aria-hidden': true, style: { flex: 'none', filter: 'drop-shadow(0 0 6px rgba(34,211,238,.45))' } },
+    React.createElement('defs', null,
+        React.createElement('linearGradient', { id: 'phg', x1: 0, y1: 0, x2: 1, y2: 1 }, React.createElement('stop', { offset: 0, stopColor: '#ec4899' }), React.createElement('stop', { offset: 1, stopColor: '#8b5cf6' })),
+        React.createElement('linearGradient', { id: 'phs', x1: 0, y1: 0, x2: 0, y2: 1 }, React.createElement('stop', { offset: 0, stopColor: '#67e8f9' }), React.createElement('stop', { offset: 1, stopColor: '#3b82f6' }))),
+    React.createElement('rect', { x: 15, y: 3, width: 34, height: 58, rx: 9, fill: 'url(#phg)', stroke: '#22d3ee', strokeWidth: 2.5 }),
+    React.createElement('rect', { x: 19.5, y: 10, width: 25, height: 40, rx: 4, fill: '#0f0a29' }),
+    React.createElement('polygon', { points: '35,13 25.5,31 31,31 28,47 39,26 33.5,26', fill: 'url(#phs)' }),
+    React.createElement('rect', { x: 27, y: 5.6, width: 10, height: 2, rx: 1, fill: '#0f0a29', opacity: .55 }),
+    React.createElement('circle', { cx: 32, cy: 55.5, r: 2.3, fill: '#22d3ee' }));
+const RoomCard = ({ room, joined, name }) => {
+    const h = React.createElement, [cp, setCp] = useState(false);
+    const copy = () => { try { navigator.clipboard.writeText(room); setCp(true); setTimeout(() => setCp(false), 1500); } catch (e) { } };
+    return h('div', { className: 'ph-card' },
+        h('div', { className: 'ph-card-top' }, h(PhoneIcon, { size: 26 }), h('span', null, 'Room code \u00B7 friends join with this')),
+        h('div', { className: 'ph-code', onClick: copy }, room.split('').map((c, i) => h('i', { key: i }, c))),
+        h('div', { className: 'ph-actions' },
+            h('button', { onClick: copy }, cp ? 'Copied!' : 'Copy'),
+            h('button', { onClick: () => window.blInvite(room) }, 'Invite'),
+            h('button', { onClick: () => window.blQR(room) }, 'QR code')),
+        h('div', { className: 'ph-sub' }, joined ? 'You\u2019re in as ' + name : 'Joining as ' + name + '\u2026'));
+};
+
 const PhoneGame = ({ game, goBack, onGames }) => {
     const h = React.createElement;
     const HostC = game === 'strokes' ? StrokesHost : game === 'cap' ? CapHost : game === 'burn' ? BurnHost : OnlineHost;
@@ -5169,7 +5236,7 @@ const PhoneGame = ({ game, goBack, onGames }) => {
     if (!ready) {
         const go = () => { const n = cleanName(name); if (!n) return; try { localStorage.setItem('blersjda_name', n); } catch (e) { } setName(n); setReady(true); };
         return h('div', { className: 'max-w-md w-full flex flex-col items-center gap-5 scale-in text-center' },
-            h('div', { style: { fontSize: 64 } }, '\uD83D\uDCF1'),
+            h(PhoneIcon, { size: 84 }),
             h('h2', { className: 'text-3xl font-black text-white tracking-tight' }, 'HOST ON THIS PHONE'),
             h('p', { className: 'text-purple-200 text-sm' }, 'You host and play from one device. Friends join with the room code on their own phones. Pick your nickname:'),
             h('input', { type: 'text', autoFocus: true, placeholder: 'Nickname', maxLength: 60, value: name, onChange: e => setName(e.nativeEvent && e.nativeEvent.isComposing ? e.target.value : gClamp(e.target.value, 12)), onKeyDown: e => { if (e.key === 'Enter') go(); }, className: 'w-full p-4 rounded-2xl text-center text-2xl font-bold bg-purple-950 border-2 border-cyan-500 text-white outline-none' }),
@@ -5180,14 +5247,12 @@ const PhoneGame = ({ game, goBack, onGames }) => {
     const OFF = { position: 'fixed', left: 0, top: 0, width: '1024px', height: '768px', overflow: 'hidden', visibility: 'hidden', pointerEvents: 'none', zIndex: -1 };
     const auto = room ? { code: room, name: cleanName(name) } : null;
     return h(React.Fragment, null,
-        h('div', { key: 'host', 'aria-hidden': !showHost, style: showHost ? { width: '100%' } : OFF }, h(HostC, { goBack, onGames })),
+        !started && showHost && room && h(RoomCard, { key: 'card', room, joined, name: cleanName(name) }),
+        h('div', { key: 'host', className: 'ph-fit', 'aria-hidden': !showHost, style: showHost ? { width: '100%' } : OFF }, h(HostC, { goBack, onGames })),
         room && h('div', { key: 'client', style: showHost ? { display: 'none' } : { width: '100%', display: 'flex', justifyContent: 'center' } }, h(OnlineClient, { goBack, auto })),
         h('div', { key: 'pill', className: 'phone-pill' },
-            !started && room && h('div', { className: 'pp-row' },
-                h('button', { onClick: () => window.blInvite(room) }, '\uD83D\uDCE4 Invite'),
-                h('button', { onClick: () => window.blQR(room) }, '\u25A6 QR code')),
             !started
-                ? h('span', { className: joined ? 'ok' : '' }, joined ? '\u2705 You\u2019re in as ' + cleanName(name) + ' \u00B7 press Start when everyone has joined' : '\uD83D\uDCF1 Joining as ' + cleanName(name) + '\u2026')
+                ? h('span', { className: joined ? 'ok' : '' }, joined ? '\u2705 You\u2019re in as ' + cleanName(name) : 'Joining as ' + cleanName(name) + '\u2026')
                 : h('button', { onClick: () => setHostView(v => !v) }, hostView ? '\uD83C\uDFAE Back to my screen' : '\uD83C\uDF9B Host controls'))
     );
 };
@@ -5392,7 +5457,7 @@ const MainMenu = ({ setView, game, openGames }) => (React.createElement("div", {
     React.createElement("div", { className: "w-full space-y-8 flex flex-col relative z-10" },
         React.createElement("button", { onClick: () => setView('HOST'), className: "bg-transparent border-none shadow-none text-5xl md:text-6xl font-black text-white transition-all duration-300 hover:text-yellow-400 hover:scale-110 hover:animate-pulse tracking-tight" }, "HOST GAME"),
         React.createElement("button", { onClick: () => setView('JOIN'), className: "bg-transparent border-none shadow-none text-5xl md:text-6xl font-black text-white transition-all duration-300 hover:text-yellow-400 hover:scale-110 hover:animate-pulse tracking-tight" }, "JOIN GAME"),
-        React.createElement("button", { onClick: () => setView('PHONE'), className: "phone-host-btn" }, React.createElement("span", { className: "ph-ic" }, "\uD83D\uDCF1"), React.createElement("span", null, React.createElement("b", null, "HOST ON THIS PHONE"), React.createElement("small", null, "No big screen or computer needed")))),
+        React.createElement("button", { onClick: () => setView('PHONE'), className: "phone-host-btn" }, React.createElement("span", { className: "ph-ic" }, React.createElement(PhoneIcon, { size: 46 })), React.createElement("span", null, React.createElement("b", null, "HOST ON THIS PHONE"), React.createElement("small", null, "No big screen or computer needed")))),
     React.createElement("div", { className: "mt-12 text-sm text-purple-200 glass-panel p-5 rounded-2xl w-full slide-up-fade pointer-events-none" },
         React.createElement("p", { className: "mb-2" },
             React.createElement("strong", null, "How to play:"),
@@ -6036,14 +6101,14 @@ const OnlineHost = ({ goBack, onGames }) => {
             React.createElement("div", { className: "font-mono text-4xl text-white font-black tracking-widest" }, roomCode),
             React.createElement("div", { className: "text-xs text-cyan-300 uppercase mt-1 tracking-wider" }, "herjiberb.github.io"))),
         gameState === 'LOBBY' && (React.createElement("div", { className: "w-full scale-in" },
-            React.createElement("h2", { className: "text-4xl md:text-5xl font-black mb-4 uppercase tracking-widest text-cyan-400 drop-shadow-md" },
+            React.createElement("h2", { "data-ph": "hide", className: "text-4xl md:text-5xl font-black mb-4 uppercase tracking-widest text-cyan-400 drop-shadow-md" },
                 "Join at ",
                 React.createElement("span", { className: "text-pink-400" }, "herjiberb.github.io/Blersjda-Kit")),
-            React.createElement("div", { className: "bg-purple-900/50 border-2 border-pink-500 rounded-3xl p-8 mb-8 inline-block shadow-[0_0_40px_rgba(236,72,153,0.3)]" },
+            React.createElement("div", { "data-ph": "hide", className: "bg-purple-900/50 border-2 border-pink-500 rounded-3xl p-8 mb-8 inline-block shadow-[0_0_40px_rgba(236,72,153,0.3)]" },
                 React.createElement("p", { className: "text-2xl text-purple-200 mb-2 font-bold uppercase tracking-widest" }, "Room Code"),
                 React.createElement("div", { className: "font-mono bg-white text-black px-8 py-3 rounded-xl text-7xl tracking-[0.2em] font-black" }, roomCode || '...'),
                 React.createElement("button", { onClick: (e) => { try { navigator.clipboard.writeText(roomCode); e.currentTarget.textContent = 'Copied!'; } catch (er) { } }, className: "block mx-auto mt-4 text-cyan-300 hover:text-white underline font-bold uppercase tracking-widest text-sm" }, React.createElement(React.Fragment,null,React.createElement(Ico,{n:"clipboard",size:18})," Copy Code"))),
-            React.createElement("div", { className: "flex gap-8 mb-8 glass-panel p-6 rounded-2xl justify-center items-center text-xl font-bold" },
+            React.createElement("div", { "data-ph": "settings", className: "flex gap-8 mb-8 glass-panel p-6 rounded-2xl justify-center items-center text-xl font-bold" },
                 React.createElement("label", { className: "flex items-center gap-3 cursor-pointer hover:text-pink-300 transition-colors" },
                     React.createElement("input", { type: "checkbox", checked: settings.familyFriendly, onChange: e => setSettings(s => ({ ...s, familyFriendly: e.target.checked })), className: "w-6 h-6 accent-pink-500" }),
                     "Family Friendly Mode"),
@@ -6061,7 +6126,7 @@ const OnlineHost = ({ goBack, onGames }) => {
                     "Auto Progress"),
                 React.createElement("div", { className: "w-px h-8 bg-white/20" }),
                 React.createElement(GameSettingsControl, { cap: settings.cap || 0, setCap: n => setSettings(x => ({ ...x, cap: n })), min: 4, count: players.length, anon: !!settings.anonymo, setAnon: v => setSettings(x => ({ ...x, anonymo: v })) })),
-            React.createElement("div", { className: "glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30" },
+            React.createElement("div", { "data-ph": "players", className: "glass-panel p-8 rounded-3xl min-h-[250px] mb-8 w-full border border-purple-500/30" },
                 React.createElement("h3", { className: "text-2xl mb-6 text-pink-300 font-bold uppercase tracking-widest" },
                     "Players (",
                     players.length,
@@ -6842,6 +6907,31 @@ root.render(React.createElement(React.Fragment, null, React.createElement(App, n
     function draw() { try { new QRCode(document.getElementById('qr-box'), { text: link(code), width: 230, height: 230 }); } catch (e) { document.getElementById('qr-box').textContent = link(code); } }
     if (window.QRCode) draw(); else { var sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; sc.onload = draw; sc.onerror = function () { document.getElementById('qr-box').textContent = link(code); }; document.head.appendChild(sc); }
   };
+  window.blPwaCheck = async function () {
+    var rows = [], ok = function (t, g, d) { rows.push((g ? '\u2705 ' : '\u274C ') + t + (d ? ' \u2014 ' + d : '')); };
+    ok('Secure (HTTPS) page', window.isSecureContext, location.protocol + '//' + location.host);
+    var man = null, murl = (document.querySelector('link[rel=manifest]') || {}).href;
+    try { var r = await fetch(murl, { cache: 'no-store' }); man = await r.json(); ok('Manifest loads', r.ok, murl.replace(location.origin, '')); } catch (e) { ok('Manifest loads', false, 'not found / not valid JSON at ' + murl); }
+    if (man) {
+      ok('name + start_url + display', !!(man.name && man.start_url && /standalone|fullscreen|minimal-ui/.test(man.display)), man.display);
+      for (var sz of [192, 512]) {
+        var ic = (man.icons || []).find(function (i) { return i.sizes === sz + 'x' + sz && i.purpose === 'any'; });
+        if (!ic) { ok(sz + 'px icon in manifest', false); continue; }
+        var u = new URL(ic.src, murl).href;
+        var good = await new Promise(function (res) { var im = new Image(); im.onload = function () { res(im.naturalWidth === sz); }; im.onerror = function () { res(false); }; im.src = u; });
+        ok(sz + 'px icon loads', good, ic.src);
+      }
+    }
+    var reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
+    ok('Service worker registered', !!reg, reg ? (reg.active ? 'active' : 'installing\u2026 reload in a moment') : 'sw.js missing next to index.html?');
+    ok('Already installed / standalone', true, standalone ? 'yes (running as app)' : 'no, running in browser');
+    ok('Install prompt available', !!deferred, deferred ? 'ready' : 'Chrome has not offered it (see above, or it is already installed)');
+    var ov = document.createElement('div'); ov.className = 'qr-ov'; ov.style.alignItems = 'stretch';
+    ov.innerHTML = '<b style="font:900 1.3rem sans-serif;letter-spacing:0">Install check</b><div style="text-align:left;font-size:.95rem;line-height:1.7">' + rows.join('<br>') + '</div><button class="bl-share" style="margin:0">Close</button>';
+    document.body.appendChild(ov); ov.querySelector('button').onclick = function () { ov.remove(); };
+  };
+  if (/[?&]pwa=check/.test(location.search)) window.addEventListener('load', function () { setTimeout(window.blPwaCheck, 800); });
+  else if (!standalone && /Android|CrOS/.test(navigator.userAgent)) setTimeout(function () { if (!deferred) { try { if (localStorage.getItem('bl_install_dismiss')) return; } catch (e) { } show('Can\u2019t install? Find out why', 'Check', window.blPwaCheck, 'bl_install_dismiss'); } }, 12000);
   // Lock-screen media card helps Android keep game audio alive in the background
   try { if ('mediaSession' in navigator) navigator.mediaSession.metadata = new MediaMetadata({ title: 'Blersjda Madness', artist: 'Party game', artwork: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }] }); } catch (e) { }
   // Ask for persistent storage so Android doesn't evict the cached game
