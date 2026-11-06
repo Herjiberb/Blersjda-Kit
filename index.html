@@ -4,6 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0f0a29">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+<link rel="icon" type="image/x-icon" href="icons/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="mask-icon" href="icons/favicon.svg" color="#ec4899">
+<meta name="msapplication-TileImage" content="icons/tile-150.png"><meta name="msapplication-TileColor" content="#0f0a29">
+<script>
+/* Share target + web+blersjda: links pull a 4-char room code into ?room= so the Join screen opens ready */
+(function(){try{var q=new URLSearchParams(location.search),t=[q.get('url'),q.get('text'),q.get('title'),q.get('protocol')].join(' '),m=/room=([A-Za-z0-9]{4})/.exec(t)||/web\+blersjda:\/*([A-Za-z0-9]{4})/i.exec(t);
+if(m&&!q.get('room')){history.replaceState(null,'',location.pathname+'?room='+m[1].toUpperCase());}}catch(e){}})();
+</script>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Blersjda">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="application-name" content="Blersjda Madness">
+<meta name="description" content="The ultimate party game. Host and play from just your phone.">
 <title>Blersjda Madness</title>
 <link rel="preconnect" href="https://unpkg.com" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -295,6 +319,26 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .bl-top{position:fixed;left:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:9996;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(15,10,41,.7);color:#fff;opacity:0;pointer-events:none;transition:opacity .2s}
 .bl-top.on{opacity:.8;pointer-events:auto}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+<style id="pwa-css">
+.phone-host-btn{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px 18px;border-radius:22px;border:2px solid rgba(34,211,238,.6);background:linear-gradient(135deg,rgba(236,72,153,.28),rgba(34,211,238,.2));color:#fff;box-shadow:0 0 22px rgba(34,211,238,.25);margin-top:4px}
+.phone-host-btn .ph-ic{font-size:2.2rem;line-height:1}
+.phone-host-btn b{display:block;font-size:1.25rem;font-weight:900;letter-spacing:.03em}
+.phone-host-btn small{display:block;font-size:.8rem;color:#a5f3fc;font-weight:600;margin-top:2px}
+.phone-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));z-index:9990;max-width:min(92vw,460px)}
+.pp-row{display:flex;gap:8px;justify-content:center;margin-bottom:8px}.qr-ov{position:fixed;inset:0;z-index:10000;background:rgba(5,3,20,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff;text-align:center;padding:20px}.qr-ov .qr{background:#fff;padding:14px;border-radius:18px}.qr-ov b{font:900 3rem monospace;letter-spacing:.3em}
+.phone-pill span,.phone-pill button{display:block;padding:9px 16px;border-radius:999px;font-weight:800;font-size:.82rem;color:#fff;background:rgba(15,10,41,.92);border:1px solid rgba(34,211,238,.5);text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.phone-pill span.ok{border-color:#4ade80;background:rgba(6,50,30,.95)}
+.phone-pill button{background:linear-gradient(90deg,#be185d,#6d28d9);border-color:rgba(255,255,255,.4)}
+.pwa-chip{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top));z-index:9996;display:none;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:999px;background:rgba(15,10,41,.95);border:1px solid #22d3ee;color:#fff;font-weight:800;font-size:.85rem;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.pwa-chip.on{display:flex}
+.pwa-chip button{border:0;border-radius:999px;padding:6px 12px;font-weight:900;font-size:.8rem;background:#ec4899;color:#fff}
+.pwa-chip button.x{background:transparent;color:#aaa;padding:6px 8px}
+#wco-bar{display:none;position:fixed;z-index:9999;top:0;left:env(titlebar-area-x,0);width:env(titlebar-area-width,100%);height:env(titlebar-area-height,0px);-webkit-app-region:drag;app-region:drag}
+@media (display-mode:window-controls-overlay){#wco-bar{display:block}body{padding-top:env(titlebar-area-height,0px)}}
+@media (display-mode:standalone){body{-webkit-user-select:none;user-select:none}input,textarea{-webkit-user-select:text;user-select:text}}
+body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+@media (min-width:900px) and (pointer:fine){.phone-host-btn{max-width:420px;margin-inline:auto}}
 </style>
 </head>
 <body>
@@ -3363,7 +3407,7 @@ const StrokesHost = ({ goBack, onGames }) => {
     };
     const hcRef = useRef(); hcRef.current = handleClientMessage;
     useEffect(() => {
-        const code = generateCode(); setRoomCode(code); BLSND.preload();
+        const code = generateCode(); setRoomCode(code); window.__blRoom = code; try { window.dispatchEvent(new Event('bl-room')); } catch (e) { } BLSND.preload();
         const mq = mqtt.connect(MQTT_URL + '/' + code, MQTT_OPTS); mqttRef.current = mq; const mock = {};
         mq.on('connect', () => { mq.subscribe(`blersjda/${code}/host`, () => { }); });
         mq.on('message', (topic, message) => {
@@ -3782,7 +3826,7 @@ const CapHost = ({ goBack, onGames }) => {
     }, [players, audience, gameState, round, clashes, currentClashIndex, settings]);
     useEffect(() => {
         const code = generateCode();
-        setRoomCode(code); BLSND.preload();
+        setRoomCode(code); window.__blRoom = code; try { window.dispatchEvent(new Event('bl-room')); } catch (e) { } BLSND.preload();
         const mqttClient = mqtt.connect(MQTT_URL + '/' + code, MQTT_OPTS);
         const mockConnections = {};
         mqttClient.on('connect', () => {
@@ -4949,7 +4993,7 @@ const BurnHost = ({ goBack, onGames }) => {
     };
     const hcRef = useRef(); hcRef.current = handleClientMessage;
     useEffect(() => {
-        const code = generateCode(); setRoomCode(code); BLSND.preload();
+        const code = generateCode(); setRoomCode(code); window.__blRoom = code; try { window.dispatchEvent(new Event('bl-room')); } catch (e) { } BLSND.preload();
         const mq = mqtt.connect(MQTT_URL + '/' + code, MQTT_OPTS); mqttRef.current = mq; const mock = {};
         mq.on('connect', () => { mq.subscribe(`blersjda/${code}/host`, () => { }); });
         mq.on('message', (topic, message) => { try { const data = NET.dec(message); if (data && data.userId) { const u = data.userId; if (!mock[u]) mock[u] = { open: true, metadata: { userId: u }, send: (p) => publishQ(mq, `blersjda/${code}/client/${u}`, p) }; hcRef.current(data, mock[u]); } } catch (e) { console.error('host msg', e); } });
@@ -5104,13 +5148,62 @@ const BurnHost = ({ goBack, onGames }) => {
             h('button', { onClick: () => setShowKick(false), style: sBtn('#4b5563', { width: '100%', marginTop: 10 }) }, 'Close'))), document.body));
 };
 
+
+const PhoneGame = ({ game, goBack, onGames }) => {
+    const h = React.createElement;
+    const HostC = game === 'strokes' ? StrokesHost : game === 'cap' ? CapHost : game === 'burn' ? BurnHost : OnlineHost;
+    const [name, setName] = useState(() => { try { return gClamp(localStorage.getItem('blersjda_name') || '', 12); } catch (e) { return ''; } });
+    const [ready, setReady] = useState(() => { try { return !!cleanName(localStorage.getItem('blersjda_name') || ''); } catch (e) { return false; } });
+    const [room, setRoom] = useState(''), [joined, setJoined] = useState(false), [started, setStarted] = useState(false), [hostView, setHostView] = useState(false);
+    useEffect(() => {
+        window.__blRoom = '';
+        const onRoom = () => setRoom(window.__blRoom || '');
+        const onMsg = (e) => {
+            const t = (e.detail && e.detail.type) || '';
+            if (t === 'LOBBY_JOINED') setJoined(true);
+            if (/^(STATE_(ANSWERING|VOTING|REVEAL|LEADERBOARD)|S_(?!SUB)|B_(?!SUB)|CAP_(?!PRELOAD))/.test(t)) { setStarted(true); setHostView(false); try { navigator.vibrate && navigator.vibrate(60); } catch (er) { } }
+        };
+        window.addEventListener('bl-room', onRoom); window.addEventListener('bl-host-msg', onMsg);
+        return () => { window.removeEventListener('bl-room', onRoom); window.removeEventListener('bl-host-msg', onMsg); window.__blRoom = ''; try { localStorage.removeItem('blersjda_session'); } catch (er) { } };
+    }, []);
+    if (!ready) {
+        const go = () => { const n = cleanName(name); if (!n) return; try { localStorage.setItem('blersjda_name', n); } catch (e) { } setName(n); setReady(true); };
+        return h('div', { className: 'max-w-md w-full flex flex-col items-center gap-5 scale-in text-center' },
+            h('div', { style: { fontSize: 64 } }, '\uD83D\uDCF1'),
+            h('h2', { className: 'text-3xl font-black text-white tracking-tight' }, 'HOST ON THIS PHONE'),
+            h('p', { className: 'text-purple-200 text-sm' }, 'You host and play from one device. Friends join with the room code on their own phones. Pick your nickname:'),
+            h('input', { type: 'text', autoFocus: true, placeholder: 'Nickname', maxLength: 60, value: name, onChange: e => setName(e.nativeEvent && e.nativeEvent.isComposing ? e.target.value : gClamp(e.target.value, 12)), onKeyDown: e => { if (e.key === 'Enter') go(); }, className: 'w-full p-4 rounded-2xl text-center text-2xl font-bold bg-purple-950 border-2 border-cyan-500 text-white outline-none' }),
+            h('button', { onClick: go, disabled: !cleanName(name), className: 'w-full bg-pink-600 border-b-4 border-pink-900 text-white font-black text-2xl py-4 rounded-2xl' }, 'CREATE ROOM'),
+            h('div', { className: 'flex gap-3' }, h('button', { onClick: onGames, className: 'bg-purple-800/70 text-white font-bold px-4 py-2 rounded-xl text-sm' }, 'Change game'), h('button', { onClick: goBack, className: 'bg-transparent border border-white/30 text-white font-bold px-4 py-2 rounded-xl text-sm' }, 'Back')));
+    }
+    const showHost = !started || hostView;
+    const OFF = { position: 'fixed', left: 0, top: 0, width: '1024px', height: '768px', overflow: 'hidden', visibility: 'hidden', pointerEvents: 'none', zIndex: -1 };
+    const auto = room ? { code: room, name: cleanName(name) } : null;
+    return h(React.Fragment, null,
+        h('div', { key: 'host', 'aria-hidden': !showHost, style: showHost ? { width: '100%' } : OFF }, h(HostC, { goBack, onGames })),
+        room && h('div', { key: 'client', style: showHost ? { display: 'none' } : { width: '100%', display: 'flex', justifyContent: 'center' } }, h(OnlineClient, { goBack, auto })),
+        h('div', { key: 'pill', className: 'phone-pill' },
+            !started && room && h('div', { className: 'pp-row' },
+                h('button', { onClick: () => window.blInvite(room) }, '\uD83D\uDCE4 Invite'),
+                h('button', { onClick: () => window.blQR(room) }, '\u25A6 QR code')),
+            !started
+                ? h('span', { className: joined ? 'ok' : '' }, joined ? '\u2705 You\u2019re in as ' + cleanName(name) + ' \u00B7 press Start when everyone has joined' : '\uD83D\uDCF1 Joining as ' + cleanName(name) + '\u2026')
+                : h('button', { onClick: () => setHostView(v => !v) }, hostView ? '\uD83C\uDFAE Back to my screen' : '\uD83C\uDF9B Host controls'))
+    );
+};
+
 const App = () => {
-    const [view, setView] = useState('MENU');
+    const [view, setView] = useState(() => { try { const q = new URLSearchParams(location.search), m = q.get('mode'); if (m === 'phone') return 'PHONE'; if (m === 'host') return 'HOST'; if (m === 'join' || q.get('room')) return 'JOIN'; } catch (e) { } return 'MENU'; });
     window.__blView = view;
     const [game, setGame] = useState(() => { try { return localStorage.getItem('bl_game') || 'madness'; } catch (e) { return 'madness'; } });
     const [menuFx, setMenuFx] = useState(null);
     const [showGames, setShowGames] = useState(false);
-    const pickGame = (id) => { setShowGames(false); if (id === game) return; if (view === 'HOST' && !confirm('Switching games opens a NEW room code, so players must rejoin. Switch?')) return; try { localStorage.setItem('bl_game', id); } catch (e) { } setGame(id); };
+    const pickGame = (id) => { setShowGames(false); if (id === game) return; if ((view === 'HOST' || view === 'PHONE') && !confirm('Switching games opens a NEW room code, so players must rejoin. Switch?')) return; try { localStorage.setItem('bl_game', id); } catch (e) { } setGame(id); };
+    useEffect(() => { if (view !== 'MENU') { try { history.pushState({ bl: view }, ''); } catch (e) { } } }, [view]);
+    useEffect(() => {
+        const pop = () => { if (window.__blView !== 'MENU') { if (confirm('Leave this screen? You may drop out of the game.')) setView('MENU'); else { try { history.pushState({ bl: 1 }, ''); } catch (e) { } } } };
+        window.addEventListener('popstate', pop); return () => window.removeEventListener('popstate', pop);
+    }, []);
     useEffect(() => {
         let wakeLock = null;
         const requestWakeLock = async () => {
@@ -5176,6 +5269,7 @@ const App = () => {
         view === 'MENU' && React.createElement(MainMenu, { setView: setView, game: game, openGames: () => setShowGames(true) }),
         view === 'HOST' && React.createElement(game === 'strokes' ? StrokesHost : game === 'cap' ? CapHost : game === 'burn' ? BurnHost : OnlineHost, { key: game, goBack: () => setView('MENU'), onGames: () => setShowGames(true) }),
         showGames && React.createElement(GamesMenu, { current: game, onPick: pickGame, onClose: () => setShowGames(false) }),
+        view === 'PHONE' && React.createElement(PhoneGame, { key: game, game: game, goBack: () => setView('MENU'), onGames: () => setShowGames(true) }),
         view === 'JOIN' && React.createElement(OnlineClient, { goBack: () => setView('MENU') }),
         view === 'HISTORY' && React.createElement(HistoryViewer, { goBack: () => setView('MENU') })));
 };
@@ -5297,7 +5391,8 @@ const MainMenu = ({ setView, game, openGames }) => (React.createElement("div", {
     React.createElement("p", { className: "text-xl mb-10 text-cyan-300 font-bold tracking-widest uppercase wobble-anim" }, "The Ultimate Party Game"),
     React.createElement("div", { className: "w-full space-y-8 flex flex-col relative z-10" },
         React.createElement("button", { onClick: () => setView('HOST'), className: "bg-transparent border-none shadow-none text-5xl md:text-6xl font-black text-white transition-all duration-300 hover:text-yellow-400 hover:scale-110 hover:animate-pulse tracking-tight" }, "HOST GAME"),
-        React.createElement("button", { onClick: () => setView('JOIN'), className: "bg-transparent border-none shadow-none text-5xl md:text-6xl font-black text-white transition-all duration-300 hover:text-yellow-400 hover:scale-110 hover:animate-pulse tracking-tight" }, "JOIN GAME")),
+        React.createElement("button", { onClick: () => setView('JOIN'), className: "bg-transparent border-none shadow-none text-5xl md:text-6xl font-black text-white transition-all duration-300 hover:text-yellow-400 hover:scale-110 hover:animate-pulse tracking-tight" }, "JOIN GAME"),
+        React.createElement("button", { onClick: () => setView('PHONE'), className: "phone-host-btn" }, React.createElement("span", { className: "ph-ic" }, "\uD83D\uDCF1"), React.createElement("span", null, React.createElement("b", null, "HOST ON THIS PHONE"), React.createElement("small", null, "No big screen or computer needed")))),
     React.createElement("div", { className: "mt-12 text-sm text-purple-200 glass-panel p-5 rounded-2xl w-full slide-up-fade pointer-events-none" },
         React.createElement("p", { className: "mb-2" },
             React.createElement("strong", null, "How to play:"),
@@ -5441,7 +5536,7 @@ const OnlineHost = ({ goBack, onGames }) => {
     }, [players, audience, gameState, round, clashes, currentClashIndex, settings]);
     useEffect(() => {
         const code = generateCode();
-        setRoomCode(code); BLSND.preload();
+        setRoomCode(code); window.__blRoom = code; try { window.dispatchEvent(new Event('bl-room')); } catch (e) { } BLSND.preload();
         const mqttClient = mqtt.connect(MQTT_URL + '/' + code, MQTT_OPTS);
         const mockConnections = {};
         mqttClient.on('connect', () => {
@@ -6116,7 +6211,7 @@ const ClientWinAnimation = ({ avatar }) => {
             React.createElement("div", { className: "goo-drop", style: { background: avatar.color, left: '50%', animationDelay: '0.4s' } }),
             React.createElement("div", { className: "goo-drop", style: { background: avatar.color, left: '80%', animationDelay: '0.8s' } }))));
 };
-const OnlineClient = ({ goBack }) => {
+const OnlineClient = ({ goBack, auto }) => {
     const [isEditingAvatar, setIsEditingAvatar] = useState(false);
     const [myAvatar, setMyAvatar] = useState(null);
     const [myVotedFor, setMyVotedFor] = useState(null);
@@ -6242,6 +6337,14 @@ const OnlineClient = ({ goBack }) => {
             catch (e) { console.error("Failed to parse client inbound MQTT packet:", e); }
         });
     };
+    const autoTry = useRef(0);
+    useEffect(() => {
+        if (!auto || !auto.code || joinedRef.current) return;
+        if (joinStatus !== 'idle' && joinStatus !== 'failed') return;
+        if (autoTry.current >= 6) return;
+        const t = setTimeout(() => { autoTry.current++; autoRef.current = true; joinGame({ auto: true, code: auto.code, name: auto.name }); }, autoTry.current === 0 ? 900 : 1800);
+        return () => clearTimeout(t);
+    }, [auto && auto.code, joinStatus]);
     const savedCodeRef = useRef('');
     useEffect(() => {
         try {
@@ -6694,6 +6797,56 @@ const UIExtras = () => {
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(React.Fragment, null, React.createElement(App, null), React.createElement(UIExtras, null)));
 
+</script>
+<div id="wco-bar"></div>
+<script>
+(function () {
+  var standalone = matchMedia('(display-mode: standalone), (display-mode: window-controls-overlay), (display-mode: minimal-ui)').matches || navigator.standalone;
+  var chip = document.createElement('div'); chip.className = 'pwa-chip'; document.body.appendChild(chip);
+  function show(html, label, fn, dismissKey) {
+    chip.innerHTML = '<span>' + html + '</span><button class="go">' + label + '</button>' + (dismissKey ? '<button class="x" aria-label="Dismiss">\u2715</button>' : '');
+    chip.classList.add('on');
+    chip.querySelector('.go').onclick = function () { chip.classList.remove('on'); fn(); };
+    var x = chip.querySelector('.x'); if (x) x.onclick = function () { chip.classList.remove('on'); try { localStorage.setItem(dismissKey, '1'); } catch (e) { } };
+  }
+  var deferred = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault(); deferred = e;
+    try { if (localStorage.getItem('bl_install_dismiss')) return; } catch (er) { }
+    if (!standalone) show('\uD83D\uDCF2 Install Blersjda for the best phone experience', 'Install', function () { deferred.prompt(); deferred.userChoice.finally(function () { deferred = null; }); }, 'bl_install_dismiss');
+  });
+  window.addEventListener('appinstalled', function () { chip.classList.remove('on'); window.blToast && window.blToast('Installed! Launch it from your home screen.', { type: 'success' }); });
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        function watch(w) { w.addEventListener('statechange', function () { if (w.state === 'installed' && navigator.serviceWorker.controller) show('\u2728 Update ready', 'Reload', function () { w.postMessage('SKIP_WAITING'); }); }); }
+        if (reg.waiting && navigator.serviceWorker.controller) watch(reg.waiting);
+        reg.addEventListener('updatefound', function () { if (reg.installing) watch(reg.installing); });
+        setInterval(function () { reg.update().catch(function () { }); }, 3600e3);
+      }).catch(function () { });
+      var reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () { if (reloading) return; reloading = true; location.reload(); });
+    });
+  }
+  function link(code) { return location.origin + location.pathname + '?room=' + code; }
+  window.blInvite = function (code) {
+    var url = link(code), text = 'Join my Blersjda game! Room code ' + code;
+    if (navigator.share) navigator.share({ title: 'Blersjda Madness', text: text, url: url }).catch(function () { });
+    else { try { navigator.clipboard.writeText(text + ' ' + url); window.blToast && window.blToast('Invite copied', { type: 'success', ttl: 1800 }); } catch (e) { } }
+  };
+  window.blQR = function (code) {
+    var ov = document.createElement('div'); ov.className = 'qr-ov';
+    ov.innerHTML = '<div>Scan to join</div><div class="qr" id="qr-box" style="min-width:230px;min-height:230px"></div><b>' + code + '</b><div style="opacity:.7">or open the link and enter the code</div><button class="bl-share" style="margin:0">Close</button>';
+    document.body.appendChild(ov);
+    ov.querySelector('button').onclick = ov.onclick = function (e) { if (e.target === ov || e.target.tagName === 'BUTTON') ov.remove(); };
+    function draw() { try { new QRCode(document.getElementById('qr-box'), { text: link(code), width: 230, height: 230 }); } catch (e) { document.getElementById('qr-box').textContent = link(code); } }
+    if (window.QRCode) draw(); else { var sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; sc.onload = draw; sc.onerror = function () { document.getElementById('qr-box').textContent = link(code); }; document.head.appendChild(sc); }
+  };
+  // Lock-screen media card helps Android keep game audio alive in the background
+  try { if ('mediaSession' in navigator) navigator.mediaSession.metadata = new MediaMetadata({ title: 'Blersjda Madness', artist: 'Party game', artwork: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }] }); } catch (e) { }
+  // Ask for persistent storage so Android doesn't evict the cached game
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { }
+})();
 </script>
 </body>
 </html>
