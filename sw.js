@@ -1,6 +1,6 @@
 /* Blersjda Madness service worker: offline app shell + runtime caching.
    Multiplayer traffic (WebSocket / worker long-polling) is never touched. */
-const VERSION = 'v2';
+const VERSION = 'v4';
 const SHELL = 'bl-shell-' + VERSION;
 const RUNTIME = 'bl-runtime-' + VERSION;
 const MEDIA = 'bl-media-' + VERSION;
