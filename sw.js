@@ -1,6 +1,6 @@
 /* Blersjda Madness service worker: offline app shell + runtime caching.
    Multiplayer traffic (WebSocket / worker long-polling) is never touched. */
-const VERSION = 'v5';
+const VERSION = 'v6';
 const SHELL = 'bl-shell-' + VERSION;
 const RUNTIME = 'bl-runtime-' + VERSION;
 const MEDIA = 'bl-media-' + VERSION;
@@ -95,4 +95,13 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(staleWhileRevalidate(req, SHELL)); return;
   }
   if (/cdnjs\.cloudflare\.com|cdn\.tailwindcss\.com|unpkg\.com|fonts\.(googleapis|gstatic)\.com/.test(url.hostname)) e.respondWith(staleWhileRevalidate(req, RUNTIME));
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil((async () => {
+    const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of all) { if ('focus' in c) return c.focus(); }
+    return self.clients.openWindow('./?source=notification');
+  })());
 });

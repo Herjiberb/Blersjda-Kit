@@ -49,7 +49,9 @@ if(m&&!q.get('room')){history.replaceState(null,'',location.pathname+'?room='+m[
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
 <script>
 /* ============================================================
-   Blersjda Kit is GREAT!!!
+   >>> SET THIS AFTER YOU DEPLOY YOUR CLOUDFLARE WORKER <<<
+   Use wss:// (not https://), no trailing slash. Example:
+   window.BLERSJDA_SERVER = 'wss://blersjda-server.janedoe.workers.dev';
    ============================================================ */
 window.BLERSJDA_SERVER = 'wss://blersjda-server.bryantreitzel.workers.dev';
 </script>
@@ -5221,18 +5223,18 @@ const PhoneGame = ({ game, goBack, onGames }) => {
     const [ready, setReady] = useState(() => { try { return !!cleanName(localStorage.getItem('blersjda_name') || ''); } catch (e) { return false; } });
     const [room, setRoom] = useState(''), [joined, setJoined] = useState(false), [started, setStarted] = useState(false), [hostView, setHostView] = useState(false);
     useEffect(() => {
-        window.__blRoom = '';
         const onRoom = () => setRoom(window.__blRoom || '');
+        onRoom(); const poll = setInterval(() => { if (window.__blRoom) { onRoom(); clearInterval(poll); } }, 300);
         const onMsg = (e) => {
             const t = (e.detail && e.detail.type) || '';
             if (t === 'LOBBY_JOINED') setJoined(true);
             if (/^(STATE_(ANSWERING|VOTING|REVEAL|LEADERBOARD)|S_(?!SUB)|B_(?!SUB)|CAP_(?!PRELOAD))/.test(t)) { setStarted(true); setHostView(false); try { navigator.vibrate && navigator.vibrate(60); } catch (er) { } }
         };
         window.addEventListener('bl-room', onRoom); window.addEventListener('bl-host-msg', onMsg);
-        return () => { window.removeEventListener('bl-room', onRoom); window.removeEventListener('bl-host-msg', onMsg); window.__blRoom = ''; try { localStorage.removeItem('blersjda_session'); } catch (er) { } };
+        return () => { clearInterval(poll); window.removeEventListener('bl-room', onRoom); window.removeEventListener('bl-host-msg', onMsg); window.__blRoom = ''; try { localStorage.removeItem('blersjda_session'); } catch (er) { } };
     }, []);
     if (!ready) {
-        const go = () => { const n = cleanName(name); if (!n) return; try { localStorage.setItem('blersjda_name', n); } catch (e) { } setName(n); setReady(true); };
+        const go = () => { const n = cleanName(name); if (!n) return; try { localStorage.setItem('blersjda_name', n); } catch (e) { } try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) { } setName(n); setReady(true); };
         return h('div', { className: 'max-w-md w-full flex flex-col items-center gap-5 scale-in text-center' },
             h(PhoneIcon, { size: 84 }),
             h('h2', { className: 'text-3xl font-black text-white tracking-tight' }, 'HOST ON THIS PHONE'),
@@ -6930,6 +6932,24 @@ root.render(React.createElement(React.Fragment, null, React.createElement(App, n
   };
   if (/[?&]pwa=check/.test(location.search)) window.addEventListener('load', function () { setTimeout(window.blPwaCheck, 800); });
   else if (!standalone && /Android|CrOS/.test(navigator.userAgent)) setTimeout(function () { if (!deferred) { try { if (localStorage.getItem('bl_install_dismiss')) return; } catch (e) { } show('Can\u2019t install? Find out why', 'Check', window.blPwaCheck, 'bl_install_dismiss'); } }, 12000);
+  // ---- deeper PWA integration ----
+  document.documentElement.classList.toggle('pwa-standalone', !!standalone);
+  window.addEventListener('bl-room', function () { try { navigator.setAppBadge && navigator.setAppBadge(1); } catch (e) { } });
+  window.addEventListener('bl-host-msg', function (e) { var t = (e.detail && e.detail.type) || ''; try { if (/^STATE_(ANSWERING|VOTING)$|^S_|^B_/.test(t)) navigator.vibrate && navigator.vibrate([40, 30, 40]); } catch (er) { } });
+  function offlineChip() { if (!navigator.onLine) show('\uD83D\uDCE1 You\u2019re offline \u2014 multiplayer needs internet', 'OK', function () { }); else if (chip.querySelector('span') && /offline/.test(chip.textContent)) chip.classList.remove('on'); }
+  window.addEventListener('offline', offlineChip); window.addEventListener('online', offlineChip);
+  document.addEventListener('visibilitychange', function () {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.ready.then(function (reg) {
+      if (document.hidden) {
+        if (window.__blRoom && window.Notification && Notification.permission === 'granted')
+          reg.showNotification('Your game is live \uD83C\uDFAE', { body: 'Hosting pauses in the background. Tap to jump back in.', tag: 'bl-host', icon: 'icons/icon-192.png', badge: 'icons/monochrome-96.png', renotify: false, silent: true });
+      } else {
+        reg.getNotifications({ tag: 'bl-host' }).then(function (l) { l.forEach(function (n) { n.close(); }); });
+        if (!window.__blRoom) { try { navigator.clearAppBadge && navigator.clearAppBadge(); } catch (e) { } }
+      }
+    }).catch(function () { });
+  });
   // Lock-screen media card helps Android keep game audio alive in the background
   try { if ('mediaSession' in navigator) navigator.mediaSession.metadata = new MediaMetadata({ title: 'Blersjda Madness', artist: 'Party game', artwork: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }] }); } catch (e) { }
   // Ask for persistent storage so Android doesn't evict the cached game
