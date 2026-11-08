@@ -3492,12 +3492,11 @@ const SGAMES = [
     { id: 'cap', name: 'Blersjda Cap', tag: 'Caption · Vote · Laugh', a: '#22c55e', b: '#a855f7' },
     { id: 'burn', name: 'Blersjda Burn', tag: 'Write · Burn · Reply', a: '#f97316', b: '#dc2626' }];
 const SDisc = ({ g, size = 120 }) => {
-    const h = React.createElement, c = size / 2;
+    const h = React.createElement;
     return h('div', { className: 'bl-disc', style: { width: size, height: size, borderRadius: '50%', position: 'relative', background: `conic-gradient(from 20deg,${g.a},#ffffffcc,${g.b},#ffffff88,${g.a},#ffffffcc,${g.b},#ffffff88,${g.a})`, boxShadow: `0 0 ${size / 4}px ${g.a}88, inset 0 0 ${size / 6}px rgba(0,0,0,.35)` } },
-        h('div', { style: { position: 'absolute', inset: size * .06, borderRadius: '50%', border: '2px solid rgba(255,255,255,.35)' } }),
-        h('div', { style: { position: 'absolute', inset: size * .27, borderRadius: '50%', background: `linear-gradient(135deg,${g.a},${g.b})`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 3px rgba(255,255,255,.6)' } },
-            h('svg', { viewBox: '0 0 32 32', width: size * .3, height: size * .3, fill: 'none', stroke: '#fff', strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round' }, g.id === 'burn' ? h('path', { d: 'M16 3 C18 9 25 11 25 19 A9 9 0 0 1 7 19 C7 15 9 13 10 11 C11 14 12 15 14 15 C14 10 13 7 16 3 Z', fill: '#fff' }) : g.id === 'cap' ? h('path', { d: 'M4 6 H28 V22 H16 L9 28 V22 H4 Z', fill: '#fff' }) : g.id === 'madness' ? h('path', { d: 'M18 3 L7 18 H15 L13 29 L25 13 H17 Z', fill: '#fff' }) : h('path', { d: 'M4 26 C8 10 12 28 16 14 C19 4 22 20 28 6' }))),
-        h('div', { style: { position: 'absolute', left: c - size * .05, top: c - size * .05, width: size * .1, height: size * .1, borderRadius: '50%', background: '#0f0a29', boxShadow: '0 0 0 2px rgba(255,255,255,.7)' } }));
+        h('div', { style: { position: 'absolute', inset: '6%', borderRadius: '50%', border: '2px solid rgba(255,255,255,.35)' } }),
+        h('div', { style: { position: 'absolute', inset: '27%', borderRadius: '50%', background: `linear-gradient(135deg,${g.a},${g.b})`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 3px rgba(255,255,255,.6)' } },
+            h('svg', { viewBox: '0 0 32 32', width: '65%', height: '65%', fill: 'none', stroke: '#fff', strokeWidth: 3, strokeLinecap: 'round', strokeLinejoin: 'round' }, g.id === 'burn' ? h('path', { d: 'M16 3 C18 9 25 11 25 19 A9 9 0 0 1 7 19 C7 15 9 13 10 11 C11 14 12 15 14 15 C14 10 13 7 16 3 Z', fill: '#fff' }) : g.id === 'cap' ? h('path', { d: 'M4 6 H28 V22 H16 L9 28 V22 H4 Z', fill: '#fff' }) : g.id === 'madness' ? h('path', { d: 'M18 3 L7 18 H15 L13 29 L25 13 H17 Z', fill: '#fff' }) : h('path', { d: 'M4 26 C8 10 12 28 16 14 C19 4 22 20 28 6' }))));
 };
 const GamesMenu = ({ current, onPick, onClose }) => {
     const h = React.createElement;
@@ -7027,25 +7026,25 @@ if (!window.BL_CAST_RX) root.render(React.createElement(React.Fragment, null, Re
   }
   // ---- install prompts ----
   var ua = navigator.userAgent || '', isAndroid = /Android/i.test(ua), isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-  var deferred = null, SNOOZE = 6 * 36e5, NEVER = 14 * 864e5, sheetEl = null;
+  var deferred = null, snoozedUntilRefresh = false, NEVER = 30 * 864e5, sheetEl = null;
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { } }
-  function snoozed() { var t = +ls('bl_install_snooze') || 0; return ls('bl_installed') === '1' || (Date.now() - (+ls('bl_install_never') || 0) < NEVER) || (Date.now() - t < SNOOZE); }
+  function snoozed() { return snoozedUntilRefresh || ls('bl_installed') === '1' || (Date.now() - (+ls('bl_install_never') || 0) < NEVER); }
   function closeSheet() { if (sheetEl) { sheetEl.remove(); sheetEl = null; } }
   function sheet(title, sub, bodyHtml, goLabel, onGo) {
     closeSheet();
     sheetEl = document.createElement('div'); sheetEl.className = 'pwa-sheet-bg';
     sheetEl.innerHTML = '<div class="pwa-sheet" role="dialog" aria-label="Install"><div class="hd"><img src="icons/icon-192.png" alt=""><div><h3>' + title + '</h3><small>' + sub + '</small></div></div>' + bodyHtml +
-      (goLabel ? '<button class="go">' + goLabel + '</button>' : '') + '<div class="row"><button class="later">Not now</button><button class="never">Don\u2019t ask again</button></div></div>';
+      (goLabel ? '<button class="go">' + goLabel + '</button>' : '') + '<div class="row"><button class="later">Not now</button><button class="never">Don\u2019t ask for 1 month</button></div></div>';
     document.body.appendChild(sheetEl);
-    sheetEl.onclick = function (e) { if (e.target === sheetEl) { ls('bl_install_snooze', String(Date.now())); closeSheet(); } };
-    sheetEl.querySelector('.later').onclick = function () { ls('bl_install_snooze', String(Date.now())); closeSheet(); };
+    sheetEl.onclick = function (e) { if (e.target === sheetEl) { snoozedUntilRefresh = true; closeSheet(); } };
+    sheetEl.querySelector('.later').onclick = function () { snoozedUntilRefresh = true; closeSheet(); };
     sheetEl.querySelector('.never').onclick = function () { ls('bl_install_never', String(Date.now())); closeSheet(); };
     var g = sheetEl.querySelector('.go'); if (g) g.onclick = function () { closeSheet(); onGo && onGo(); };
   }
   var BENEFITS = '<ul><li>\u26A1 Opens full-screen, like a real app</li><li>\uD83D\uDCF4 Loads fast, even on bad Wi-Fi</li><li>\uD83C\uDFE0 One-tap Host / Join shortcuts (long-press the icon)</li><li>\uD83D\uDD0B Screen stays awake while you host</li></ul>';
   window.blCanInstall = function () { return !standalone && ls('bl_installed') !== '1' && (!!deferred || isIOS); };
   window.blInstall = function () {
-    if (deferred) { var d = deferred; deferred = null; d.prompt(); d.userChoice.then(function (c) { if (c && c.outcome !== 'accepted') ls('bl_install_snooze', String(Date.now())); }).finally(function () { window.dispatchEvent(new Event('bl-installable')); }); }
+    if (deferred) { var d = deferred; deferred = null; d.prompt(); d.userChoice.then(function (c) { if (c && c.outcome !== 'accepted') snoozedUntilRefresh = true; }).finally(function () { window.dispatchEvent(new Event('bl-installable')); }); }
     else if (isIOS) sheet('Add to Home Screen', 'Takes 5 seconds', '<ol><li>Tap the <b>Share</b> button (\u2B06\uFE0F) in Safari</li><li>Scroll and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b></li></ol>', '', null);
     else if (isAndroid) sheet('Install from the menu', 'Chrome hasn\u2019t offered it yet', '<ol><li>Tap the <b>\u22EE</b> menu (top right)</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b></li></ol>', 'Run install check', window.blPwaCheck);
   };

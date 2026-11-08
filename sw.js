@@ -1,12 +1,12 @@
 /* Blersjda Madness service worker: offline app shell + runtime caching.
    Multiplayer traffic (WebSocket / worker long-polling) is never touched. */
-const VERSION = 'v9';
+const VERSION = 'v10';
 const SHELL = 'bl-shell-' + VERSION;
 const RUNTIME = 'bl-runtime-' + VERSION;
 const MEDIA = 'bl-media-' + VERSION;
 const SHELL_URLS = [
   './', './index.html', './manifest.webmanifest',
-  './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/favicon.svg', './icons/favicon.ico', './icons/monochrome-192.png',
+  './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/favicon.svg', './icons/favicon.ico', './icons/monochrome-192.png', './icons/monochrome-512.png', './icons/monochrome-96.png', './icons/icon-48.png', './icons/icon-72.png', './icons/icon-96.png', './icons/icon-128.png', './icons/icon-144.png', './icons/icon-152.png', './icons/icon-167.png', './icons/icon-180.png', './icons/icon-256.png', './icons/icon-384.png', './icons/icon-1024.png', './icons/maskable-192.png', './icons/maskable-1024.png', './icons/favicon-16.png', './icons/favicon-32.png', './icons/apple-touch-icon-180.png', './icons/shortcut-host-phone.png', './icons/shortcut-host.png', './icons/shortcut-join.png',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js'

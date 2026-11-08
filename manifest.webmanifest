@@ -31,8 +31,26 @@
   "handle_links": "preferred",
   "icons": [
     {
+      "src": "icons/icon-36.png",
+      "sizes": "36x36",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "icons/icon-48.png",
       "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-64.png",
+      "sizes": "64x64",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-70.png",
+      "sizes": "70x70",
       "type": "image/png",
       "purpose": "any"
     },
@@ -57,6 +75,12 @@
     {
       "src": "icons/icon-144.png",
       "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-150.png",
+      "sizes": "150x150",
       "type": "image/png",
       "purpose": "any"
     },
@@ -91,6 +115,12 @@
       "purpose": "any"
     },
     {
+      "src": "icons/icon-310.png",
+      "sizes": "310x310",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "icons/icon-384.png",
       "sizes": "384x384",
       "type": "image/png",
@@ -109,8 +139,86 @@
       "purpose": "any"
     },
     {
+      "src": "icons/maskable-36.png",
+      "sizes": "36x36",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-108.png",
+      "sizes": "108x108",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-167.png",
+      "sizes": "167x167",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
       "src": "icons/maskable-192.png",
       "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-310.png",
+      "sizes": "310x310",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-384.png",
+      "sizes": "384x384",
       "type": "image/png",
       "purpose": "maskable"
     },
@@ -135,6 +243,24 @@
     {
       "src": "icons/monochrome-512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "monochrome"
+    },
+    {
+      "src": "icons/monochrome-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "monochrome"
+    },
+    {
+      "src": "icons/monochrome-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "monochrome"
+    },
+    {
+      "src": "icons/monochrome-96.png",
+      "sizes": "96x96",
       "type": "image/png",
       "purpose": "monochrome"
     },
