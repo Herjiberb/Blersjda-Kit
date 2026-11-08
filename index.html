@@ -355,11 +355,24 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 /* ---- game title word ---- */
 .bl-word{display:inline-block;color:transparent;-webkit-background-clip:text;background-clip:text;background-size:200% 100%}
 .bl-word-madness{background-image:linear-gradient(90deg,#facc15,#fef08a,#60a5fa)}
-.bl-word-strokes{background-image:linear-gradient(90deg,#f59e0b,#fde68a,#14b8a6)}
-.bl-word-cap{background-image:linear-gradient(90deg,#22c55e,#bbf7d0,#a855f7)}
 .bl-word-burn{background-image:linear-gradient(0deg,#dc2626 0%,#f97316 45%,#fde047 80%,#fff7ae 100%);background-size:100% 100%;animation:blBurn 1.4s ease-in-out infinite alternate;filter:drop-shadow(0 0 10px rgba(249,115,22,.9)) drop-shadow(0 -4px 14px rgba(239,68,68,.7))}
 @keyframes blBurn{0%{filter:drop-shadow(0 0 8px rgba(249,115,22,.8)) drop-shadow(0 -2px 10px rgba(239,68,68,.6));transform:scaleY(1)}100%{filter:drop-shadow(0 0 16px rgba(253,224,71,.95)) drop-shadow(0 -6px 20px rgba(239,68,68,.9));transform:scaleY(1.04)}}
 @media (prefers-reduced-motion:reduce){.bl-word-burn{animation:none}}
+.bl-word-strokes{display:none}
+.pen-title{display:block;margin:2px auto 0;width:min(84vw,380px);height:auto;overflow:visible}
+.pen-p{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:penDraw .25s cubic-bezier(.5,.1,.3,1) forwards}
+.pen-main{stroke:url(#penG);stroke-width:15}
+.pen-glow{stroke:url(#penG);stroke-width:22}
+.pen-hi{stroke:#fff;stroke-width:3.5;opacity:.55;transform-box:fill-box}
+.pen-under{stroke:#fde68a;stroke-width:6;filter:drop-shadow(0 0 6px #f59e0b);animation-duration:.2s}
+.pen-dot{fill:#2dd4bf;opacity:0;animation:penPop .15s ease-out forwards}
+@keyframes penDraw{to{stroke-dashoffset:0}}
+@keyframes penPop{0%{opacity:0;transform:scale(0)}100%{opacity:.9;transform:scale(1)}}
+.pen-glow{animation:penDraw .25s cubic-bezier(.5,.1,.3,1) forwards,penPulse 2.4s .8s ease-in-out infinite alternate}
+@keyframes penPulse{from{opacity:.6}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.pen-p,.pen-dot{animation:none;stroke-dashoffset:0;opacity:1}}
+/* CAP: wide, huge meme caption (white fill, thick black outline) */
+.bl-word-cap{display:block;margin:4px auto 0;max-width:100%;background:none;-webkit-text-fill-color:#fff;color:#fff;font-family:Impact,Haettenschweiler,"Arial Narrow Bold","Franklin Gothic Heavy","Arial Black",sans-serif;font-weight:900;font-size:clamp(3.2rem,15vw,4.6rem);line-height:1;letter-spacing:.05em;text-transform:uppercase;transform:scaleX(1.25) rotate(-2deg);transform-origin:center;-webkit-text-stroke:.08em #000;paint-order:stroke fill;text-shadow:0 .05em 0 #000,0 .08em .1em rgba(0,0,0,.7);filter:none}
 /* ---- game picker (bottom sheet on phones, centred card on desktop) ---- */
 .gm-back{position:fixed;inset:0;z-index:120;background:rgba(8,4,24,.88);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;overscroll-behavior:contain}
 .gm-sheet{background:linear-gradient(160deg,#20114b,#0f0a29);border:2px solid #22d3ee;border-radius:28px;padding:20px 16px;width:100%;max-width:640px;text-align:center;box-shadow:0 0 50px rgba(34,211,238,.35);animation:blSheet .25s ease-out}
@@ -5431,6 +5444,30 @@ const App = () => {
         view === 'JOIN' && React.createElement(OnlineClient, { goBack: () => setView('MENU') }),
         view === 'HISTORY' && React.createElement(HistoryViewer, { goBack: () => setView('MENU') })));
 };
+/* Hand-drawn "pen stroke" title for STROKES: each letter is a single round-capped path that draws itself on. No fonts used. */
+const PEN_LETTERS = [
+    'M70 38 C60 12 8 12 10 46 C12 78 72 66 70 98 C68 128 14 122 6 98',
+    'M0 26 L76 24 M38 24 L40 122',
+    'M12 122 L10 22 C84 14 84 74 12 70 M42 72 L78 122',
+    'M40 18 C88 16 88 124 40 124 C-8 124 -8 20 40 18',
+    'M12 20 L12 122 M74 22 L14 80 M36 64 L78 122',
+    'M74 24 L12 22 L12 120 L74 122 M12 70 L58 70',
+    'M70 38 C60 12 8 12 10 46 C12 78 72 66 70 98 C68 128 14 122 6 98'
+];
+const PenTitle = () => {
+    const h = React.createElement, tilt = [-3, 2, -2, 3, -2, 2, -3];
+    const letters = (cls, extra) => PEN_LETTERS.map((d, i) => h('path', { key: cls + i, d, pathLength: 1, className: 'pen-p ' + cls, style: { animationDelay: (i * 0.073) + 's', ...(extra || {}) }, transform: 'translate(' + (i * 96 + 8) + ' ' + (tilt[i] * 1.5) + ') rotate(' + tilt[i] + ' 40 70)' }));
+    return h('svg', { className: 'pen-title', viewBox: '0 0 700 168', role: 'img', 'aria-label': 'Strokes' },
+        h('defs', null,
+            h('linearGradient', { id: 'penG', x1: 0, y1: 0, x2: 1, y2: 0 }, h('stop', { offset: '0', stopColor: '#fbbf24' }), h('stop', { offset: '.5', stopColor: '#fb7185' }), h('stop', { offset: '1', stopColor: '#2dd4bf' })),
+            h('filter', { id: 'penGlow', x: '-20%', y: '-30%', width: '140%', height: '160%' }, h('feGaussianBlur', { stdDeviation: 7 })),
+            h('filter', { id: 'penRough' }, h('feTurbulence', { type: 'fractalNoise', baseFrequency: '.04', numOctaves: 2, seed: 4, result: 'n' }), h('feDisplacementMap', { in: 'SourceGraphic', in2: 'n', scale: 4 }))),
+        h('g', { filter: 'url(#penGlow)', opacity: .75 }, letters('pen-glow')),
+        h('g', { filter: 'url(#penRough)' }, letters('pen-main')),
+        h('g', null, letters('pen-hi')),
+        h('path', { d: 'M20 150 C140 138 220 160 340 148 S560 140 680 152', pathLength: 1, className: 'pen-p pen-under', style: { animationDelay: '.6s' } }),
+        [[40, 6], [688, 30], [660, 140]].map((c, i) => h('circle', { key: i, cx: c[0], cy: c[1] + 6, r: 4 + i, className: 'pen-dot', style: { animationDelay: (.7 + i * .05) + 's' } })));
+};
 const TITLE_WORD = { madness: 'Madness', strokes: 'Strokes', cap: 'Cap', burn: 'Burn' };
 const LightningLogo = ({ game = 'madness' }) => {
     const canvasRef = useRef(null), gameRef = useRef(game);
@@ -5537,7 +5574,7 @@ const LightningLogo = ({ game = 'madness' }) => {
         React.createElement("h1", { className: "bl-title text-6xl md:text-7xl font-black uppercase tracking-tight relative z-10 text-center select-none leading-none drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]" },
             "Blersjda",
             React.createElement("br", null),
-            React.createElement("span", { key: game, className: "bl-word bl-word-" + game }, TITLE_WORD[game] || "Madness"))));
+            game === 'strokes' ? React.createElement(PenTitle, { key: game }) : React.createElement("span", { key: game, className: "bl-word bl-word-" + game }, TITLE_WORD[game] || "Madness"))));
 };
 const GamesDock = ({ game, openGames }) => {
     const h = React.createElement, g = SGAMES.find(x => x.id === game) || SGAMES[0];
