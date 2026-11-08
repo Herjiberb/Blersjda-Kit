@@ -32,6 +32,7 @@
 <link rel="mask-icon" href="icons/favicon.svg" color="#ec4899">
 <meta name="msapplication-TileImage" content="icons/icon-150.png"><meta name="msapplication-TileColor" content="#0f0a29">
 <script>
+window.BL_CAST_RX=/[?&]cast=1/.test(location.search)||!!(navigator.presentation&&navigator.presentation.receiver);
 /* Share target + web+blersjda: links pull a 4-char room code into ?room= so the Join screen opens ready */
 (function(){try{var q=new URLSearchParams(location.search),t=[q.get('url'),q.get('text'),q.get('title'),q.get('protocol')].join(' '),m=/room=([A-Za-z0-9]{4})/.exec(t)||/web\+blersjda:\/*([A-Za-z0-9]{4})/i.exec(t);
 if(m&&!q.get('room')){history.replaceState(null,'',location.pathname+'?room='+m[1].toUpperCase());}}catch(e){}})();
@@ -373,6 +374,20 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 @media (prefers-reduced-motion:reduce){.pen-p,.pen-dot{animation:none;stroke-dashoffset:0;opacity:1}}
 /* CAP: wide, huge meme caption (white fill, thick black outline) */
 .bl-word-cap{display:block;margin:4px auto 0;max-width:100%;background:none;-webkit-text-fill-color:#fff;color:#fff;font-family:Impact,Haettenschweiler,"Arial Narrow Bold","Franklin Gothic Heavy","Arial Black",sans-serif;font-weight:900;font-size:clamp(3.2rem,15vw,4.6rem);line-height:1;letter-spacing:.05em;text-transform:uppercase;transform:scaleX(1.25) rotate(-2deg);transform-origin:center;-webkit-text-stroke:.08em #000;paint-order:stroke fill;text-shadow:0 .05em 0 #000,0 .08em .1em rgba(0,0,0,.7);filter:none}
+/* ---- casting ---- */
+.cast-fab{position:fixed;right:14px;bottom:14px;z-index:9990;display:none;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:2px solid #22d3ee;background:rgba(15,10,41,.88);backdrop-filter:blur(8px);color:#fff;font-weight:900;font-size:.9rem;letter-spacing:.04em;box-shadow:0 0 18px rgba(34,211,238,.35);opacity:.55;transition:opacity .2s}
+.cast-fab.on{display:flex}.cast-fab:hover,.cast-fab.live,.cast-fab.pulse{opacity:1}.cast-fab.live{border-color:#4ade80;box-shadow:0 0 18px rgba(74,222,128,.5)}
+.cast-fab.pulse{animation:castPulse 1s 4}@keyframes castPulse{50%{transform:scale(1.12)}}
+.cast-panel .opt{display:block;width:100%;text-align:left;margin:0 0 8px;padding:12px 14px;border-radius:14px;border:1px solid rgba(34,211,238,.45);background:rgba(255,255,255,.06);color:#fff;font-weight:800;font-size:.95rem}
+.cast-panel .opt small{display:block;color:#a5f3fc;font-weight:600;font-size:.76rem;margin-top:2px}
+.cast-panel .opt.stop{border-color:#f87171}.cast-panel .st{font-size:.82rem;font-weight:700;margin:2px 0 12px;color:#c4b5fd;line-height:1.5}
+.cast-panel details{font-size:.8rem;color:#c4b5fd;margin-top:4px}.cast-panel summary{font-weight:800;cursor:pointer}.cast-panel li{margin:4px 0}
+.bl-cast-rx{background:#0f0a29}.bl-cast-rx #root{display:none!important}
+#cast-stage{position:fixed;inset:0;overflow:hidden;background:#0f0a29;cursor:none}
+#cast-inner{position:absolute;left:50%;top:50%;transform-origin:center;pointer-events:none;user-select:none;overflow:hidden}
+#cast-inner *{animation-duration:0s!important;animation-delay:0s!important;animation-iteration-count:1!important;transition:none!important}
+#cast-wait{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#a5f3fc;font:900 2rem sans-serif;text-align:center}
+#cast-hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);padding:8px 16px;border-radius:999px;background:rgba(0,0,0,.7);color:#fff;font:700 .9rem sans-serif;z-index:5;cursor:pointer}
 /* ---- game picker (bottom sheet on phones, centred card on desktop) ---- */
 .gm-back{position:fixed;inset:0;z-index:120;background:rgba(8,4,24,.88);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;overscroll-behavior:contain}
 .gm-sheet{background:linear-gradient(160deg,#20114b,#0f0a29);border:2px solid #22d3ee;border-radius:28px;padding:20px 16px;width:100%;max-width:640px;text-align:center;box-shadow:0 0 50px rgba(34,211,238,.35);animation:blSheet .25s ease-out}
@@ -6995,12 +7010,13 @@ const UIExtras = () => {
 };
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(React.createElement(React.Fragment, null, React.createElement(App, null), React.createElement(UIExtras, null)));
+if (!window.BL_CAST_RX) root.render(React.createElement(React.Fragment, null, React.createElement(App, null), React.createElement(UIExtras, null)));
 
 </script>
 <div id="wco-bar"></div>
 <script>
 (function () {
+  if (window.BL_CAST_RX) return;
   var standalone = matchMedia('(display-mode: standalone), (display-mode: window-controls-overlay), (display-mode: minimal-ui)').matches || navigator.standalone;
   var chip = document.createElement('div'); chip.className = 'pwa-chip'; document.body.appendChild(chip);
   function show(html, label, fn, dismissKey) {
@@ -7153,6 +7169,154 @@ root.render(React.createElement(React.Fragment, null, React.createElement(App, n
   } catch (e) { }
   // Ask for persistent storage so Android doesn't evict the cached game
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { }
+})();
+</script>
+<script>
+/* ================= CAST / SECOND DISPLAY =================
+   Host (computers only): mirrors the host screen to any number of Cast/Presentation-API TVs and to an
+   external HDMI display (separate window placed + fullscreened on the other screen).
+   Receiver (?cast=1, or opened by a Cast device): shows the mirrored host screen, letterboxed to fit. */
+(function () {
+  'use strict';
+  var BCN = 'bl-cast', RX = !!window.BL_CAST_RX;
+  function recvUrl() { return location.origin + location.pathname + '?cast=1'; }
+
+  /* ---------- RECEIVER ---------- */
+  if (RX) {
+    document.documentElement.classList.add('bl-cast-rx');
+    document.title = 'Blersjda Display';
+    var hdmi = /[?&]hdmi=1/.test(location.search), stage, inner, wrap, wait, W = 1920, H = 1080;
+    function build() {
+      stage = document.createElement('div'); stage.id = 'cast-stage';
+      inner = document.createElement('div'); inner.id = 'cast-inner';
+      wrap = document.createElement('div'); wrap.style.cssText = 'position:relative;width:100%;min-height:100%';
+      inner.appendChild(wrap);
+      wait = document.createElement('div'); wait.id = 'cast-wait'; wait.innerHTML = '<div style="font-size:4rem">\uD83D\uDCFA</div><div>Waiting for the host\u2026</div><div style="font-size:1rem;opacity:.7">Blersjda display</div>';
+      stage.appendChild(inner); stage.appendChild(wait); document.body.appendChild(stage);
+      if (hdmi) {
+        var hint = document.createElement('div'); hint.id = 'cast-hint'; hint.textContent = 'Click anywhere for fullscreen'; document.body.appendChild(hint);
+        document.addEventListener('click', function () { try { document.documentElement.requestFullscreen(); } catch (e) { } hint.remove(); }, { once: true });
+      }
+      window.addEventListener('resize', fit);
+    }
+    function fit() { var k = Math.min(innerWidth / W, innerHeight / H); inner.style.width = W + 'px'; inner.style.height = H + 'px'; inner.style.transform = 'translate(-50%,-50%) scale(' + k + ')'; }
+    var awake = null;
+    function apply(m) {
+      if (!m || m.t !== 'frame') return;
+      if (!stage) build();
+      W = m.w || W; H = m.h || H; fit();
+      if (wait) { wait.remove(); wait = null; }
+      document.documentElement.className = (m.hc || '') + ' bl-cast-rx';
+      document.body.className = m.bc || ''; document.body.style.cssText = m.bs || '';
+      wrap.style.top = -(m.sy || 0) + 'px'; wrap.innerHTML = m.html;
+      if (!awake && navigator.wakeLock) { navigator.wakeLock.request('screen').then(function (l) { awake = l; l.addEventListener('release', function () { awake = null; }); }).catch(function () { }); }
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+      build();
+      // Cast device (Presentation API receiver)
+      try {
+        if (navigator.presentation && navigator.presentation.receiver) navigator.presentation.receiver.connectionList.then(function (list) {
+          function add(c) { c.onmessage = function (e) { try { apply(JSON.parse(e.data)); } catch (er) { } }; }
+          list.connections.forEach(add); list.onconnectionavailable = function (e) { add(e.connection); };
+        });
+      } catch (e) { }
+      // Same-computer window (HDMI / second monitor)
+      try {
+        var bc = new BroadcastChannel(BCN); bc.onmessage = function (e) { apply(e.data); };
+        var hello = function () { bc.postMessage({ t: 'hello' }); }; hello(); setInterval(hello, 3000);
+      } catch (e) { }
+    });
+    return;
+  }
+
+  /* ---------- HOST (computers only) ---------- */
+  if (window.BL_IS_PHONE) return;
+  var conns = [], bc = null, rxAt = 0, hdmiWin = null, last = '', force = false, avail = null, req = null, fab, sheetEl = null, defSet = false;
+  try { bc = new BroadcastChannel(BCN); bc.onmessage = function (e) { if (e.data && e.data.t === 'hello') { rxAt = Date.now(); force = true; } }; } catch (e) { }
+  function hostActive() { return window.__blView === 'HOST' && !!window.__blRoom; }
+  function openConns() { return conns.filter(function (c) { return c.state === 'connected'; }); }
+  function hdmiOpen() { return (hdmiWin && !hdmiWin.closed) || (Date.now() - rxAt < 7000); }
+  function snapshot() {
+    var root = document.getElementById('root'); if (!root) return null;
+    var clone = root.cloneNode(true), src = root.querySelectorAll('canvas'), dst = clone.querySelectorAll('canvas');
+    src.forEach(function (c, i) {
+      try {
+        if (/pointer-events-none/.test(c.className) || c.width * c.height > 2.5e6) { dst[i].remove(); return; }
+        var r = c.getBoundingClientRect(), im = document.createElement('img');
+        im.src = c.toDataURL('image/webp', .7); im.className = c.className; im.setAttribute('style', (c.getAttribute('style') || '') + ';width:' + r.width + 'px;height:' + r.height + 'px');
+        dst[i].replaceWith(im);
+      } catch (e) { }
+    });
+    clone.querySelectorAll('script,iframe,audio,video').forEach(function (n) { n.remove(); });
+    return clone.innerHTML;
+  }
+  function tick() {
+    if (!hostActive()) return;
+    var live = openConns(), local = hdmiOpen();
+    if (!live.length && !local) return;
+    var html = snapshot(); if (html == null) return;
+    var m = { t: 'frame', html: html, w: innerWidth, h: innerHeight, sy: scrollY, hc: document.documentElement.className, bc: document.body.className, bs: document.body.style.cssText };
+    var str = JSON.stringify(m); if (str === last && !force) return; last = str; force = false;
+    live.forEach(function (c) { try { c.send(str); } catch (e) { } });
+    if (local && bc) { try { bc.postMessage(m); } catch (e) { } }
+  }
+  setInterval(tick, 800);
+
+  function addConn(c) {
+    if (conns.indexOf(c) < 0) conns.push(c);
+    c.onstatechange = function () { if (c.state === 'closed' || c.state === 'terminated') conns = conns.filter(function (x) { return x !== c; }); if (c.state === 'connected') force = true; ui(); };
+    if (c.state === 'connected') force = true; ui();
+  }
+  function getReq() { if (!req && window.PresentationRequest) { try { req = new PresentationRequest([recvUrl()]); req.getAvailability().then(function (a) { avail = a.value; a.onchange = function () { avail = a.value; ui(); }; ui(); }).catch(function () { }); } catch (e) { } } return req; }
+  function castStart() {
+    var r = getReq(); if (!r) return;
+    r.start().then(addConn).catch(function (e) { window.blToast && window.blToast(e && e.name === 'NotFoundError' ? 'No TV found on this network' : 'Cast cancelled', { ttl: 2500 }); });
+  }
+  function castStop() { conns.slice().forEach(function (c) { try { c.terminate(); } catch (e) { } }); conns = []; try { hdmiWin && hdmiWin.close(); } catch (e) { } hdmiWin = null; rxAt = 0; ui(); }
+  async function openHdmi() {
+    var feat = 'popup,width=1280,height=720', note = 'Opened the display window. Drag it to your TV / HDMI screen, then click inside it for fullscreen.';
+    try {
+      if (window.getScreenDetails) {
+        var d = await window.getScreenDetails(), cur = d.currentScreen, t = d.screens.find(function (x) { return x !== cur && !x.isPrimary; }) || d.screens.find(function (x) { return x !== cur; });
+        if (t) { feat = 'popup,left=' + t.availLeft + ',top=' + t.availTop + ',width=' + t.availWidth + ',height=' + t.availHeight; note = 'Showing on your external display \u2014 click inside it once for fullscreen.'; }
+      }
+    } catch (e) { }
+    hdmiWin = window.open(location.pathname + '?cast=1&hdmi=1', 'blcast', feat);
+    if (!hdmiWin) note = 'Pop-up blocked \u2014 allow pop-ups for this site and try again.';
+    window.blToast && window.blToast(note, { ttl: 5000 }); force = true; ui();
+  }
+  function secure() { return location.protocol === 'https:' && !/^(localhost|127\.|192\.168\.|10\.)/.test(location.hostname); }
+  function openPanel() {
+    closePanel();
+    var n = openConns().length, ext = screen.isExtended, tv = !!window.PresentationRequest;
+    var h = '<div class="pwa-sheet-bg cast-bg"><div class="pwa-sheet cast-panel" role="dialog" aria-label="Cast"><div class="hd"><div style="font-size:2.4rem">\uD83D\uDCFA</div><div><h3>Show the game on a TV</h3><small>Everyone can see the screen without crowding your laptop</small></div></div>';
+    if (n || hdmiOpen()) h += '<div class="st">\uD83D\uDFE2 Showing on ' + (n ? n + ' cast device' + (n > 1 ? 's' : '') : '') + (n && hdmiOpen() ? ' + ' : '') + (hdmiOpen() ? 'an external display' : '') + '</div>';
+    else if (!secure() && tv) h += '<div class="st">\u26A0\uFE0F TVs can only open this game from its public https address (not localhost / a local file).</div>';
+    if (tv) h += '<button class="opt" data-a="cast">\uD83D\uDCE1 ' + (n ? 'Add another TV' : 'Cast to a TV') + '<small>Chromecast, Google TV, Android TV and smart TVs with Chromecast built in' + (avail === false ? ' \u2014 none found yet, check Wi-Fi' : avail ? ' \u2014 device(s) found' : '') + '</small></button>';
+    h += '<button class="opt" data-a="hdmi">\uD83D\uDD0C ' + (hdmiOpen() ? 'Re-open external display window' : 'Use HDMI / second display') + '<small>' + (ext ? 'Second screen detected \u2014 opens straight onto it' : 'Plug in a TV or monitor, then tap here') + '</small></button>';
+    if (n || hdmiOpen()) h += '<button class="opt stop" data-a="stop">\u23F9 Stop showing on TVs</button>';
+    h += '<details><summary>Other ways to connect</summary><ul><li><b>Any Chromecast TV:</b> Chrome \u22EE menu \u2192 Cast, Save and Share \u2192 Cast\u2026 \u2192 pick your TV (mirrors this tab).</li><li><b>Windows / Chromebook:</b> Win+K (Windows) or the system tray \u2192 Cast (ChromeOS) for Miracast TVs.</li><li><b>Apple TV / AirPlay TVs:</b> Mac menu bar \u2192 Control Center \u2192 Screen Mirroring.</li><li><b>HDMI cable:</b> set the TV as an extended display, then use \u201CUse HDMI / second display\u201D.</li></ul></details>';
+    h += '<div class="row"><button class="cl">Close</button></div></div></div>';
+    sheetEl = document.createElement('div'); sheetEl.innerHTML = h; sheetEl = sheetEl.firstChild; document.body.appendChild(sheetEl);
+    sheetEl.onclick = function (e) { if (e.target === sheetEl) closePanel(); };
+    sheetEl.querySelector('.cl').onclick = closePanel;
+    sheetEl.querySelectorAll('[data-a]').forEach(function (b) { b.onclick = function () { var a = b.dataset.a; if (a === 'cast') castStart(); else if (a === 'hdmi') openHdmi(); else if (a === 'stop') castStop(); closePanel(); }; });
+  }
+  function closePanel() { if (sheetEl) { sheetEl.remove(); sheetEl = null; } }
+  function ui() {
+    if (!fab) { fab = document.createElement('button'); fab.className = 'cast-fab'; fab.onclick = openPanel; fab.setAttribute('aria-label', 'Show game on a TV'); document.body.appendChild(fab); }
+    var on = hostActive(), n = openConns().length, live = n || hdmiOpen();
+    fab.classList.toggle('on', on); fab.classList.toggle('live', !!live);
+    fab.innerHTML = '\uD83D\uDCFA <span>' + (live ? 'Casting' + (n > 1 ? ' \u00D7' + n : '') : 'Cast to TV') + '</span>';
+    if (on && !defSet && window.PresentationRequest && navigator.presentation) { // lets Chrome\u2019s own \u22EE \u2192 Cast menu start it too
+      try { var r = getReq(); navigator.presentation.defaultRequest = r; r.onconnectionavailable = function (e) { addConn(e.connection); }; defSet = true; } catch (e) { }
+    }
+  }
+  setInterval(ui, 1000); window.addEventListener('bl-room', ui);
+  document.addEventListener('keydown', function (e) { if (e.key === 'c' && !e.ctrlKey && !e.metaKey && !e.altKey && hostActive() && !/INPUT|TEXTAREA/.test((e.target || {}).tagName || '')) { sheetEl ? closePanel() : openPanel(); } });
+  // A TV / monitor was plugged in
+  try { screen.addEventListener('change', function () { if (screen.isExtended && hostActive() && !hdmiOpen()) { window.blToast && window.blToast('\uD83D\uDCFA Second display detected \u2014 press C or tap Cast to show the game on it', { ttl: 6000 }); fab && fab.classList.add('pulse'); setTimeout(function () { fab && fab.classList.remove('pulse'); }, 4500); } }); } catch (e) { }
+  window.addEventListener('beforeunload', function () { try { hdmiWin && hdmiWin.close(); } catch (e) { } });
 })();
 </script>
 </body>
