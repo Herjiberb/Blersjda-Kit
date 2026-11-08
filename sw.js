@@ -1,6 +1,6 @@
 /* Blersjda Madness service worker: offline app shell + runtime caching.
    Multiplayer traffic (WebSocket / worker long-polling) is never touched. */
-const VERSION = 'v6';
+const VERSION = 'v8';
 const SHELL = 'bl-shell-' + VERSION;
 const RUNTIME = 'bl-runtime-' + VERSION;
 const MEDIA = 'bl-media-' + VERSION;
@@ -11,7 +11,7 @@ const SHELL_URLS = [
   'https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js'
 ];
-const SOUNDS = ['draw.wav', 'gong.wav', 'music.wav', 'squelchy.wav', 'victory.wav'];
+const SOUNDS = ['draw.wav', 'gong.wav', 'music.wav', 'menu.wav', 'voting.wav', 'squelchy.wav', 'victory.wav'];
 const MEDIA_MAX = 160;
 
 self.addEventListener('install', (e) => {
