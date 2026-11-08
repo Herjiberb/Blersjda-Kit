@@ -7027,9 +7027,9 @@ if (!window.BL_CAST_RX) root.render(React.createElement(React.Fragment, null, Re
   }
   // ---- install prompts ----
   var ua = navigator.userAgent || '', isAndroid = /Android/i.test(ua), isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-  var deferred = null, SNOOZE = 7 * 864e5, sheetEl = null;
+  var deferred = null, SNOOZE = 6 * 36e5, NEVER = 14 * 864e5, sheetEl = null;
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { } }
-  function snoozed() { var t = +ls('bl_install_snooze') || 0; return ls('bl_install_never') === '1' || ls('bl_installed') === '1' || (Date.now() - t < SNOOZE); }
+  function snoozed() { var t = +ls('bl_install_snooze') || 0; return ls('bl_installed') === '1' || (Date.now() - (+ls('bl_install_never') || 0) < NEVER) || (Date.now() - t < SNOOZE); }
   function closeSheet() { if (sheetEl) { sheetEl.remove(); sheetEl = null; } }
   function sheet(title, sub, bodyHtml, goLabel, onGo) {
     closeSheet();
@@ -7039,7 +7039,7 @@ if (!window.BL_CAST_RX) root.render(React.createElement(React.Fragment, null, Re
     document.body.appendChild(sheetEl);
     sheetEl.onclick = function (e) { if (e.target === sheetEl) { ls('bl_install_snooze', String(Date.now())); closeSheet(); } };
     sheetEl.querySelector('.later').onclick = function () { ls('bl_install_snooze', String(Date.now())); closeSheet(); };
-    sheetEl.querySelector('.never').onclick = function () { ls('bl_install_never', '1'); closeSheet(); };
+    sheetEl.querySelector('.never').onclick = function () { ls('bl_install_never', String(Date.now())); closeSheet(); };
     var g = sheetEl.querySelector('.go'); if (g) g.onclick = function () { closeSheet(); onGo && onGo(); };
   }
   var BENEFITS = '<ul><li>\u26A1 Opens full-screen, like a real app</li><li>\uD83D\uDCF4 Loads fast, even on bad Wi-Fi</li><li>\uD83C\uDFE0 One-tap Host / Join shortcuts (long-press the icon)</li><li>\uD83D\uDD0B Screen stays awake while you host</li></ul>';
@@ -7057,19 +7057,36 @@ if (!window.BL_CAST_RX) root.render(React.createElement(React.Fragment, null, Re
   // Offer once the person has had a moment to look around, or right after they create a room (never while a game is mid-play).
   var offerTimer = null;
   function scheduleOffer(ms) { clearTimeout(offerTimer); offerTimer = setTimeout(function () { if (!window.__blRoom) offer(); }, ms); }
-  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; window.dispatchEvent(new Event('bl-installable')); scheduleOffer(9000); });
-  if (isIOS && !standalone) scheduleOffer(15000);
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; window.dispatchEvent(new Event('bl-installable')); scheduleOffer(2500); });
+  if (isIOS && !standalone) scheduleOffer(4000);
+  // Keep offering (politely): every 90s while on the menu, plus a manual how-to if Chrome never fires the install event
+  setInterval(function () { if (!window.__blRoom && !sheetEl && !standalone) offer(); }, 90e3);
+  if (isAndroid && !standalone) setTimeout(function () { if (!deferred && !snoozed() && !sheetEl) window.blInstall(); }, 12000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && !window.__blRoom) scheduleOffer(1500); });
   window.addEventListener('appinstalled', function () { deferred = null; ls('bl_installed', '1'); closeSheet(); chip.classList.remove('on'); window.dispatchEvent(new Event('bl-installable')); window.blToast && window.blToast('Installed! Launch it from your home screen.', { type: 'success' }); });
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    var pending = false, reloading = false;
+    function busy() { return !!window.__blRoom || (window.__blView && window.__blView !== 'MENU'); }
+    function applyUpdate() { if (reloading) return; reloading = true; window.blToast && window.blToast('Updating to the latest version\u2026', { ttl: 1500 }); setTimeout(function () { location.reload(); }, 600); }
+    function gotUpdate() {
+      if (!busy()) return applyUpdate();
+      if (pending) return; pending = true;
+      show('\u2728 New version ready \u2014 it will apply when you leave this game', 'Update now', function () { applyUpdate(); }, null);
+    }
+    setInterval(function () { if (pending && !busy()) applyUpdate(); }, 3000);
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').then(function (reg) {
-        function watch(w) { w.addEventListener('statechange', function () { if (w.state === 'installed' && navigator.serviceWorker.controller) show('\u2728 Update ready', 'Reload', function () { w.postMessage('SKIP_WAITING'); }); }); }
-        if (reg.waiting && navigator.serviceWorker.controller) watch(reg.waiting);
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
+        function ping() { reg.update().catch(function () { }); if (reg.active) reg.active.postMessage('CHECK_UPDATE'); }
+        function watch(w) { w.addEventListener('statechange', function () { if (w.state === 'installed' && navigator.serviceWorker.controller) gotUpdate(); }); }
+        if (reg.waiting && navigator.serviceWorker.controller) gotUpdate();
         reg.addEventListener('updatefound', function () { if (reg.installing) watch(reg.installing); });
-        setInterval(function () { reg.update().catch(function () { }); }, 3600e3);
+        ping(); setInterval(ping, 5 * 60e3);
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) ping(); });
+        window.addEventListener('focus', ping); window.addEventListener('online', ping);
       }).catch(function () { });
-      var reloading = false;
-      navigator.serviceWorker.addEventListener('controllerchange', function () { if (reloading) return; reloading = true; location.reload(); });
+      navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'NEW_VERSION') gotUpdate(); });
+      // A new service worker took control: the page is now stale, refresh (deferred while a game is live)
+      navigator.serviceWorker.addEventListener('controllerchange', function () { if (!navigator.serviceWorker.controller) return; gotUpdate(); });
     });
   }
   function link(code) { return location.origin + location.pathname + '?room=' + code; }
@@ -7152,7 +7169,6 @@ if (!window.BL_CAST_RX) root.render(React.createElement(React.Fragment, null, Re
     }
   } catch (e) { }
   // 5) Update check whenever the app returns to the foreground
-  document.addEventListener('visibilitychange', function () { if (!document.hidden && navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(function (r) { r && r.update().catch(function () { }); }); });
   // 6) Back-online recovery message
   window.addEventListener('online', function () { window.blToast && window.blToast('Back online', { type: 'success', ttl: 1500 }); });
   // Room links opened while the installed app is already running: the browser hands the link to launchQueue
