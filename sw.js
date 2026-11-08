@@ -1,6 +1,6 @@
 /* Blersjda Madness service worker: offline app shell + runtime caching.
    Multiplayer traffic (WebSocket / worker long-polling) is never touched. */
-const VERSION = 'v8';
+const VERSION = 'v9';
 const SHELL = 'bl-shell-' + VERSION;
 const RUNTIME = 'bl-runtime-' + VERSION;
 const MEDIA = 'bl-media-' + VERSION;
@@ -15,6 +15,7 @@ const SOUNDS = ['draw.wav', 'gong.wav', 'music.wav', 'menu.wav', 'voting.wav', '
 const MEDIA_MAX = 160;
 
 self.addEventListener('install', (e) => {
+  self.skipWaiting();
   e.waitUntil((async () => {
     const c = await caches.open(SHELL);
     // Best effort: one missing file must not block install.
@@ -35,6 +36,7 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('message', (e) => {
   if (e.data === 'SKIP_WAITING') self.skipWaiting();
+  if (e.data === 'CHECK_UPDATE') e.waitUntil(checkNow());
   if (e.data === 'CLEAR_CACHES') e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('bl-')).map(k => caches.delete(k)))));
 });
 
@@ -73,16 +75,41 @@ async function staleWhileRevalidate(req, cacheName) {
   return hit || (await net) || Response.error();
 }
 
+async function sig(res) { const t = await res.clone().text(); let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return t.length + ':' + h; }
+async function tell(msg) { for (const c of await self.clients.matchAll({ type: 'window', includeUncontrolled: true })) c.postMessage(msg); }
+
+// Network-first for the page itself (bypassing the HTTP cache). If the content differs from what was cached, tell the open pages.
 async function navigate(e) {
   const c = await caches.open(SHELL);
   try {
     const pre = e.preloadResponse && await e.preloadResponse;
-    const net = pre || await Promise.race([fetch(e.request), new Promise((_, rej) => setTimeout(rej, 4000))]);
-    if (net && net.ok) { c.put('./index.html', net.clone()); return net; }
+    const net = pre || await Promise.race([fetch(e.request, { cache: 'no-cache' }), new Promise((_, rej) => setTimeout(rej, 4000))]);
+    if (net && net.ok) {
+      e.waitUntil((async () => {
+        const old = await c.match('./index.html');
+        const changed = old ? (await sig(old)) !== (await sig(net)) : false;
+        await c.put('./index.html', net.clone());
+        if (changed) await tell({ type: 'NEW_VERSION' });
+      })());
+      return net;
+    }
   } catch (err) {}
   return (await c.match('./index.html')) || (await c.match('./')) || new Response('Offline. Open the app once online first.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
 }
 
+// Background check the page can trigger: refetch index.html, refresh cache, report if it changed.
+async function checkNow() {
+  try {
+    const c = await caches.open(SHELL), net = await fetch('./index.html', { cache: 'no-store' });
+    if (!net.ok) return;
+    const old = await c.match('./index.html');
+    const changed = old ? (await sig(old)) !== (await sig(net)) : false;
+    await c.put('./index.html', net.clone());
+    if (changed) await tell({ type: 'NEW_VERSION' });
+  } catch (e) {}
+}
+
+let _t = 0; function checkSoon() { if (Date.now() - _t > 120000) { _t = Date.now(); checkNow(); } }
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
@@ -92,7 +119,7 @@ self.addEventListener('fetch', (e) => {
   if (url.origin === location.origin) {
     if (/\.(wav|mp3|ogg|m4a|webm|mp4)$/i.test(url.pathname)) { e.respondWith(cacheFirst(req, MEDIA, MEDIA_MAX)); return; }
     if (/\.(png|jpe?g|webp|gif|svg|ico|woff2?)$/i.test(url.pathname)) { e.respondWith(cacheFirst(req, RUNTIME, 400)); return; }
-    e.respondWith(staleWhileRevalidate(req, SHELL)); return;
+    e.respondWith(staleWhileRevalidate(req, SHELL)); checkSoon(); return;
   }
   if (/cdnjs\.cloudflare\.com|cdn\.tailwindcss\.com|unpkg\.com|fonts\.(googleapis|gstatic)\.com/.test(url.hostname)) e.respondWith(staleWhileRevalidate(req, RUNTIME));
 });
