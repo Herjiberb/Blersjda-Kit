@@ -352,6 +352,57 @@ button:disabled{cursor:not-allowed;opacity:.55}
 @media (display-mode:window-controls-overlay){#wco-bar{display:block}body{padding-top:env(titlebar-area-height,0px)}}
 @media (display-mode:standalone){body{-webkit-user-select:none;user-select:none}input,textarea{-webkit-user-select:text;user-select:text}}
 body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+/* ---- game title word ---- */
+.bl-word{display:inline-block;color:transparent;-webkit-background-clip:text;background-clip:text;background-size:200% 100%}
+.bl-word-madness{background-image:linear-gradient(90deg,#facc15,#fef08a,#60a5fa)}
+.bl-word-strokes{background-image:linear-gradient(90deg,#f59e0b,#fde68a,#14b8a6)}
+.bl-word-cap{background-image:linear-gradient(90deg,#22c55e,#bbf7d0,#a855f7)}
+.bl-word-burn{background-image:linear-gradient(0deg,#dc2626 0%,#f97316 45%,#fde047 80%,#fff7ae 100%);background-size:100% 100%;animation:blBurn 1.4s ease-in-out infinite alternate;filter:drop-shadow(0 0 10px rgba(249,115,22,.9)) drop-shadow(0 -4px 14px rgba(239,68,68,.7))}
+@keyframes blBurn{0%{filter:drop-shadow(0 0 8px rgba(249,115,22,.8)) drop-shadow(0 -2px 10px rgba(239,68,68,.6));transform:scaleY(1)}100%{filter:drop-shadow(0 0 16px rgba(253,224,71,.95)) drop-shadow(0 -6px 20px rgba(239,68,68,.9));transform:scaleY(1.04)}}
+@media (prefers-reduced-motion:reduce){.bl-word-burn{animation:none}}
+/* ---- game picker (bottom sheet on phones, centred card on desktop) ---- */
+.gm-back{position:fixed;inset:0;z-index:120;background:rgba(8,4,24,.88);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;overscroll-behavior:contain}
+.gm-sheet{background:linear-gradient(160deg,#20114b,#0f0a29);border:2px solid #22d3ee;border-radius:28px;padding:20px 16px;width:100%;max-width:640px;text-align:center;box-shadow:0 0 50px rgba(34,211,238,.35);animation:blSheet .25s ease-out}
+@keyframes blSheet{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.gm-grab{display:none;width:44px;height:5px;border-radius:9px;background:rgba(255,255,255,.3);margin:0 auto 12px}
+.gm-h{font-size:2.2rem;letter-spacing:.15em;color:#22d3ee;margin-bottom:2px}
+.gm-sub{color:#c4b5fd;font-weight:700;margin-bottom:16px;font-size:.9rem}
+.gm-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gm-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;border-radius:20px;color:#fff;text-align:center;background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:2px solid rgba(255,255,255,.12);min-height:64px;-webkit-tap-highlight-color:transparent;transition:transform .15s,border-color .15s}
+.gm-card:active{transform:scale(.97)}
+.gm-card.on{border-color:var(--ga);box-shadow:0 0 22px var(--ga)}
+.gm-txt{display:flex;flex-direction:column;gap:2px;min-width:0}.gm-txt b{font-size:1.05rem;letter-spacing:.04em}
+.gm-tag{font-size:.72rem;color:#a5f3fc;font-weight:700}
+.gm-badge{font-size:.65rem;font-weight:900;letter-spacing:.1em;color:#94a3b8}.gm-badge.sel{color:#4ade80}
+.gm-close{margin-top:16px;min-height:44px;padding:0 24px;background:none;border:none;color:#9ca3af;font-weight:800;text-decoration:underline;letter-spacing:.1em;text-transform:uppercase;font-size:.8rem}
+@media (max-width:560px){
+ .gm-back{align-items:flex-end;padding:0}
+ .gm-sheet{border-radius:26px 26px 0 0;border-bottom:0;max-height:92vh;overflow-y:auto;padding:12px 14px calc(16px + env(safe-area-inset-bottom))}
+ .gm-grab{display:block}.gm-h{font-size:1.7rem}
+ .gm-grid{grid-template-columns:1fr;gap:10px}
+ .gm-card{flex-direction:row;text-align:left;gap:14px;padding:10px 14px 10px 10px;min-height:92px}
+ .gm-disc{flex:none}.gm-disc>div{width:68px!important;height:68px!important}
+ .gm-txt{flex:1}.gm-badge{position:absolute;top:8px;right:12px}
+ .gm-close{width:100%;border-radius:14px;background:rgba(255,255,255,.08);text-decoration:none}
+ /* "now playing" dock: centred pill above the title instead of overlapping it */
+ .gm-dock{left:50%!important;transform:translateX(-50%)!important;padding:6px 14px 6px 6px!important;gap:8px!important;max-width:92vw}
+ .gm-dock .bl-disc-spin>div{width:40px!important;height:40px!important}
+ .gm-pad{padding-top:58px}
+}
+/* ---- install UI ---- */
+.bl-install-btn{width:100%;margin-top:4px;padding:12px 16px;border-radius:16px;border:2px dashed rgba(34,211,238,.6);background:rgba(34,211,238,.08);color:#a5f3fc;font-weight:900;letter-spacing:.06em;font-size:1rem}
+.pwa-sheet-bg{position:fixed;inset:0;z-index:9997;background:rgba(5,3,20,.6);display:flex;align-items:flex-end;justify-content:center;animation:blFade .2s}
+@keyframes blFade{from{opacity:0}to{opacity:1}}
+.pwa-sheet{width:min(100%,480px);box-sizing:border-box;background:linear-gradient(160deg,#20114b,#0f0a29);border:2px solid #22d3ee;border-bottom:0;border-radius:26px 26px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));color:#fff;text-align:left;animation:blSheet .25s ease-out}
+.pwa-sheet .hd{display:flex;gap:14px;align-items:center;margin-bottom:12px}.pwa-sheet .hd img{width:60px;height:60px;border-radius:16px;box-shadow:0 0 18px rgba(236,72,153,.5)}
+.pwa-sheet h3{font-weight:900;font-size:1.25rem;line-height:1.15}.pwa-sheet .hd small{display:block;color:#a5f3fc;font-weight:700;font-size:.8rem}
+.pwa-sheet ul{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:8px;font-weight:700;font-size:.92rem}
+.pwa-sheet ol{margin:0 0 14px;padding-left:20px;display:grid;gap:8px;font-weight:700;font-size:.92rem}
+.pwa-sheet .go{width:100%;min-height:50px;border:0;border-radius:14px;font-weight:900;font-size:1.05rem;color:#fff;background:linear-gradient(90deg,#ec4899,#8b5cf6)}
+.pwa-sheet .row{display:flex;gap:8px;margin-top:8px}.pwa-sheet .row button{flex:1;min-height:44px;border:0;border-radius:12px;background:rgba(255,255,255,.08);color:#c4b5fd;font-weight:800;font-size:.8rem}
+@media (min-width:600px){.pwa-sheet-bg{align-items:center}.pwa-sheet{border-radius:26px;border-bottom:2px solid #22d3ee}}
+html.pwa-standalone.pwa-android *{-webkit-tap-highlight-color:transparent}
+html.pwa-standalone{overscroll-behavior-y:contain}
 @media (min-width:900px) and (pointer:fine){.phone-host-btn{max-width:420px;margin-inline:auto}}
 
 .ph-card{width:100%;max-width:520px;margin:0 auto 10px;padding:14px 14px 12px;border-radius:20px;background:linear-gradient(160deg,rgba(236,72,153,.18),rgba(34,211,238,.12));border:1px solid rgba(34,211,238,.45);text-align:center;box-sizing:border-box}
@@ -416,6 +467,48 @@ const BLSND = (() => {
     };
     return { play, preload };
 })();
+/* True only on phones/tablets (touch-first devices). Used to hide "Host on this phone" on computers. */
+const IS_PHONE = (() => {
+    try {
+        const ua = navigator.userAgent || '';
+        const mobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(ua) || (navigator.userAgentData && navigator.userAgentData.mobile) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+        const touchFirst = matchMedia('(pointer:coarse)').matches && !matchMedia('(hover:hover) and (pointer:fine)').matches;
+        return !!(mobileUA || touchFirst);
+    } catch (e) { return true; }
+})();
+window.BL_IS_PHONE = IS_PHONE;
+
+/* ================= MUSIC TABLE =================
+   Every track used by the game lives here. To give a game mode its own music,
+   edit that game's entry below (any slot you leave out falls back to `default`).
+   rounds[0..2] = round 1, 2, 3.  classic = optional "Classic Music" set. */
+const MUSIC = {
+    default: {
+        lobby:   'menu.wav',
+        rounds:  ['music.wav',     'music_2.wav',     'music_3.wav'],
+        classic: ['music_old.wav', 'music_2_old.wav', 'music_3_old.wav'],
+        voting:  'voting.wav',
+        volume:  { lobby: .5, round: .5, voting: .8 },
+    },
+    madness: {},   // same as default for now
+    strokes: {},   // e.g. { rounds: ['strokes_1.wav', 'strokes_2.wav', 'strokes_3.wav'] }
+    cap:     {},
+    burn:    {},
+};
+/* blMusic('burn','round',2,false) -> { src:'music_2.wav', vol:.5 } */
+const blMusic = (game, slot, round = 1, classic = false) => {
+    const d = MUSIC.default, g = MUSIC[game] || {};
+    const pick = (k) => (g[k] !== undefined ? g[k] : d[k]);
+    let src;
+    if (slot === 'round') {
+        const list = (classic && (g.classic || d.classic)) || pick('rounds');
+        src = list[Math.min(Math.max(round, 1), list.length) - 1];
+    } else src = pick(slot);
+    const vol = ((g.volume || {})[slot] !== undefined ? g.volume[slot] : d.volume[slot]);
+    return { src, vol };
+};
+window.BL_MUSIC = MUSIC;
+
 const NET = (() => {
     const K = { type: '~t', userId: '~u', name: '~n', avatar: '~a', prompts: '~p', prompt: '~q', answers: '~s', msg: '~m', timeLeft: '~l', players: '~P', isFinal: '~F', round: '~r', stats: '~S', allowPass: '~A', readOnly: '~R', isAudience: '~I', votedFor: '~v', text: '~x', id: '~i', score: '~c', body: '~b', eyes: '~e', mouth: '~o', accessory: '~y', color: '~k' };
     const KR = Object.fromEntries(Object.entries(K).map(([a, b]) => [b, a]));
@@ -3380,14 +3473,17 @@ const SDisc = ({ g, size = 120 }) => {
 };
 const GamesMenu = ({ current, onPick, onClose }) => {
     const h = React.createElement;
-    return ReactDOM.createPortal(h('div', { onClick: onClose, style: { position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(8,4,24,.88)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, overflowY: 'auto' } },
-        h('div', { onClick: e => e.stopPropagation(), className: 'scale-in', style: { background: 'linear-gradient(160deg,#20114b,#0f0a29)', border: '2px solid #22d3ee', borderRadius: 28, padding: '24px 18px', width: '100%', maxWidth: 640, textAlign: 'center', boxShadow: '0 0 50px rgba(34,211,238,.35)' } },
-            h('h2', { style: { ...sFont, fontSize: 40, letterSpacing: '.15em', color: '#22d3ee', marginBottom: 4 } }, 'GAMES'),
-            h('p', { style: { color: '#c4b5fd', fontWeight: 700, marginBottom: 18, fontSize: 14 } }, 'Pick a disc to play'),
-            h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12 } }, SGAMES.map(g => h('button', { key: g.id, className: 'bl-disc-btn' + (current === g.id ? ' on' : ''), onClick: () => onPick(g.id) },
-                h(SDisc, { g, size: 130 }), h('b', { style: { fontSize: 18, ...sFont, letterSpacing: '.05em' } }, g.name), h('span', { style: { fontSize: 12, color: '#a5f3fc', fontWeight: 700 } }, g.tag),
-                h('span', { style: { fontSize: 11, fontWeight: 900, color: current === g.id ? '#4ade80' : '#94a3b8', letterSpacing: '.1em' } }, current === g.id ? 'SELECTED' : g.def ? 'DEFAULT' : 'NEW')))),
-            h('button', { onClick: onClose, style: { marginTop: 18, background: 'none', border: 'none', color: '#9ca3af', fontWeight: 800, textDecoration: 'underline', letterSpacing: '.1em', textTransform: 'uppercase', fontSize: 13 } }, 'Close'))), document.body);
+    useEffect(() => { const k = (e) => { if (e.key === 'Escape') onClose(); }; window.addEventListener('keydown', k); const o = document.body.style.overflow; document.body.style.overflow = 'hidden'; return () => { window.removeEventListener('keydown', k); document.body.style.overflow = o; }; }, []);
+    return ReactDOM.createPortal(h('div', { onClick: onClose, className: 'gm-back' },
+        h('div', { onClick: e => e.stopPropagation(), className: 'gm-sheet' },
+            h('div', { className: 'gm-grab' }),
+            h('h2', { className: 'gm-h', style: sFont }, 'GAMES'),
+            h('p', { className: 'gm-sub' }, 'Pick a game to play'),
+            h('div', { className: 'gm-grid' }, SGAMES.map(g => h('button', { key: g.id, className: 'gm-card' + (current === g.id ? ' on' : ''), style: { '--ga': g.a, '--gb': g.b }, onClick: () => onPick(g.id) },
+                h('span', { className: 'gm-disc' }, h(SDisc, { g, size: 76 })),
+                h('span', { className: 'gm-txt' }, h('b', { style: sFont }, g.name), h('span', { className: 'gm-tag' }, g.tag)),
+                h('span', { className: 'gm-badge' + (current === g.id ? ' sel' : '') }, current === g.id ? 'SELECTED' : g.def ? 'DEFAULT' : 'NEW')))),
+            h('button', { onClick: onClose, className: 'gm-close' }, 'Close'))), document.body);
 };
 
 /* ================= Strokes host ================= */
@@ -3406,7 +3502,7 @@ const StrokesHost = ({ goBack, onGames }) => {
     /* music */
     useEffect(() => {
         const a = audioRef.current; if (!a) return; let fi, track = null, vol = .5;
-        if (phase === 'LOBBY') track = 'menu.wav'; else if (['DRAW', 'QUOTE', 'MEME', 'CARD'].includes(phase)) track = round === 2 ? 'music_2.wav' : round === 3 ? 'music_3.wav' : 'music.wav'; else if (phase === 'VOTING') { track = 'voting.wav'; vol = .8; }
+        { const slot = phase === 'LOBBY' ? 'lobby' : ['DRAW', 'QUOTE', 'MEME', 'CARD'].includes(phase) ? 'round' : phase === 'VOTING' ? 'voting' : null; if (slot) { const m = blMusic('strokes', slot, round); track = m.src; vol = m.vol; } }
         if (track) { if (!a.src.endsWith(track)) { a.src = track; } a.loop = true; if (a.paused) a.volume = 0; a.play().catch(() => { }); fi = setInterval(() => { const v = Math.min(vol, (a.volume || 0) + .05); try { a.volume = v; } catch (e) { } if (v >= vol) clearInterval(fi); }, 100); }
         else if (a.volume > 0) { fi = setInterval(() => { const v = Math.max(0, a.volume - .1); try { a.volume = v; } catch (e) { } if (v <= 0) { clearInterval(fi); a.pause(); } }, 100); }
         return () => clearInterval(fi);
@@ -3787,8 +3883,8 @@ const CapHost = ({ goBack, onGames }) => {
             return;
         let fadeInterval;
         if (gameState === 'LOBBY') {
-            if (!audio.src.endsWith('menu.wav'))
-                audio.src = 'menu.wav';
+            if (!audio.src.endsWith(blMusic('cap', 'lobby').src))
+                audio.src = blMusic('cap', 'lobby').src;
             audio.loop = true;
             audio.volume = 0;
             audio.play().catch(e => console.log("Audio play prevented:", e));
@@ -3803,11 +3899,7 @@ const CapHost = ({ goBack, onGames }) => {
             }, 100);
         }
         else if (gameState === 'ANSWERING') {
-            let track = settings.useOldMusic ? 'music_old.wav' : 'music.wav';
-            if (round === 2)
-                track = settings.useOldMusic ? 'music_2_old.wav' : 'music_2.wav';
-            if (round === 3)
-                track = settings.useOldMusic ? 'music_3_old.wav' : 'music_3.wav';
+            let track = blMusic('cap', 'round', round, settings.useOldMusic).src;
             if (!audio.src.endsWith(track))
                 audio.src = track;
             audio.loop = true;
@@ -3824,7 +3916,7 @@ const CapHost = ({ goBack, onGames }) => {
             }, 100);
         }
         else if (gameState === 'VOTING') {
-            let track = 'voting.wav';
+            let track = blMusic('cap', 'voting').src;
             if (!audio.src.endsWith(track)) {
                 audio.src = track;
                 audio.currentTime = 0;
@@ -4983,7 +5075,7 @@ const BurnHost = ({ goBack, onGames }) => {
     useEffect(() => { const f = (e) => { e.preventDefault(); e.returnValue = 'Leaving destroys the game!'; }; window.addEventListener('beforeunload', f); return () => window.removeEventListener('beforeunload', f); }, []);
     useEffect(() => {
         const a = audioRef.current; if (!a) return; let fi, track = null, vol = .5;
-        if (phase === 'LOBBY') track = 'menu.wav'; else if (['WRITE', 'BURN', 'NEWP', 'CARD', 'ANS_IN'].includes(phase)) track = round === 2 ? 'music_2.wav' : round === 3 ? 'music_3.wav' : 'music.wav'; else if (phase === 'VOTING') { track = 'voting.wav'; vol = .8; }
+        { const slot = phase === 'LOBBY' ? 'lobby' : ['WRITE', 'BURN', 'NEWP', 'CARD', 'ANS_IN'].includes(phase) ? 'round' : phase === 'VOTING' ? 'voting' : null; if (slot) { const m = blMusic('burn', slot, round); track = m.src; vol = m.vol; } }
         if (track) { if (!a.src.endsWith(track)) { a.src = track; } a.loop = true; if (a.paused) a.volume = 0; a.play().catch(() => { }); fi = setInterval(() => { const v = Math.min(vol, (a.volume || 0) + .05); try { a.volume = v; } catch (e) { } if (v >= vol) clearInterval(fi); }, 100); }
         else if (a.volume > 0) { fi = setInterval(() => { const v = Math.max(0, a.volume - .1); try { a.volume = v; } catch (e) { } if (v <= 0) { clearInterval(fi); a.pause(); } }, 100); }
         return () => clearInterval(fi);
@@ -5258,10 +5350,11 @@ const PhoneGame = ({ game, goBack, onGames }) => {
 };
 
 const App = () => {
-    const [view, setView] = useState(() => { try { const q = new URLSearchParams(location.search), m = q.get('mode'); if (m === 'phone') return 'PHONE'; if (m === 'host') return 'HOST'; if (m === 'join' || q.get('room')) return 'JOIN'; } catch (e) { } return 'MENU'; });
+    const [view, setView] = useState(() => { try { const q = new URLSearchParams(location.search), m = q.get('mode'); if (m === 'phone') return IS_PHONE ? 'PHONE' : 'HOST'; if (m === 'host') return 'HOST'; if (m === 'join' || q.get('room')) return 'JOIN'; } catch (e) { } return 'MENU'; });
     window.__blView = view;
     const [game, setGame] = useState(() => { try { return localStorage.getItem('bl_game') || 'madness'; } catch (e) { return 'madness'; } });
     const [menuFx, setMenuFx] = useState(null);
+    useEffect(() => { const g = SGAMES.find(x => x.id === game) || SGAMES[0]; document.title = g.name; }, [game]);
     const [showGames, setShowGames] = useState(false);
     const pickGame = (id) => { setShowGames(false); if (id === game) return; if ((view === 'HOST' || view === 'PHONE') && !confirm('Switching games opens a NEW room code, so players must rejoin. Switch?')) return; try { localStorage.setItem('bl_game', id); } catch (e) { } setGame(id); };
     useEffect(() => { if (view !== 'MENU') { try { history.pushState({ bl: view }, ''); } catch (e) { } } }, [view]);
@@ -5334,12 +5427,14 @@ const App = () => {
         view === 'MENU' && React.createElement(MainMenu, { setView: setView, game: game, openGames: () => setShowGames(true) }),
         view === 'HOST' && React.createElement(game === 'strokes' ? StrokesHost : game === 'cap' ? CapHost : game === 'burn' ? BurnHost : OnlineHost, { key: game, goBack: () => setView('MENU'), onGames: () => setShowGames(true) }),
         showGames && React.createElement(GamesMenu, { current: game, onPick: pickGame, onClose: () => setShowGames(false) }),
-        view === 'PHONE' && React.createElement(PhoneGame, { key: game, game: game, goBack: () => setView('MENU'), onGames: () => setShowGames(true) }),
+        view === 'PHONE' && IS_PHONE && React.createElement(PhoneGame, { key: game, game: game, goBack: () => setView('MENU'), onGames: () => setShowGames(true) }),
         view === 'JOIN' && React.createElement(OnlineClient, { goBack: () => setView('MENU') }),
         view === 'HISTORY' && React.createElement(HistoryViewer, { goBack: () => setView('MENU') })));
 };
-const LightningLogo = () => {
-    const canvasRef = useRef(null);
+const TITLE_WORD = { madness: 'Madness', strokes: 'Strokes', cap: 'Cap', burn: 'Burn' };
+const LightningLogo = ({ game = 'madness' }) => {
+    const canvasRef = useRef(null), gameRef = useRef(game);
+    gameRef.current = game;
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas)
@@ -5371,7 +5466,8 @@ const LightningLogo = () => {
                 ex = Math.random() * w;
                 ey = h;
             }
-            const color = Math.random() > 0.5 ? '#facc15' : '#38bdf8';
+            const pal = { burn: ['#fb923c', '#ef4444'], strokes: ['#f59e0b', '#2dd4bf'], cap: ['#4ade80', '#c084fc'] }[gameRef.current] || ['#facc15', '#38bdf8'];
+            const color = Math.random() > 0.5 ? pal[0] : pal[1];
             const segments = 12;
             const displacement = 25;
             const path = [{ x: sx, y: sy }];
@@ -5438,26 +5534,32 @@ const LightningLogo = () => {
     }, []);
     return (React.createElement("div", { className: "relative w-full h-52 flex items-center justify-center mb-2 overflow-hidden select-none" },
         React.createElement("canvas", { ref: canvasRef, className: "absolute inset-0 w-full h-full pointer-events-none z-0" }),
-        React.createElement("h1", { className: "text-6xl md:text-7xl font-black uppercase tracking-tight relative z-10 text-center select-none leading-none drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]" },
+        React.createElement("h1", { className: "bl-title text-6xl md:text-7xl font-black uppercase tracking-tight relative z-10 text-center select-none leading-none drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]" },
             "Blersjda",
             React.createElement("br", null),
-            React.createElement("span", { className: "text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-200 to-blue-400" }, "Madness"))));
+            React.createElement("span", { key: game, className: "bl-word bl-word-" + game }, TITLE_WORD[game] || "Madness"))));
 };
 const GamesDock = ({ game, openGames }) => {
     const h = React.createElement, g = SGAMES.find(x => x.id === game) || SGAMES[0];
-    return ReactDOM.createPortal(h('button', { onClick: openGames, 'aria-label': 'Choose game', className: 'bl-disc-btn', style: { position: 'fixed', top: 'max(12px, env(safe-area-inset-top))', left: 12, zIndex: 40, flexDirection: 'row', gap: 12, padding: '8px 18px 8px 8px', borderRadius: 999, background: 'rgba(15,10,41,.75)', backdropFilter: 'blur(10px)', border: '2px solid ' + g.a, boxShadow: '0 0 22px ' + g.a + '66', animation: 'none' } },
+    return ReactDOM.createPortal(h('button', { onClick: openGames, 'aria-label': 'Choose game', className: 'bl-disc-btn gm-dock', style: { position: 'fixed', top: 'max(12px, env(safe-area-inset-top))', left: 12, zIndex: 40, flexDirection: 'row', gap: 12, padding: '8px 18px 8px 8px', borderRadius: 999, background: 'rgba(15,10,41,.75)', backdropFilter: 'blur(10px)', border: '2px solid ' + g.a, boxShadow: '0 0 22px ' + g.a + '66', animation: 'none' } },
         h('span', { className: 'bl-disc-spin', style: { display: 'block' } }, h(SDisc, { g, size: 52 })),
         h('span', { style: { textAlign: 'left', lineHeight: 1.15 } }, h('span', { style: { display: 'block', fontSize: 10, fontWeight: 900, letterSpacing: '.2em', color: '#67e8f9' } }, 'NOW PLAYING'), h('span', { style: { display: 'block', fontSize: 15, fontWeight: 900, letterSpacing: '.04em' } }, g.name)),
         h('span', { style: { fontSize: 12, color: '#a5f3fc', marginLeft: 2 } }, '\u25BE')), document.body);
 };
-const MainMenu = ({ setView, game, openGames }) => (React.createElement("div", { className: "max-w-md w-full flex flex-col items-center gap-4 scale-in text-center" },
+const InstallBtn = () => {
+    const [, tick] = useState(0);
+    useEffect(() => { const f = () => tick(x => x + 1); window.addEventListener('bl-installable', f); return () => window.removeEventListener('bl-installable', f); }, []);
+    if (!window.blCanInstall || !window.blCanInstall()) return null;
+    return React.createElement("button", { onClick: () => window.blInstall && window.blInstall(), className: "bl-install-btn" }, "\uD83D\uDCF2 Install app");
+};
+const MainMenu = ({ setView, game, openGames }) => (React.createElement("div", { className: "gm-pad max-w-md w-full flex flex-col items-center gap-4 scale-in text-center" },
     React.createElement(GamesDock, { game: game, openGames: openGames }),
-    React.createElement(LightningLogo, null),
+    React.createElement(LightningLogo, { game: game }),
     React.createElement("p", { className: "text-xl mb-10 text-cyan-300 font-bold tracking-widest uppercase wobble-anim" }, "The Ultimate Party Game"),
     React.createElement("div", { className: "w-full space-y-8 flex flex-col relative z-10" },
         React.createElement("button", { onClick: () => setView('HOST'), className: "bg-transparent border-none shadow-none text-5xl md:text-6xl font-black text-white transition-all duration-300 hover:text-yellow-400 hover:scale-110 hover:animate-pulse tracking-tight" }, "HOST GAME"),
         React.createElement("button", { onClick: () => setView('JOIN'), className: "bg-transparent border-none shadow-none text-5xl md:text-6xl font-black text-white transition-all duration-300 hover:text-yellow-400 hover:scale-110 hover:animate-pulse tracking-tight" }, "JOIN GAME"),
-        React.createElement("button", { onClick: () => setView('PHONE'), className: "phone-host-btn" }, React.createElement("span", { className: "ph-ic" }, React.createElement(PhoneIcon, { size: 46 })), React.createElement("span", null, React.createElement("b", null, "HOST ON THIS PHONE"), React.createElement("small", null, "No big screen or computer needed")))),
+        IS_PHONE && React.createElement("button", { onClick: () => setView('PHONE'), className: "phone-host-btn" }, React.createElement("span", { className: "ph-ic" }, React.createElement(PhoneIcon, { size: 46 })), React.createElement("span", null, React.createElement("b", null, "HOST ON THIS PHONE"), React.createElement("small", null, "No big screen or computer needed"))), React.createElement(InstallBtn, null)),
     React.createElement("div", { className: "mt-12 text-sm text-purple-200 glass-panel p-5 rounded-2xl w-full slide-up-fade pointer-events-none" },
         React.createElement("p", { className: "mb-2" },
             React.createElement("strong", null, "How to play:"),
@@ -5517,8 +5619,8 @@ const OnlineHost = ({ goBack, onGames }) => {
             return;
         let fadeInterval;
         if (gameState === 'LOBBY') {
-            if (!audio.src.endsWith('menu.wav'))
-                audio.src = 'menu.wav';
+            if (!audio.src.endsWith(blMusic('madness', 'lobby').src))
+                audio.src = blMusic('madness', 'lobby').src;
             audio.loop = true;
             audio.volume = 0;
             audio.play().catch(e => console.log("Audio play prevented:", e));
@@ -5533,11 +5635,7 @@ const OnlineHost = ({ goBack, onGames }) => {
             }, 100);
         }
         else if (gameState === 'ANSWERING') {
-            let track = settings.useOldMusic ? 'music_old.wav' : 'music.wav';
-            if (round === 2)
-                track = settings.useOldMusic ? 'music_2_old.wav' : 'music_2.wav';
-            if (round === 3)
-                track = settings.useOldMusic ? 'music_3_old.wav' : 'music_3.wav';
+            let track = blMusic('madness', 'round', round, settings.useOldMusic).src;
             if (!audio.src.endsWith(track))
                 audio.src = track;
             audio.loop = true;
@@ -5554,7 +5652,7 @@ const OnlineHost = ({ goBack, onGames }) => {
             }, 100);
         }
         else if (gameState === 'VOTING') {
-            let track = 'voting.wav';
+            let track = blMusic('madness', 'voting').src;
             if (!audio.src.endsWith(track)) {
                 audio.src = track;
                 audio.currentTime = 0;
@@ -6874,13 +6972,41 @@ root.render(React.createElement(React.Fragment, null, React.createElement(App, n
     chip.querySelector('.go').onclick = function () { chip.classList.remove('on'); fn(); };
     var x = chip.querySelector('.x'); if (x) x.onclick = function () { chip.classList.remove('on'); try { localStorage.setItem(dismissKey, '1'); } catch (e) { } };
   }
-  var deferred = null;
-  window.addEventListener('beforeinstallprompt', function (e) {
-    e.preventDefault(); deferred = e;
-    try { if (localStorage.getItem('bl_install_dismiss')) return; } catch (er) { }
-    if (!standalone) show('\uD83D\uDCF2 Install Blersjda for the best phone experience', 'Install', function () { deferred.prompt(); deferred.userChoice.finally(function () { deferred = null; }); }, 'bl_install_dismiss');
-  });
-  window.addEventListener('appinstalled', function () { chip.classList.remove('on'); window.blToast && window.blToast('Installed! Launch it from your home screen.', { type: 'success' }); });
+  // ---- install prompts ----
+  var ua = navigator.userAgent || '', isAndroid = /Android/i.test(ua), isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  var deferred = null, SNOOZE = 7 * 864e5, sheetEl = null;
+  function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { } }
+  function snoozed() { var t = +ls('bl_install_snooze') || 0; return ls('bl_install_never') === '1' || ls('bl_installed') === '1' || (Date.now() - t < SNOOZE); }
+  function closeSheet() { if (sheetEl) { sheetEl.remove(); sheetEl = null; } }
+  function sheet(title, sub, bodyHtml, goLabel, onGo) {
+    closeSheet();
+    sheetEl = document.createElement('div'); sheetEl.className = 'pwa-sheet-bg';
+    sheetEl.innerHTML = '<div class="pwa-sheet" role="dialog" aria-label="Install"><div class="hd"><img src="icons/icon-192.png" alt=""><div><h3>' + title + '</h3><small>' + sub + '</small></div></div>' + bodyHtml +
+      (goLabel ? '<button class="go">' + goLabel + '</button>' : '') + '<div class="row"><button class="later">Not now</button><button class="never">Don\u2019t ask again</button></div></div>';
+    document.body.appendChild(sheetEl);
+    sheetEl.onclick = function (e) { if (e.target === sheetEl) { ls('bl_install_snooze', String(Date.now())); closeSheet(); } };
+    sheetEl.querySelector('.later').onclick = function () { ls('bl_install_snooze', String(Date.now())); closeSheet(); };
+    sheetEl.querySelector('.never').onclick = function () { ls('bl_install_never', '1'); closeSheet(); };
+    var g = sheetEl.querySelector('.go'); if (g) g.onclick = function () { closeSheet(); onGo && onGo(); };
+  }
+  var BENEFITS = '<ul><li>\u26A1 Opens full-screen, like a real app</li><li>\uD83D\uDCF4 Loads fast, even on bad Wi-Fi</li><li>\uD83C\uDFE0 One-tap Host / Join shortcuts (long-press the icon)</li><li>\uD83D\uDD0B Screen stays awake while you host</li></ul>';
+  window.blCanInstall = function () { return !standalone && ls('bl_installed') !== '1' && (!!deferred || isIOS); };
+  window.blInstall = function () {
+    if (deferred) { var d = deferred; deferred = null; d.prompt(); d.userChoice.then(function (c) { if (c && c.outcome !== 'accepted') ls('bl_install_snooze', String(Date.now())); }).finally(function () { window.dispatchEvent(new Event('bl-installable')); }); }
+    else if (isIOS) sheet('Add to Home Screen', 'Takes 5 seconds', '<ol><li>Tap the <b>Share</b> button (\u2B06\uFE0F) in Safari</li><li>Scroll and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b></li></ol>', '', null);
+    else if (isAndroid) sheet('Install from the menu', 'Chrome hasn\u2019t offered it yet', '<ol><li>Tap the <b>\u22EE</b> menu (top right)</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b></li></ol>', 'Run install check', window.blPwaCheck);
+  };
+  function offer() {
+    if (standalone || snoozed()) return;
+    if (deferred) sheet('Install Blersjda', 'Free \u2022 no app store \u2022 ~1 MB', BENEFITS, '\uD83D\uDCF2 Install', window.blInstall);
+    else if (isIOS) sheet('Add Blersjda to your Home Screen', 'Get the full-screen app experience', BENEFITS, 'Show me how', window.blInstall);
+  }
+  // Offer once the person has had a moment to look around, or right after they create a room (never while a game is mid-play).
+  var offerTimer = null;
+  function scheduleOffer(ms) { clearTimeout(offerTimer); offerTimer = setTimeout(function () { if (!window.__blRoom) offer(); }, ms); }
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; window.dispatchEvent(new Event('bl-installable')); scheduleOffer(9000); });
+  if (isIOS && !standalone) scheduleOffer(15000);
+  window.addEventListener('appinstalled', function () { deferred = null; ls('bl_installed', '1'); closeSheet(); chip.classList.remove('on'); window.dispatchEvent(new Event('bl-installable')); window.blToast && window.blToast('Installed! Launch it from your home screen.', { type: 'success' }); });
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('sw.js').then(function (reg) {
@@ -6925,13 +7051,13 @@ root.render(React.createElement(React.Fragment, null, React.createElement(App, n
     var reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
     ok('Service worker registered', !!reg, reg ? (reg.active ? 'active' : 'installing\u2026 reload in a moment') : 'sw.js missing next to index.html?');
     ok('Already installed / standalone', true, standalone ? 'yes (running as app)' : 'no, running in browser');
-    ok('Install prompt available', !!deferred, deferred ? 'ready' : 'Chrome has not offered it (see above, or it is already installed)');
+    ok('Install prompt available', !!deferred || ls('bl_installed') === '1', deferred ? 'ready' : 'Chrome has not offered it (see above, or it is already installed)');
     var ov = document.createElement('div'); ov.className = 'qr-ov'; ov.style.alignItems = 'stretch';
     ov.innerHTML = '<b style="font:900 1.3rem sans-serif;letter-spacing:0">Install check</b><div style="text-align:left;font-size:.95rem;line-height:1.7">' + rows.join('<br>') + '</div><button class="bl-share" style="margin:0">Close</button>';
     document.body.appendChild(ov); ov.querySelector('button').onclick = function () { ov.remove(); };
   };
   if (/[?&]pwa=check/.test(location.search)) window.addEventListener('load', function () { setTimeout(window.blPwaCheck, 800); });
-  else if (!standalone && /Android|CrOS/.test(navigator.userAgent)) setTimeout(function () { if (!deferred) { try { if (localStorage.getItem('bl_install_dismiss')) return; } catch (e) { } show('Can\u2019t install? Find out why', 'Check', window.blPwaCheck, 'bl_install_dismiss'); } }, 12000);
+  else if (!standalone && isAndroid) setTimeout(function () { if (!deferred && !snoozed() && ls('bl_installed') !== '1') show('Can\u2019t install? Find out why', 'Check', window.blPwaCheck, 'bl_install_check_dismiss'); }, 20000);
   // ---- deeper PWA integration ----
   document.documentElement.classList.toggle('pwa-standalone', !!standalone);
   window.addEventListener('bl-room', function () { try { navigator.setAppBadge && navigator.setAppBadge(1); } catch (e) { } });
@@ -6952,6 +7078,42 @@ root.render(React.createElement(React.Fragment, null, React.createElement(App, n
   });
   // Lock-screen media card helps Android keep game audio alive in the background
   try { if ('mediaSession' in navigator) navigator.mediaSession.metadata = new MediaMetadata({ title: 'Blersjda Madness', artist: 'Party game', artwork: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }] }); } catch (e) { }
+  // ---- Android / PWA extras ----
+  var root = document.documentElement; if (isAndroid) root.classList.add('pwa-android');
+  matchMedia('(display-mode: standalone)').addEventListener && matchMedia('(display-mode: standalone)').addEventListener('change', function (e) { standalone = e.matches; root.classList.toggle('pwa-standalone', standalone); });
+  // 1) Keep the screen awake while hosting a room
+  var wake = null;
+  async function wakeOn() { try { if (!navigator.wakeLock || wake || document.hidden) return; wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', function () { wake = null; }); } catch (e) { wake = null; } }
+  function wakeOff() { try { wake && wake.release(); } catch (e) { } wake = null; }
+  window.addEventListener('bl-room', wakeOn);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && window.__blRoom) wakeOn(); });
+  setInterval(function () { if (!window.__blRoom && wake) wakeOff(); }, 4000);
+  // 2) Light haptic tap on buttons (Android only, touch only)
+  if (isAndroid && navigator.vibrate) document.addEventListener('pointerdown', function (e) { if (e.pointerType === 'touch' && e.target.closest && e.target.closest('button,[role=button]')) navigator.vibrate(8); }, { passive: true });
+  // 3) Share target: anything shared to the app that contains a room code/link opens the join screen
+  try {
+    var q = new URLSearchParams(location.search), shared = (q.get('url') || '') + ' ' + (q.get('text') || '') + ' ' + (q.get('title') || '');
+    if (!q.get('room') && (q.get('url') || q.get('text'))) {
+      var m = /[?&]room=([A-Za-z0-9]{3,8})/.exec(shared) || /\b(?:room code|code)[:\s]+([A-Za-z0-9]{3,8})\b/i.exec(shared);
+      if (m) location.replace(location.pathname + '?room=' + m[1].toUpperCase());
+    }
+  } catch (e) { }
+  // 5) Update check whenever the app returns to the foreground
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(function (r) { r && r.update().catch(function () { }); }); });
+  // 6) Back-online recovery message
+  window.addEventListener('online', function () { window.blToast && window.blToast('Back online', { type: 'success', ttl: 1500 }); });
+  // Room links opened while the installed app is already running: the browser hands the link to launchQueue
+  // instead of navigating, so without this the app just stays on / returns to the home screen.
+  try {
+    if ('launchQueue' in window) window.launchQueue.setConsumer(function (lp) {
+      if (!lp || !lp.targetURL) return;
+      try {
+        var u = new URL(lp.targetURL), shared = [u.searchParams.get('url'), u.searchParams.get('text'), u.searchParams.get('title')].join(' ');
+        var code = u.searchParams.get('room') || (/[?&]room=([A-Za-z0-9]{4})/.exec(shared) || [])[1] || (/web\+blersjda:\/*([A-Za-z0-9]{4})/i.exec(u.searchParams.get('protocol') || '') || [])[1];
+        if (code && code.toUpperCase() !== (new URLSearchParams(location.search).get('room') || '').toUpperCase()) location.replace(location.pathname + '?room=' + code.toUpperCase());
+      } catch (e) { }
+    });
+  } catch (e) { }
   // Ask for persistent storage so Android doesn't evict the cached game
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) { }
 })();
