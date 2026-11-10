@@ -520,9 +520,9 @@ const MUSIC = {
         volume:  { lobby: .5, round: .5, voting: .8 },
     },
     madness: {},   // same as default for now
-    strokes: {},   // e.g. { rounds: ['strokes_1.wav', 'strokes_2.wav', 'strokes_3.wav'] }
+    strokes: { lobby: 'menu-strokes.wav', rounds: ['music-strokes.wav', 'music_2-strokes.wav', 'music_3-strokes.wav'] },
     cap:     {},
-    burn:    {},
+    burn:    { lobby: 'menu-burn.wav', rounds: ['music-burn.wav', 'music_2-burn.wav', 'music_3-burn.wav'] },
 };
 /* blMusic('burn','round',2,false) -> { src:'music_2.wav', vol:.5 } */
 const blMusic = (game, slot, round = 1, classic = false) => {
