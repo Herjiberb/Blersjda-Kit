@@ -3434,7 +3434,7 @@ const SVoteView = ({ a, b, ro, dl, total, onVote, tid }) => {
         h('div', { style: { width: '100%', maxWidth: 480, display: 'flex', gap: 8 } }, h(STimer, { left, total })),
         h('h2', { style: { ...sFont, fontSize: 28, color: '#fde68a' } }, ro ? 'YOUR MEME IS BATTLING!' : 'WHICH IS FUNNIER?'),
         h('div', { style: { display: 'flex', gap: 10, justifyContent: 'center' } }, card('a', a), card('b', b)),
-        ro && h('div', { style: { color: '#c4b5fd', fontWeight: 700 } }, "You can't vote on your own match. Watch the big screen!"),
+        ro && h('div', { style: { color: '#c4b5fd', fontWeight: 700 } }, "You can't vote on your own match. Hang tight!"),
         v && h('div', { style: { color: '#86efac', fontWeight: 900 } }, 'Vote locked in!'));
 };
 
@@ -3469,8 +3469,8 @@ const StrokesClient = () => {
     } else if (s.m === 'quote') body = h(SQuoteEditor, { key: s.tid, tid: s.tid, theme: s.th, dl: s.dl, total: s.tot, onAdd: (x) => send({ k: 'q', tid: s.tid, x }), onDone: () => send({ k: 'qd', tid: s.tid }) });
     else if (s.m === 'meme' && s.ds && s.ds.length && s.qs && s.qs.length) body = h(SMemeEditor, { key: s.tid, tid: s.tid, ds: s.ds, qs: s.qs, dl: s.dl, total: s.tot, onLock: (di, qi, st) => send({ k: 'm', tid: s.tid, di, qi, st }) });
     else if (s.m === 'vote') body = h(SVoteView, { key: s.tid, tid: s.tid, a: s.a, b: s.b, ro: s.ro, dl: s.dl, total: s.tot, onVote: (v) => send({ k: 'v', tid: s.tid, v }) });
-    else if (s.m === 'res') body = h('div', { style: { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 20, textAlign: 'center' } }, h('h2', { style: { ...sFont, fontSize: 36, color: '#fde68a' } }, s.w === 'a' ? 'A WINS!' : 'B WINS!'), h('div', { style: { fontSize: 22, fontWeight: 900 } }, s.va + ' – ' + s.vb), s.mine != null && h('div', { style: { color: '#4ade80', fontWeight: 900, fontSize: 20 } }, '+' + s.mine + ' points for you!'), h('p', { style: { color: '#c4b5fd' } }, 'Look at the big screen'));
-    else if (s.m === 'rank') body = h('div', { style: { minHeight: '100%', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 } }, h('h2', { style: { ...sFont, fontSize: 30, color: '#facc15', textAlign: 'center' } }, (s.title || 'Round') + (s.title === 'Game Over' ? '' : ' RANKS')), h('p', { style: { color: '#c4b5fd', fontWeight: 700, textAlign: 'center' } }, 'Look at the big screen'), h(SRankList, { all: s.all || [], me: uid }));
+    else if (s.m === 'res') body = h('div', { style: { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 20, textAlign: 'center' } }, h('h2', { style: { ...sFont, fontSize: 36, color: '#fde68a' } }, s.w === 'a' ? 'A WINS!' : 'B WINS!'), h('div', { style: { fontSize: 22, fontWeight: 900 } }, s.va + ' – ' + s.vb), s.mine != null && h('div', { style: { color: '#4ade80', fontWeight: 900, fontSize: 20 } }, '+' + s.mine + ' points for you!'), h('p', { style: { color: '#c4b5fd' } }, 'Hang tight…'));
+    else if (s.m === 'rank') body = h('div', { style: { minHeight: '100%', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 } }, h('h2', { style: { ...sFont, fontSize: 30, color: '#facc15', textAlign: 'center' } }, (s.title || 'Round') + (s.title === 'Game Over' ? '' : ' RANKS')), h('p', { style: { color: '#c4b5fd', fontWeight: 700, textAlign: 'center' } }, 'Hang tight…'), h(SRankList, { all: s.all || [], me: uid }));
     else if (s.m === 'end' && s.showFull && s.full && s.full.sorted) { const F = s.full, sz = Math.min(300, window.innerWidth - 40), tg = (n, ic, fb) => h('div', { style: { fontWeight: 700, fontSize: 14, color: '#c4b5fd' } }, Ic(ic, 16), ' ', n || fb), mm = (m, ttl, col, ic) => m && h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 } }, h('div', { style: { fontWeight: 900, letterSpacing: '.12em', color: col } }, Ic(ic, 20), ' ' + ttl), h('div', { style: { lineHeight: 0, border: '4px solid ' + col, borderRadius: 16, overflow: 'hidden' } }, h(SMeme, { d: m.d, x: m.x, st: m.st, size: sz })), tg(m.maker, 'wrench', 'Unknown'), tg(m.designer, 'palette', 'Auto-doodle'), tg(m.quoter, 'chat', 'Stock quote'));
         body = h('div', { style: { minHeight: '100%', padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 } }, h('h2', { style: { ...sFont, fontSize: 34, color: '#facc15', textAlign: 'center' } }, 'THE WINNING MEME'), mm(F.champ, 'GRAND CHAMPION MEME', '#facc15', 'crown'), mm(F.runner, 'RUNNER-UP MEME', '#cbd5e1', 'medal'),
             h('h3', { style: { ...sFont, fontSize: 30, color: '#facc15' } }, 'FINAL RANKS'), h(SRankList, { all: F.sorted, me: s.me, big: true }),
@@ -3481,7 +3481,7 @@ const StrokesClient = () => {
         h('div', { style: { fontSize: 56 } }, Ic(s.rank === 1 ? 'crown' : 'trophy', 64)), h('h2', { style: { ...sFont, fontSize: 34, color: '#fde68a' } }, '#' + s.rank + ' · ' + s.score + ' pts'),
         (s.hon || []).length ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 360 } }, h('div', { style: { color: '#f9a8d4', fontWeight: 900, letterSpacing: '.1em' } }, 'YOUR HONORS'), (s.hon || []).map((x, i) => h('div', { key: i, style: { background: 'rgba(250,204,21,.15)', border: '2px solid #facc15', borderRadius: 12, padding: 10, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' } }, Ic(x.ic, 26), h('span', null, x.t + ' — ' + x.d)))) : h('p', { style: { color: '#c4b5fd', fontWeight: 700 } }, 'Thanks for playing!'),
         s.meme && h(SMeme, { d: s.meme.d, x: s.meme.x, st: s.meme.st, size: Math.min(240, window.innerWidth - 60) }), s.meme && h('div', { style: { color: '#a5f3fc', fontWeight: 700, fontSize: 13 } }, 'Your best meme'), s.all && h('button', { onClick: () => setS({ ...s, showFull: true }), style: sBtn('#7c3aed', { width: '100%', maxWidth: 420, minHeight: 56 }) }, 'See full ranks'));
-    else body = wait('Hang tight…', 'Look at the big screen');
+    else body = wait('Hang tight…', 'Hang tight…');
     return ReactDOM.createPortal(h('div', { className: 's-ovl', style: { position: 'fixed', inset: 0, zIndex: 60, overflowY: 'auto', overflowX: 'hidden', background: 'radial-gradient(circle at 50% 0%,#2a1560 0%,#0f0a29 70%)', color: '#fff', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } }, body), document.body);
 };
 
@@ -3539,9 +3539,9 @@ const StrokesHost = ({ goBack, onGames }) => {
     useSpiderSender(['VOTING', 'REVEAL', 'ROUND_END', 'GAME_END'].includes(phase), () => Object.values(conns.current));
     const send = (uid, type, payload) => { const c = conns.current[uid]; if (c && c.open) c.send({ type, ...payload }); };
     const resend = (uid, aud) => {
-        const c = S.current.cur; if (!c) { send(uid, 'STATE_WAITING', { msg: 'Look at the big screen!' }); return; }
+        const c = S.current.cur; if (!c) { send(uid, 'STATE_WAITING', { msg: 'Hang tight!' }); return; }
         const p = c.make(uid, aud);
-        if (p) send(uid, c.type, { tid: c.tid, t: Math.max(1, Math.ceil((c.dl - Date.now()) / 1000)), tot: c.tot, ...p }); else send(uid, 'STATE_WAITING', { msg: c.aMsg || 'Look at the big screen!' });
+        if (p) send(uid, c.type, { tid: c.tid, t: Math.max(1, Math.ceil((c.dl - Date.now()) / 1000)), tot: c.tot, ...p }); else send(uid, 'STATE_WAITING', { msg: c.aMsg || 'Hang tight!' });
     };
     const openTask = (type, secs, make, aMsg) => { const st = S.current; const tid = ++st.tidc; st.cur = { tid, type, dl: Date.now() + secs * 1000, start: Date.now(), tot: secs, make, aMsg }; st.players.forEach(p => resend(p.userId, false)); st.audience.forEach(a => resend(a.userId, true)); return tid; };
     const onSub = (data) => {
@@ -4087,7 +4087,7 @@ const CapHost = ({ goBack, onGames }) => {
             }
         }
         else {
-            sendToClient(userId, 'STATE_WAITING', { msg: "Look at the big screen!" });
+            sendToClient(userId, 'STATE_WAITING', { msg: "Hang tight!" });
         }
     };
     const handleClientMessage = (data, conn) => {
@@ -5007,7 +5007,7 @@ const BnFlames = ({ n = 7 }) => React.createElement('div', { style: { position: 
     Array.from({ length: 8 }, (_, i) => React.createElement('div', { key: 'e' + i, className: 'bn-ember', style: { left: (8 + i * 11) + '%', '--dx': ((i % 2 ? 1 : -1) * (10 + i * 4)) + 'px', animationDelay: (i * .17) + 's' } })));
 /* ---------- phone side ---------- */
 const BurnClient = () => {
-    const h = React.createElement, [s, setS] = useState(null), [fin, setFin] = useState({});
+    const h = React.createElement, [s, setS] = useState(null), [fin, setFin] = useState({}), [showAll, setShowAll] = useState(false);
     const uid = (() => { try { return localStorage.getItem('blersjda_uid'); } catch (e) { return ''; } })();
     const send = (o) => { try { window.__bConn && window.__bConn.send({ type: 'B_SUB', userId: uid, ...o }); } catch (e) { } };
     const av2 = useMemo(() => [generateAvatar(), generateAvatar()], []);
@@ -5018,7 +5018,7 @@ const BurnClient = () => {
                 const dl = Date.now() + (d.t || 0) * 1000 - 400;
                 if (ty === 'B_WRITE') setS({ m: 'write', ...d, dl }); else if (ty === 'B_BURN') setS({ m: 'burn', ...d, dl }); else if (ty === 'B_NEW') setS({ m: 'newp', ...d, dl });
                 else if (ty === 'B_VOTE') setS({ m: 'vote', ...d, dl }); else if (ty === 'B_WAIT') setS({ m: 'wait', ...d }); else if (ty === 'B_RES') { setS({ m: 'res', ...d }); if (d.me && d.me.delta > 0) bnConfetti(24); }
-                else if (ty === 'B_RANK') setS({ m: 'rank', ...d }); else if (ty === 'B_END') setS({ m: 'end', ...d });
+                else if (ty === 'B_RANK') setS({ m: 'rank', ...d }); else if (ty === 'B_REV') { setS({ m: 'rev', ...d }); bnLightning(); } else if (ty === 'B_END') setS({ m: 'end', ...d });
             } else if (ty === 'STATE_WAITING' || ty === 'KICKED' || ty === 'LOBBY_JOINED') setS(null);
         };
         window.addEventListener('bl-host-msg', f); return () => window.removeEventListener('bl-host-msg', f);
@@ -5026,20 +5026,28 @@ const BurnClient = () => {
     if (!s) return null;
     const box = { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 12, textAlign: 'center', width: '100%', maxWidth: 480, margin: '0 auto', boxSizing: 'border-box' };
     const head = (t, c) => h('h2', { style: { ...sFont, fontSize: 30, color: c || '#f9a8d4', letterSpacing: '.05em' } }, t);
-    const wait = (msg, arena) => h('div', { style: { ...box, justifyContent: 'center' } }, arena ? h(React.Fragment, null, h('h2', { style: { ...sFont, fontSize: 34, color: '#ef4444', letterSpacing: '.1em' } }, 'ANSWERS IN!'), h('div', { style: { width: '100%', height: 200 } }, h(BattleView, { avatars: av2 }))) : h('div', { style: { fontSize: 54 } }, Ic('party', 64)), h('h2', { style: { ...sFont, fontSize: 28, color: '#4ade80' } }, msg || 'Hang tight…'), h('p', { style: { color: '#c4b5fd', fontWeight: 700 } }, 'Look at the big screen'));
+    const wait = (msg, arena) => h('div', { style: { ...box, justifyContent: 'center' } }, arena ? h(React.Fragment, null, h('h2', { style: { ...sFont, fontSize: 34, color: '#ef4444', letterSpacing: '.1em' } }, 'ANSWERS IN!'), h('div', { style: { width: '100%', height: 200 } }, h(BattleView, { avatars: av2 }))) : h('div', { style: { fontSize: 54 } }, Ic('party', 64)), h('h2', { style: { ...sFont, fontSize: 28, color: '#4ade80' } }, msg || 'Hang tight…'), h('p', { style: { color: '#c4b5fd', fontWeight: 700 } }, 'Hang tight…'));
     const Timer = ({ dl, tot }) => { const left = useLeft(dl); return h('div', { style: { width: '100%', display: 'flex', gap: 8 } }, h(STimer, { left, total: tot })); };
     let body = null;
     if (s.m === 'wait') body = wait(s.msg, s.bt);
     else if (s.m === 'write') body = h(BnWrite, { key: s.tid, s, send, wait, Timer, box, head });
     else if (s.m === 'burn') { const d = fin['b' + s.tid]; body = d ? wait('Burn locked in. Waiting for the others…', false) : h(BnBurn, { key: s.tid, s, send, done: () => setFin(x => ({ ...x, ['b' + s.tid]: 1 })), Timer, box, head }); }
     else if (s.m === 'newp') { const d = fin['n' + s.tid]; body = d ? wait('Prompt submitted! Waiting…', false) : h(BnNew, { key: s.tid, s, send, done: () => setFin(x => ({ ...x, ['n' + s.tid]: 1 })), Timer, box, head }); }
-    else if (s.m === 'vote') { const d = fin['v' + s.tid]; body = d ? wait('Votes in! Watch the big screen.', false) : h(BnVote, { key: s.tid, s, send, done: () => setFin(x => ({ ...x, ['v' + s.tid]: 1 })), Timer, box, head }); }
-    else if (s.m === 'res') body = h('div', { style: box }, head(s.title || 'RESULTS', '#facc15'), (s.top || []).map((e, i) => h('div', { key: i, className: 'bn-card bn-rise', style: { width: '100%', background: i === 0 ? 'linear-gradient(135deg,#854d0e,#a16207)' : 'rgba(255,255,255,.08)', border: '2px solid ' + (i === 0 ? '#facc15' : '#94a3b8'), borderRadius: 16, padding: 12, animationDelay: (i * .2) + 's' } }, h('div', { style: { fontWeight: 900, color: i === 0 ? '#fef08a' : '#e2e8f0', fontSize: 13 } }, (i === 0 ? '1ST' : '2ND') + ' PLACE'), h('div', { style: { fontWeight: 800, fontSize: 16, color: '#fbcfe8' } }, e.p), h('div', { style: { fontWeight: 900, fontSize: 20 } }, '"' + e.x + '"'), h('div', { style: { fontSize: 12, color: '#a5f3fc', fontWeight: 700 } }, 'Prompt: ' + e.cn + ' · Answer: ' + e.an))),
+    else if (s.m === 'vote') { const d = fin['v' + s.tid]; body = d ? wait('Votes in!', false) : h(BnVote, { key: s.tid, s, send, done: () => setFin(x => ({ ...x, ['v' + s.tid]: 1 })), Timer, box, head }); }
+    else if (s.m === 'rev') body = h('div', { style: box }, h('div', { style: { fontWeight: 900, letterSpacing: '.15em', color: '#fb923c', fontSize: 18 } }, 'BURN ' + s.i + '/' + s.n),
+        h('div', { key: s.i, className: 'scale-in', style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontWeight: 900, fontSize: 18, flexWrap: 'wrap' } }, h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6 } }, h(MonsterAvatar, { attributes: s.byAv, size: 48 }), s.by + (s.you === 'by' ? ' (YOU)' : '')), h('span', { style: { color: '#f97316', ...sFont } }, 'BURNS'), h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6 } }, h(MonsterAvatar, { attributes: s.auAv, size: 48 }), s.au + (s.you === 'au' ? ' (YOU)' : ''))),
+        h('div', { key: 'b' + s.i, style: { position: 'relative', width: '100%', marginTop: 10 } }, h('div', { className: 'bn-card bn-burning', style: { background: '#7c2d12', border: '4px solid #f97316', borderRadius: 18, minHeight: 110 } }), h(BnFlames, { n: 7 }), h('div', { className: 'bn-stamp', style: { position: 'absolute', top: -12, right: -4, ...sFont, fontSize: 30, color: '#ef4444', background: '#fff', padding: '0 10px', borderRadius: 8, transform: 'rotate(-6deg)', animationDelay: '.6s', opacity: 0 } }, 'BURNED')),
+        h('div', { style: { position: 'relative', width: '100%', marginTop: 8 } }, h('div', { className: 'bn-card', style: { background: '#14532d', border: '4px solid #4ade80', borderRadius: 18, minHeight: 80 } }), h('div', { style: { position: 'absolute', top: -12, right: -4, ...sFont, fontSize: 26, color: '#16a34a', background: '#fff', padding: '0 10px', borderRadius: 8, transform: 'rotate(5deg)' } }, 'KEPT')));
+    else if (s.m === 'res') body = h('div', { style: box }, head(s.title || 'RESULTS', '#facc15'),
+        (s.ents || []).map((e, i) => { const g = e.place === 1, sv = e.place === 2; return h('div', { key: i, className: 'bn-card bn-rise', style: { width: '100%', boxSizing: 'border-box', background: g ? 'linear-gradient(135deg,#854d0e,#a16207)' : 'rgba(255,255,255,.08)', border: '2px solid ' + (g ? '#facc15' : sv ? '#cbd5e1' : e.mine ? '#ec4899' : '#fff3'), borderRadius: 16, padding: 12, animationDelay: Math.min(i, 8) * .15 + 's' } }, h('div', { style: { fontWeight: 900, color: g ? '#fef08a' : '#e2e8f0', fontSize: 13 } }, (g ? '1ST PLACE' : sv ? '2ND PLACE' : e.place ? '#' + e.place : 'NO VOTES') + (e.mine ? ' · YOURS' : '')), h('div', { style: { fontWeight: 800, fontSize: 15, color: '#fbcfe8' } }, e.p), h('div', { style: { fontWeight: 900, fontSize: 19 } }, '"' + e.x + '"'), h('div', { style: { fontSize: 12, color: '#a5f3fc', fontWeight: 700 } }, 'Prompt: ' + e.cn + ' (+' + e.cp + ') · Answer: ' + e.an + ' (+' + e.ap + ')'), h('div', { style: { fontSize: 12, color: '#facc15', fontWeight: 900 } }, e.f1 + ' first-pick' + (e.f1 === 1 ? '' : 's') + ' · ' + e.s2 + ' second-pick' + (e.s2 === 1 ? '' : 's'))); }),
+        (s.burns || []).length > 0 && h('div', { style: { width: '100%', background: 'rgba(255,255,255,.06)', borderRadius: 14, padding: 10, fontWeight: 700, fontSize: 13, color: '#fdba74', textAlign: 'left' } }, h('div', { style: { fontWeight: 900, letterSpacing: '.1em', color: '#fb923c' } }, 'BURN SCARS'), s.burns.map((b, i) => h('div', { key: i }, b.by + ' burned ' + b.au + ': \"' + b.x + '\"'))),
         s.me && h('div', { style: { width: '100%', background: 'rgba(255,255,255,.08)', borderRadius: 16, padding: 12, border: '1px solid #fff3' } }, h('div', { style: { fontSize: 32, fontWeight: 900, color: s.me.delta >= 0 ? '#4ade80' : '#f87171' } }, (s.me.delta >= 0 ? '+' : '') + s.me.delta), (s.me.parts || []).map((p, i) => h('div', { key: i, style: { fontSize: 13, fontWeight: 700, color: p.v >= 0 ? '#bbf7d0' : '#fecaca' } }, p.t + (p.v ? ': ' + (p.v >= 0 ? '+' : '') + p.v : '')))));
-    else if (s.m === 'rank') body = h('div', { style: box }, head(s.title || 'LEADERBOARD', '#facc15'), h(BnBoard, { all: s.all, me: uid }), h('div', { style: { color: '#a5f3fc', fontWeight: 800 } }, 'Look at the big screen!'));
+    else if (s.m === 'rank') body = h('div', { style: box }, head(s.title || 'LEADERBOARD', '#facc15'), h(BnBoard, { all: s.all, me: uid }), h('div', { style: { color: '#a5f3fc', fontWeight: 800 } }, 'Hang tight!'));
     else if (s.m === 'end') body = h('div', { style: box }, h('div', { style: { fontSize: 56 } }, Ic(s.rank === 1 ? 'crown' : 'trophy', 64)), head('#' + s.rank + ' · ' + s.score + ' pts', '#fde68a'), h(BnBoard, { all: s.all, me: uid, stats: true }),
-        s.mine && h('div', { style: { width: '100%', background: 'rgba(255,255,255,.08)', borderRadius: 16, padding: 12, textAlign: 'left', fontWeight: 700, fontSize: 15, lineHeight: 1.7 } }, h('div', { style: { fontWeight: 900, color: '#f9a8d4', letterSpacing: '.1em' } }, 'YOUR STATS'), [['Answers written', s.mine.w], ['Times burned', s.mine.bn], ['Answers kept', s.mine.kp], ['Prompts created', s.mine.mk], ['1st-place hits', s.mine.p1], ['2nd-place hits', s.mine.p2], ['Points gained', s.mine.gain], ['Burn penalty (half votes)', s.mine.lost]].map(([a, b]) => h('div', { key: a, style: { display: 'flex', justifyContent: 'space-between' } }, h('span', null, a), h('b', null, b)))),
-        (s.hon || []).length > 0 && h('div', { style: { width: '100%', display: 'flex', flexDirection: 'column', gap: 8 } }, h('div', { style: { fontWeight: 900, color: '#f9a8d4', letterSpacing: '.1em' } }, 'HONORS'), s.hon.map((x, i) => h('div', { key: i, style: { background: 'rgba(250,204,21,.12)', border: '2px solid #facc15', borderRadius: 12, padding: 8, fontWeight: 800 } }, x))));
+        s.mine && h('div', { style: { width: '100%', background: 'rgba(255,255,255,.08)', borderRadius: 16, padding: 12, textAlign: 'left', fontWeight: 700, fontSize: 15, lineHeight: 1.7 } }, h('div', { style: { fontWeight: 900, color: '#f9a8d4', letterSpacing: '.1em' } }, 'YOUR STATS'), [['Answers written', s.mine.w], ['Times burned', s.mine.bn], ['Answers kept', s.mine.kp], ['Prompts created', s.mine.mk], ['1st-place hits', s.mine.p1], ['2nd-place hits', s.mine.p2], ['Points gained', s.mine.gain], ['Burn penalty (half votes)', s.mine.lost], ['Votes cast', s.mine.vt]].map(([a, b]) => h('div', { key: a, style: { display: 'flex', justifyContent: 'space-between' } }, h('span', null, a), h('b', null, b)))),
+        (s.honAll || []).length > 0 && h('div', { style: { width: '100%', display: 'flex', flexDirection: 'column', gap: 8 } }, h('div', { style: { fontWeight: 900, color: '#f9a8d4', letterSpacing: '.1em' } }, 'HONORS'), s.honAll.map((x, i) => h('div', { key: i, style: { background: 'rgba(250,204,21,.12)', border: '2px solid ' + (x.me ? '#ec4899' : '#facc15'), borderRadius: 12, padding: 8, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' } }, h(MonsterAvatar, { attributes: x.avatar, size: 40 }), h('div', null, h('div', { style: { color: '#fde68a', fontWeight: 900 } }, x.t + (x.me ? ' (YOU)' : '')), h('div', { style: { fontSize: 14 } }, x.name), h('div', { style: { fontSize: 11, color: '#a5f3fc' } }, x.d))))),
+        (s.allStats || []).length > 0 && h('button', { onClick: () => setShowAll(v => !v), style: sBtn('#7c3aed', { width: '100%', minHeight: 48, fontSize: 16 }) }, showAll ? 'Hide all players\' stats' : 'Show all players\' stats'),
+        showAll && (s.allStats || []).map((p) => h('div', { key: p.userId, style: { width: '100%', background: 'rgba(255,255,255,.08)', borderRadius: 16, padding: 12, textAlign: 'left', fontWeight: 700, fontSize: 14, lineHeight: 1.6, border: p.userId === uid ? '2px solid #ec4899' : '1px solid #fff3' } }, h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, fontWeight: 900, color: '#f9a8d4', marginBottom: 4 } }, h(MonsterAvatar, { attributes: p.avatar, size: 34 }), p.name), [['Answers written', p.st.w], ['Times burned', p.st.bn], ['Answers kept', p.st.kp], ['Prompts created', p.st.mk], ['1st-place hits', p.st.p1], ['2nd-place hits', p.st.p2], ['Points gained', p.st.gain], ['Burn penalty (half votes)', p.st.lost], ['Votes cast', p.st.vt]].map(([a, b]) => h('div', { key: a, style: { display: 'flex', justifyContent: 'space-between' } }, h('span', null, a), h('b', null, b)))))); 
     return ReactDOM.createPortal(h('div', { className: 's-ovl', style: { position: 'fixed', inset: 0, zIndex: 60, overflowY: 'auto', overflowX: 'hidden', background: 'radial-gradient(circle at 50% 0%,#2a1560 0%,#0f0a29 70%)', color: '#fff', WebkitOverflowScrolling: 'touch' } }, body), document.body);
 };
 const BnBoard = ({ all, me, stats }) => { const h = React.createElement; return h('div', { style: { width: '100%', display: 'flex', flexDirection: 'column', gap: 6 } }, (all || []).map((p, i) => h('div', { key: p.userId, style: { display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 12, background: p.userId === me ? 'rgba(236,72,153,.35)' : 'rgba(255,255,255,.07)', border: i === 0 ? '2px solid #facc15' : '1px solid #fff2', fontWeight: 800 } }, h('span', { style: { width: 24, color: i === 0 ? '#facc15' : '#c084fc' } }, i + 1), h(MonsterAvatar, { attributes: p.avatar, size: 34 }), h('span', { style: { flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, p.name), p.delta ? h('span', { style: { fontSize: 12, color: p.delta > 0 ? '#4ade80' : '#f87171' } }, (p.delta > 0 ? '+' : '') + p.delta) : null, h('span', { style: { color: '#67e8f9' } }, p.score)))); };
@@ -5113,12 +5121,12 @@ const BurnHost = ({ goBack, onGames }) => {
     const send = (uid, type, payload) => { const c = conns.current[uid]; if (c && c.open) c.send({ type, ...payload }); };
     const sendAll = (type, fn) => { const st = S.current; st.players.forEach(p => send(p.userId, type, fn(p.userId, false))); st.audience.forEach(a => send(a.userId, type, fn(a.userId, true))); };
     const resend = (uid, aud) => {
-        const c = S.current.cur; if (!c) { send(uid, 'B_WAIT', { msg: 'Look at the big screen!' }); return; }
+        const c = S.current.cur; if (!c) { send(uid, 'B_WAIT', { msg: 'Hang tight!' }); return; }
         const p = c.make(uid, aud);
-        if (p) send(uid, c.type, { tid: c.tid, t: Math.max(1, Math.ceil((c.dl - Date.now()) / 1000)), tot: c.tot, ...p }); else send(uid, 'B_WAIT', { msg: c.aMsg || 'Look at the big screen!', bt: c.bt && !aud });
+        if (p) send(uid, c.type, { tid: c.tid, t: Math.max(1, Math.ceil((c.dl - Date.now()) / 1000)), tot: c.tot, ...p }); else send(uid, 'B_WAIT', { msg: c.aMsg || 'Hang tight!', bt: c.bt && !aud });
     };
     const openTask = (type, secs, make, aMsg, bt) => { const st = S.current; const tid = ++st.tidc; st.cur = { tid, type, dl: Date.now() + secs * 1000, start: Date.now(), tot: secs, make, aMsg, bt }; st.players.forEach(p => resend(p.userId, false)); st.audience.forEach(a => resend(a.userId, true)); return tid; };
-    const closeTask = (msg) => { S.current.cur = null; sendAll('B_WAIT', () => ({ msg: msg || 'Look at the big screen!' })); };
+    const closeTask = (msg) => { S.current.cur = null; sendAll('B_WAIT', () => ({ msg: msg || 'Hang tight!' })); };
     const stat = (u) => { const st = S.current; return st.stat[u] || (st.stat[u] = { w: 0, bn: 0, kp: 0, mk: 0, p1: 0, p2: 0, gain: 0, lost: 0, f1: 0, s2: 0, vt: 0 }); };
     const nm = (u) => { const p = S.current.players.find(x => x.userId === u); return p ? p.name : '?'; };
     const pav = (u) => { const p = S.current.players.find(x => x.userId === u); return p ? p.avatar : null; };
@@ -5211,7 +5219,7 @@ const BurnHost = ({ goBack, onGames }) => {
         setPhase('BURN_REVEAL'); const burns = [], scorched = {};
         for (let i = 0; i < ps.length; i++) {
             const p = ps[i], bc = burned[p.userId], kc = kept[p.userId]; stat(bc.au).bn += 1; stat(bc.au).lost += 1; scorched[bc.au] = (scorched[bc.au] || 0) + 1; burns.push({ by: p.userId, au: bc.au, x: bc.x, lost: 0 }); chk();
-            setInfo({ by: p.userId, bc, kc, loss: 0, i: i + 1, n: ps.length, k: Math.random() }); sfx(i % 2 ? 'squelchy.wav' : 'draw.wav'); speak(nm(p.userId) + ' burns ' + nm(bc.au) + '!'); sendAll('B_WAIT', (u, aud) => ({ msg: u === p.userId ? 'You burned ' + nm(bc.au) + '!' : u === bc.au ? 'You got BURNED by ' + nm(p.userId) + '!' : 'Watch the big screen!' })); await nap(4800);
+            setInfo({ by: p.userId, bc, kc, loss: 0, i: i + 1, n: ps.length, k: Math.random() }); sfx(i % 2 ? 'squelchy.wav' : 'draw.wav'); speak(nm(p.userId) + ' burns ' + nm(bc.au) + '!'); sendAll('B_REV', (u) => ({ by: nm(p.userId), byAv: pav(p.userId), au: nm(bc.au), auAv: pav(bc.au), you: u === p.userId ? 'by' : u === bc.au ? 'au' : '', i: i + 1, n: ps.length })); await nap(4800);
         }
         /* VOTE */
         st.votes = {}; setPhase('VOTING'); setInfo({ label: (r === 3 ? 'WHIP OF THE BLERSJ' : 'ROUND ' + r) + ' · VOTE FOR YOUR FAVORITES' }); speak('Vote for your favorite, and then your second favorite. You cannot vote for prompts you wrote!');
@@ -5229,7 +5237,7 @@ const BurnHost = ({ goBack, onGames }) => {
         st.hist.push({ round: r, mult, entries: sorted.map(e => ({ id: e.id, cr: e.cr, an: e.an, p: e.p, x: e.x, kp: e.kp, f1: e.f1, s2: e.s2, place: e.place, cp: e.cp, ap: e.ap })), burns });
         /* RESULTS */
         const top = sorted.filter(e => e.place === 1 || e.place === 2);
-        sendAll('B_RES', (u, aud) => ({ title: 'RESULTS', top: top.slice(0, 2).map(e => ({ p: e.p, x: e.x, cn: nm(e.cr), an: nm(e.an) })), me: aud ? null : { delta: delta[u] ? delta[u].v : 0, parts: delta[u] ? delta[u].parts : [] } }));
+        sendAll('B_RES', (u, aud) => ({ title: 'RESULTS', ents: sorted.map(e => ({ p: e.p, x: e.x, cn: nm(e.cr), an: nm(e.an), place: e.place, f1: e.f1, s2: e.s2, cp: e.cp || 0, ap: e.ap || 0, mine: !aud && (e.cr === u || e.an === u) })), burns: burns.map(x => ({ by: nm(x.by), au: nm(x.au), x: x.x })), me: aud ? null : { delta: delta[u] ? delta[u].v : 0, parts: delta[u] ? delta[u].parts : [] } }));
         const rest = sorted.filter(e => e.place > 2 || e.place === 0), second = sorted.filter(e => e.place === 2), first = sorted.filter(e => e.place === 1);
         setPhase('RESULTS'); setInfo({ stage: 0, rest, second, first, burns, mult }); speak('The votes are in!'); await nap(3500); chk();
         if (second.length) { setInfo({ stage: 1, rest, second, first, burns, mult }); sfx('squelchy.wav'); speak('In second place: ' + nm(second[0].cr) + ' and ' + nm(second[0].an)); await nap(5000); chk(); }
@@ -5245,7 +5253,7 @@ const BurnHost = ({ goBack, onGames }) => {
         const honors = [['Crispy Critter', 'Most burned', best(s => s.bn)], ['Prompt Pro', 'Most prompt points won', best(s => s.p1 * 2 + s.p2)], ['Quick Wit', 'Most winning answers', best(s => s.p1)], ['Pyromaniac', 'Burned the best answers (most 1st+2nd hits scorched)', null], ['Fireproof', 'Never got burned', (() => { const f = ps.filter(p => stat(p.userId).bn === 0); return f.length && f.length < ps.length ? { name: f[0].name, avatar: f[0].avatar, userId: f[0].userId, v: 0 } : null; })()], ['Comeback Kid', 'Got burned the most and fought on', best(s => s.lost, 2)], ['Point Machine', 'Most points gained', best(s => s.gain, 1)]].filter(x => x[2]).map(x => ({ t: x[0], name: x[2].name, avatar: x[2].avatar, userId: x[2].userId, d: x[1] }));
         setPhase('GAME_END'); setInfo({ sorted, honors }); speak("The game is over! Let's see who survived the burn!"); sfx('victory.wav'); bnConfetti(60);
         const honFor = (u) => honors.filter(x => x.userId === u).map(x => x.t + ' (' + x.d + ')');
-        sendAll('B_END', (u, aud) => ({ rank: sorted.findIndex(p => p.userId === u) + 1, score: st.sc[u] || 0, all: sorted.map(p => ({ userId: p.userId, name: p.name, avatar: p.avatar, score: p.score })), mine: aud ? null : stat(u), hon: honFor(u) }));
+        sendAll('B_END', (u, aud) => ({ rank: sorted.findIndex(p => p.userId === u) + 1, score: st.sc[u] || 0, all: sorted.map(p => ({ userId: p.userId, name: p.name, avatar: p.avatar, score: p.score })), mine: aud ? null : stat(u), hon: honFor(u), honAll: honors.map(x => ({ t: x.t, name: x.name, avatar: x.avatar, d: x.d, me: x.userId === u })), allStats: sorted.map(p => ({ userId: p.userId, name: p.name, avatar: p.avatar, st: stat(p.userId) })) }));
         try { await saveGameHistory({ mode: 'burn', date: new Date().toISOString(), players: sorted.map(p => ({ ...p, pid: PIDMAP[p.userId] || ('u:' + p.userId), net: NETMAP[p.userId] || null })), rounds: [], burn: { rounds: st.hist, stats: st.stat, honors: honors.map(x => ({ t: x.t, name: x.name })) } }); } catch (e) { console.error(e); }
     };
     /* ---- render ---- */
@@ -5281,9 +5289,9 @@ const BurnHost = ({ goBack, onGames }) => {
     else if (phase === 'BURN_REVEAL') { const bc = info.bc, kc = info.kc; body = bc ? h('div', { key: info.i, className: 'scale-in', style: { width: '100%', maxWidth: 1000, margin: '0 auto' } }, h('div', { style: { fontWeight: 900, letterSpacing: '.15em', color: '#fb923c', fontSize: 20 } }, 'BURN ' + info.i + '/' + info.n),
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, fontWeight: 900, fontSize: 'clamp(22px,4vw,40px)', margin: '8px 0' } }, h(MonsterAvatar, { attributes: pav(info.by), size: 64 }), h('span', null, nm(info.by)), h('span', { style: { color: '#f97316', ...sFont } }, 'BURNS'), h(MonsterAvatar, { attributes: pav(bc.au), size: 64 }), h('span', null, nm(bc.au))),
         h('div', { style: { display: 'flex', gap: 28, justifyContent: 'center', flexWrap: 'wrap', alignItems: 'flex-start', marginTop: 14 } },
-            h('div', { style: { position: 'relative', flex: '1 1 320px', maxWidth: 440 } }, h('div', { className: 'bn-card bn-burning', style: { ...glass, background: '#7c2d12', border: '4px solid #f97316', padding: 20 } }, h('div', { style: { fontSize: 13, color: '#fdba74', fontWeight: 800 } }, 'Answered: ' + bc.p), h('div', { style: { fontSize: 'clamp(24px,3.6vw,38px)', fontWeight: 900 } }, '"' + bc.x + '"')), h(BnFlames, { n: 9 }), h('div', { className: 'bn-stamp', style: { position: 'absolute', top: -14, right: -6, ...sFont, fontSize: 40, color: '#ef4444', background: '#fff', padding: '0 12px', borderRadius: 8, transform: 'rotate(-6deg)', animationDelay: '.6s', opacity: 0 } }, 'BURNED')),
-            h('div', { style: { flex: '1 1 320px', maxWidth: 440 } }, h('div', { className: 'bn-card', style: { ...glass, background: '#14532d', border: '4px solid #4ade80', padding: 20 } }, h('div', { style: { fontSize: 13, color: '#bbf7d0', fontWeight: 800 } }, 'KEPT'), h('div', { style: { fontSize: 'clamp(24px,3.6vw,38px)', fontWeight: 900 } }, '"' + kc.x + '"')))),
-        h('div', { style: { marginTop: 24, fontWeight: 900, fontSize: 26, color: '#f87171' } }, nm(bc.au) + ' is BURNED! Their votes count half this round.'),
+            h('div', { style: { position: 'relative', flex: '1 1 320px', maxWidth: 440 } }, h('div', { className: 'bn-card bn-burning', style: { ...glass, background: '#7c2d12', border: '4px solid #f97316', padding: 20 } }, h('div', { style: { minHeight: 150 } })), h(BnFlames, { n: 9 }), h('div', { className: 'bn-stamp', style: { position: 'absolute', top: -14, right: -6, ...sFont, fontSize: 40, color: '#ef4444', background: '#fff', padding: '0 12px', borderRadius: 8, transform: 'rotate(-6deg)', animationDelay: '.6s', opacity: 0 } }, 'BURNED')),
+            h('div', { style: { position: 'relative', flex: '1 1 320px', maxWidth: 440 } }, h('div', { className: 'bn-card', style: { ...glass, background: '#14532d', border: '4px solid #4ade80', padding: 20 } }, h('div', { style: { minHeight: 150 } }), h('div', { style: { position: 'absolute', top: -14, right: -6, ...sFont, fontSize: 40, color: '#16a34a', background: '#fff', padding: '0 12px', borderRadius: 8, transform: 'rotate(5deg)' } }, 'KEPT')))),
+        
         h('button', { onClick: () => { S.current.skip = true; }, style: sBtn('#4b5563', { marginTop: 14, minHeight: 40, fontSize: 13 }) }, 'Skip')) : null; }
     else if (phase === 'VOTING') body = h('div', { className: 'scale-in', style: { width: '100%' } }, title('VOTE!', '#facc15'), h('div', { style: { fontWeight: 900, letterSpacing: '.12em', color: '#22d3ee', fontSize: 'clamp(14px,2.2vw,22px)', textTransform: 'uppercase' } }, info.label), h('p', { style: { fontWeight: 800, color: '#fde68a', fontSize: 20 } }, 'Pick your favorite, then your 2nd favorite. You can\'t pick your own!'),
         h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center', margin: '14px 0' } }, (st.entries || []).map(e => ecard(e))), h('div', { style: { fontFamily: 'monospace', fontWeight: 900, fontSize: 80, lineHeight: 1, color: timer <= 5 ? '#f87171' : '#fff' } }, timer), h('div', { style: { display: 'inline-block', marginTop: 6, background: 'rgba(0,0,0,.35)', padding: '6px 22px', borderRadius: 99, fontWeight: 800, letterSpacing: '.1em' } }, 'VOTES: ' + Object.keys(st.votes || {}).length + (audience.length ? ' (audience included)' : '')));
@@ -5301,7 +5309,7 @@ const BurnHost = ({ goBack, onGames }) => {
             h('h3', { style: { ...sFont, fontSize: 36, color: '#f472b6', margin: '30px 0 12px', letterSpacing: '.1em' } }, 'HONORS'),
             h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14, maxWidth: 980, margin: '0 auto' } }, (info.honors || []).map((x, i) => h('div', { key: i, className: 'scale-in', style: { ...glass, padding: 14, border: '2px solid #facc15', animationDelay: i * .15 + 's' } }, h('div', { style: { fontWeight: 900, fontSize: 20, color: '#fde68a' } }, x.t), h('div', { style: { display: 'flex', justifyContent: 'center', margin: '6px 0' } }, h(MonsterAvatar, { attributes: x.avatar, size: 60 })), h('div', { style: { fontWeight: 900, fontSize: 18 } }, x.name), h('div', { style: { fontSize: 12, color: '#a5f3fc' } }, x.d)))),
             h('h3', { style: { ...sFont, fontSize: 36, color: '#22d3ee', margin: '30px 0 12px', letterSpacing: '.1em' } }, 'STATS'),
-            h('div', { style: { ...glass, padding: 14, maxWidth: 980, margin: '0 auto', overflowX: 'auto' } }, h('table', { style: { width: '100%', fontWeight: 700, fontSize: 15, textAlign: 'center' } }, h('thead', null, h('tr', { style: { color: '#f9a8d4' } }, ['Player', 'Written', 'Burned', 'Kept', 'Prompts', '1st', '2nd', 'Gained', 'Half votes'].map(c => h('th', { key: c, style: { padding: '4px 8px' } }, c)))), h('tbody', null, tags.map(({ u, s }) => h('tr', { key: u, style: { borderTop: '1px solid #fff2' } }, [nm(u), s.w, s.bn, s.kp, s.mk, s.p1, s.p2, s.gain, s.lost].map((c, i) => h('td', { key: i, style: { padding: '4px 8px', textAlign: i ? 'center' : 'left' } }, c))))))),
+            h('div', { style: { ...glass, padding: 14, maxWidth: 980, margin: '0 auto', overflowX: 'auto' } }, h('table', { style: { width: '100%', fontWeight: 700, fontSize: 15, textAlign: 'center' } }, h('thead', null, h('tr', { style: { color: '#f9a8d4' } }, ['Player', 'Written', 'Burned', 'Kept', 'Prompts', '1st', '2nd', 'Gained', 'Half votes', 'Votes cast'].map(c => h('th', { key: c, style: { padding: '4px 8px' } }, c)))), h('tbody', null, tags.map(({ u, s }) => h('tr', { key: u, style: { borderTop: '1px solid #fff2' } }, [nm(u), s.w, s.bn, s.kp, s.mk, s.p1, s.p2, s.gain, s.lost, s.vt].map((c, i) => h('td', { key: i, style: { padding: '4px 8px', textAlign: i ? 'center' : 'left' } }, c))))))),
             h('div', { style: { display: 'flex', gap: 14, justifyContent: 'center', margin: '28px 0 40px', flexWrap: 'wrap' } }, h('button', { onClick: () => window.location.reload(), style: sBtn('#2563eb', { minHeight: 64, fontSize: 22, padding: '12px 36px' }) }, 'Play Again'), h('button', { onClick: goBack, style: sBtn('#4b5563', { minHeight: 64, fontSize: 22, padding: '12px 36px' }) }, 'Main Menu')));
     }
     const playing = phase !== 'LOBBY' && phase !== 'GAME_END';
@@ -5847,7 +5855,7 @@ const OnlineHost = ({ goBack, onGames }) => {
             }
         }
         else {
-            sendToClient(userId, 'STATE_WAITING', { msg: "Look at the big screen!" });
+            sendToClient(userId, 'STATE_WAITING', { msg: "Hang tight!" });
         }
     };
     const handleClientMessage = (data, conn) => {
@@ -6592,7 +6600,7 @@ const OnlineClient = ({ goBack, auto }) => {
             setClientState('WAITING_LOBBY');
             if (data.avatar)
                 setMyAvatar(data.avatar);
-            setVoteData(data.isAudience ? "You joined as Audience!" : "You're in! Look at the big screen.");
+            setVoteData(data.isAudience ? "You joined as Audience!" : "You're in! Get ready!");
         }
         if (data.type === 'KICKED') {
             clearTimeout(joinTimer.current); try { localStorage.removeItem('blersjda_session'); } catch (e) { }
@@ -6655,7 +6663,7 @@ const OnlineClient = ({ goBack, auto }) => {
         setMyVotedFor(playerId);
         window.blToast('Vote cast!', { type: 'success', ttl: 1500 });
         setClientState('WAITING');
-        setVoteData("Vote cast! Look at the screen.");
+        setVoteData("Vote cast! Hang tight!");
     };
     const AttributeCarousel = ({ label, options, currentVal, attrKey }) => {
         const currentIndex = options.indexOf(currentVal) === -1 ? 0 : options.indexOf(currentVal);
@@ -6727,7 +6735,7 @@ const OnlineClient = ({ goBack, auto }) => {
                 }, color: "green", className: "mt-6 text-lg py-3" }, React.createElement(React.Fragment, null, React.createElement(Ico, { n: "check", size: 20 }), " Looking Good")))),
         clientState === 'WAITING' && !isEditingAvatar && (React.createElement("div", { className: "w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in" },
             React.createElement("h2", { className: "text-4xl font-black text-cyan-400 mb-6 uppercase tracking-widest" }, "Hold tight."),
-            React.createElement("p", { className: "text-2xl text-purple-200 font-bold leading-relaxed" }, typeof voteData === 'string' ? voteData : 'Look at the main screen.'),
+            React.createElement("p", { className: "text-2xl text-purple-200 font-bold leading-relaxed" }, typeof voteData === 'string' ? voteData : 'Hang tight!'),
             myAvatar && !String(voteData).includes("Audience") && (React.createElement("div", { className: "flex flex-col items-center w-full mt-8" },
                 React.createElement("div", { className: "mb-6" },
                     React.createElement(MonsterAvatar, { attributes: myAvatar, size: 100 })),
@@ -6800,7 +6808,7 @@ const OnlineClient = ({ goBack, auto }) => {
             })))),
         clientState === 'LEADERBOARD' && voteData && voteData.players && (React.createElement("div", { className: "w-full max-w-md mt-4 p-6 glass-panel rounded-3xl border-t-8 border-yellow-500 scale-in" },
             React.createElement("h2", { className: "text-4xl font-black text-yellow-400 mb-2 uppercase tracking-widest text-center" }, voteData.isFinal ? "Final Ranks" : `Round ${voteData.round} Over`),
-            React.createElement("p", { className: "text-center text-purple-200 mb-8 font-bold text-sm uppercase tracking-widest" }, voteData.isFinal ? "Game Over!" : "Look at the big screen"),
+            React.createElement("p", { className: "text-center text-purple-200 mb-8 font-bold text-sm uppercase tracking-widest" }, voteData.isFinal ? "Game Over!" : "Hang tight…"),
             React.createElement("div", { className: "flex flex-col gap-3" }, voteData.players.map((p, i) => (React.createElement("div", { key: p.userId, className: `p-4 rounded-xl flex justify-between items-center font-bold shadow-md ${i === 0 ? 'bg-yellow-600/30 border border-yellow-500' : 'bg-black/30'}` },
                 React.createElement("div", { className: "flex gap-4 items-center" },
                     React.createElement("span", { className: i === 0 ? 'text-yellow-400 text-2xl' : 'text-purple-400' },
