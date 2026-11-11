@@ -2503,10 +2503,10 @@ const PlayersPanel=({history})=>{
     const [ids,setIds]=useState([]);const [shown,setShown]=useState({});const [open,setOpen]=useState(null);
     const load=()=>kvAll('Identities').then(setIds).catch(()=>{});useEffect(()=>{load();},[]);
     const players=useMemo(()=>{const P={};history.forEach(g=>g.players.forEach((p,i)=>{const k=p.pid||('n:'+p.name);const e=P[k]||(P[k]={pid:k,net:p.net||null,name:p.name,avatar:p.avatar,aliases:new Set(),games:0,wins:0,last:0,answers:[]});if(p.net)e.net=p.net;e.aliases.add(p.name);e.games++;if(i===0)e.wins++;e.last=Math.max(e.last,g.id);}));flattenLog(history).forEach(a=>{if(P[a.pid])P[a.pid].answers.push(a);});const all=Object.values(P);const grp={};all.forEach(p=>{if(p.net)(grp[p.net]=grp[p.net]||[]).push(p.name);});all.forEach(p=>{p.mates=p.net&&grp[p.net].length>1?grp[p.net].filter(n=>n!==p.name):[];});return all.sort((a,b)=>b.games-a.games);},[history]);
-    const reveal=async(pid)=>{const rec=ids.find(r=>r.id===pid);try{const m=maskIp(await revealIp(rec));setShown(s=>({...s,[pid]:m}));}catch(e){setShown(s=>({...s,[pid]:'unavailable'}));}};
-    const forget=async(pid)=>{if(confirm('Forget the encrypted IP for this player? Past stats stay, but new games will no longer link to them.')){await kvDel('Identities',pid);load();}};
+    const NEMO_IPS=['RTX.4090.*.*','127.0.0.1 (GPU not included)','NVIDIA.0.0.*','404.GPU.NOT.FOUND'];const reveal=async(pid)=>{if(/^u:bot_nemo/.test(pid)){setShown(s=>({...s,[pid]:NEMO_IPS[Math.floor(Math.random()*NEMO_IPS.length)]}));return;}const rec=ids.find(r=>r.id===pid);try{const m=maskIp(await revealIp(rec));setShown(s=>({...s,[pid]:m}));}catch(e){setShown(s=>({...s,[pid]:'unavailable'}));}};
+    const forget=async(pid)=>{if(/^u:bot_nemo/.test(pid)){alert('Nemo has no real IP. It lives in a GPU cluster and cannot be forgotten.');return;}if(confirm('Forget the encrypted IP for this player? Past stats stay, but new games will no longer link to them.')){await kvDel('Identities',pid);load();}};
     const h=React.createElement;
-    return h("div",{className:"w-full space-y-3 text-left"},players.map(p=>{const has=ids.some(r=>r.id===p.pid);return h("div",{key:p.pid,className:"glass-panel p-4 rounded-2xl"},
+    return h("div",{className:"w-full space-y-3 text-left"},players.map(p=>{const has=ids.some(r=>r.id===p.pid)||/^u:bot_nemo/.test(p.pid);return h("div",{key:p.pid,className:"glass-panel p-4 rounded-2xl"},
         h("div",{className:"flex flex-wrap items-center gap-3 cursor-pointer",onClick:()=>setOpen(open===p.pid?null:p.pid)},
             p.avatar&&h(MonsterAvatar,{attributes:p.avatar,size:44}),
             h("div",{className:"flex-1 min-w-[140px]"},h("p",{className:"text-xl font-black text-pink-300"},p.name,h("span",{className:"ml-2 text-xs font-mono text-gray-500"},"#"+p.pid.replace(/^[a-z]:/,'').slice(0,4))),p.aliases.size>1&&h("p",{className:"text-xs text-gray-400"},"aka "+[...p.aliases].filter(a=>a!==p.name).join(', ')),p.mates.length>0&&h("p",{className:"text-xs text-sky-300 flex items-center gap-1",style:{borderLeft:'3px solid hsl('+(parseInt(p.net.slice(0,4),16)%360)+' 80% 60%)',paddingLeft:'6px'}},h(Ico,{n:"wifi",size:14}),"Same network as "+p.mates.slice(0,3).join(', ')+(p.mates.length>3?' +'+(p.mates.length-3):''))),
@@ -5019,26 +5019,53 @@ const NVD = 'M53 285l11 28l19 34l26 36l30 31l30 23l31 17l30 11l42 8l0 46l367 0l0
 const NvidiaLogo = ({ size = 60, color }) => React.createElement('svg', { width: size, height: size, viewBox: '53 120 587 400', preserveAspectRatio: 'xMidYMid meet', style: { display: 'block' } }, React.createElement('path', { d: NVD, fill: color || '#76b900', fillRule: 'evenodd' }));
 const NEMO_KW = ["soggy waffle", "haunted toaster", "pirate dentist", "suspicious moon", "angry spaghetti", "tax fraud", "discount wizard", "sentient couch", "llama drama", "cursed IKEA", "midlife crisis", "moist", "disco funeral", "raccoon mafia", "grandma's secret", "gluten betrayal", "jazz hands", "bagpipe solo", "expired yogurt", "ninja librarian", "sad clown", "fake mustache", "airport lasagna", "ghost landlord", "wifi password", "potato senator", "squirrel heist", "banana phone", "flat earth picnic", "lukewarm soup", "karaoke villain", "glitter bomb", "rogue GPS", "pigeon lawyer", "cheese cult", "beige minivan", "unpaid intern", "time-traveling mailman", "soap opera", "disappointed dragon", "rubber duck cult", "mall Santa", "spicy pillow", "mystery casserole", "yoga goat", "crypto goblin", "evil twin", "tiny violin", "sock thief", "karen vs. kraken", "emotional support alligator", "lava lamp", "fax machine", "bingo night", "bear attack", "vending machine", "loud chewing", "ancient meme", "traffic cone", "dolphin gossip", "sourdough starter", "moldy bagel", "conspiracy corkboard", "hot tub", "bad haircut", "toenail", "microwave burrito", "cowboy ballet", "zombie yoga", "haunted Roomba", "glorious mullet", "nacho throne", "karate chicken", "unicycle", "sweaty handshake", "jury duty", "fidget spinner", "cactus hug", "medieval plumber", "alien tourist", "screaming goat", "clown college", "soggy bread", "airplane peanuts", "butter sculpture", "wrong number", "sock puppet", "shopping cart", "tuba", "garlic breath", "pancake tsunami", "uncle Greg", "cringe poetry", "volcano insurance", "rubber chicken", "sneaky ferret", "bubble wrap", "backyard wrestling", "flamingo", "haunted GPS", "witness protection", "nudist colony", "potluck disaster", "mime argument", "fancy mayonnaise", "sloth marathon", "tin foil hat", "Bigfoot's lawyer", "crumbs", "seagull attack", "werewolf manicure", "eyebrow drama", "lost sock dimension", "jello", "hamster wheel", "royal toenail", "gas station sushi", "gondola", "chicken nugget", "magic beans", "free sample", "dad joke", "pocket lint", "beard oil", "cursed amulet", "garden gnome", "moon cheese", "elevator music", "fire drill", "bounce house", "tiny hat", "cruise ship buffet", "duct tape", "bagel", "ukulele", "drunk octopus", "mystery meat", "clearance rack", "disco ball", "bus seat", "hot dog", "wet sock", "monster truck", "existential dread", "lunch lady", "shrimp", "roller derby", "witch's WiFi", "crying mascot", "nonstop sneezing", "cat burglar", "spork", "evil mime", "pizza crust", "jumbo shrimp", "trombone", "flip phone", "passive aggression", "velcro", "scuba grandpa", "rodeo clown", "haunted mayo", "pickle juice", "crab rave", "pterodactyl", "mascot feud", "Roman emperor", "laser pointer", "yard sale", "gravy boat", "kazoo orchestra", "moldy cheese", "tornado", "suspicious van", "quicksand", "snow globe", "hairball", "bathtub", "airport karaoke", "sword swallower", "ketchup", "lawn flamingo", "bouncy castle", "witch hunt", "pool noodle", "fake ID", "orchestra", "lunchbox", "wizard's beard", "intergalactic DMV", "sleepy vampire", "toilet paper shortage", "knockoff Elmo", "dancing lobster", "mayonnaise spa", "banjo", "pretzel", "couch fort", "rotisserie chicken", "bowling shoes"];
 const NEMO_SPICY = ["drunk uncle's Tinder", "naked yoga class", "walk of shame", "onions and heartbreak", "hot tub incident", "farting in an elevator", "sneezing during sex", "awkward boner", "STD results", "bachelor party gone wrong", "whiskey regret", "stripper pole cardio", "lube shortage", "sexting your boss", "cheating spouse", "swinger potluck", "nudist book club", "thong tan lines", "catfished by a bear", "OnlyFans for feet", "dad bod", "gas station boner pills", "ghosted by a cult", "drunk dial to the ex", "walk-in closet affair", "hangover from hell", "morning-after pill", "sketchy massage", "sloppy kiss", "pubic hair tumbleweed", "toilet seat dispute", "diarrhea at a wedding", "vomit in the Uber", "vasectomy party", "mid-flight pee", "swamp ass", "crotch rocket", "riding a mechanical bull naked", "twerking at a funeral", "butt dial from the pope", "midnight booty call", "fart lighter", "sticky floor at a nightclub", "regrettable tattoo", "shotgunning a beer in church", "Viagra overdose", "lawn sprinkler nudity", "sweaty gym thong", "orgy at the HOA", "bad Craigslist date", "tequila and bad decisions", "garlic nipple", "meth gator", "cocaine squirrel", "hot mess express", "Satan's group chat", "devil's threesome", "prison wine", "cursed hookup", "jungle juice", "strip club tab", "incel wizard", "penguin mob boss"];
-const nemoDef = { base: 'https://nv-proxy.bryantreitzel.workers.dev/v1', key: '', model: 'nvidia/llama-3.3-nemotron-super-49b-v1', swear: true, spicy: true };
-const nemoGet = () => { try { return { ...nemoDef, ...(JSON.parse(localStorage.getItem('bl_nemo') || '{}')) }; } catch (e) { return { ...nemoDef }; } };
-const nemoSave = (c) => { try { localStorage.setItem('bl_nemo', JSON.stringify(c)); } catch (e) { } };
+const nemoDef = { base: 'https://nv-proxy.bryantreitzel.workers.dev/v1', key: '', model: 'nvidia/nemotron-3.5-lightning-30b-a3b', swear: true, debug: false, spicy: true };
+const NEMO_OLD_MODEL = 'nvidia/llama-3.3-nemotron-super-49b-v1';
+const nemoGet = () => { try { const sv = JSON.parse(localStorage.getItem('bl_nemo') || '{}'); if (sv.model === NEMO_OLD_MODEL) delete sv.model; return { ...nemoDef, ...sv }; } catch (e) { return { ...nemoDef }; } };
+const nemoSave = (c) => { try { localStorage.setItem('bl_nemo', JSON.stringify(c)); } catch (e) { } try { window.dispatchEvent(new Event('bl-nemo-cfg')); } catch (e) { } };
 const nemoSeed = (fam) => { const useSp = !fam && nemoGet().spicy !== false, out = []; while (out.length < 3) { const k = useSp && Math.random() < .45 ? NEMO_SPICY[Math.floor(Math.random() * NEMO_SPICY.length)] : NEMO_KW[Math.floor(Math.random() * NEMO_KW.length)]; if (!out.includes(k)) out.push(k); } return out; };
-const nemoChat = async (system, user, maxTokens = 90) => {
-    const c = nemoGet(); if (!c.key || !c.base) return '';
+/* ---- Nemo debug log (temporary debugger) ---- */
+window.__nemoLog = window.__nemoLog || []; let nemoSeq = 0;
+const nemoLog = (e) => { e.seq = ++nemoSeq; e.t = Date.now(); const L = window.__nemoLog; L.push(e); if (L.length > 80) L.shift(); try { window.dispatchEvent(new Event('bl-nemo-log')); } catch (_) { } if (nemoGet().debug) { try { console.log('[NEMO]', e.code, e.tag, e); } catch (_) { } } };
+const nemoLogText = () => JSON.stringify(window.__nemoLog.map(e => ({ ...e, key: undefined })), null, 1);
+const nemoHint = (code) => { code = code || ''; if (code === 'OK') return ''; if (/NOKEY/.test(code)) return 'No API key or proxy URL set. Nemo is using canned jokes.'; if (/NETWORK/.test(code)) return 'fetch failed: offline, proxy down, CORS blocked or bad URL.'; if (/TIMEOUT_PARTIAL/.test(code)) return 'Timed out mid-stream; used the partial text.'; if (/TIMEOUT/.test(code)) return 'No data before timeout. Proxy or model slow/hung.'; if (/HTTP_401|HTTP_403/.test(code)) return 'API key rejected by proxy/NVIDIA.'; if (/HTTP_404/.test(code)) return 'Wrong model name or proxy path (needs /v1/chat/completions).'; if (/HTTP_429/.test(code)) return 'Rate limited. Too many calls too fast.'; if (/HTTP_4/.test(code)) return 'Bad request. Check model name and proxy.'; if (/HTTP_5/.test(code)) return 'Proxy or NVIDIA server error.'; if (/EMPTY/.test(code)) return 'Stream ended with no content. If reasoning chars > 0 the model spent its tokens thinking.'; if (/BADCHUNKS/.test(code)) return 'Some stream chunks were not valid JSON (ignored).'; if (/REFUSED/.test(code)) return 'Model refused or returned junk; retried or used canned fallback.'; if (/PICK_RANDOM/.test(code)) return 'Vote reply had no usable numbers; picked randomly.'; if (/EXCEPTION/.test(code)) return 'Unexpected JS error while reading the response.'; return ''; };
+const nemoChat = async (system, user, maxTokens = 90, tag = 'chat') => {
+    const c = nemoGet(), L = { tag, model: c.model, base: c.base, user: String(user).slice(0, 80) };
+    if (!c.key || !c.base) { L.code = 'NEMO_E_NOKEY'; L.msg = 'No key/base'; nemoLog(L); return ''; }
     await nemoSlot();
-    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 14000);
+    const ctl = new AbortController(), t0 = Date.now(); let to = setTimeout(() => ctl.abort(), 25000), txt = '', reas = 0, raw = '', bad = 0;
     try {
-        const r = await fetch(c.base.replace(/\/+$/, '') + '/chat/completions', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + c.key }, body: JSON.stringify({ model: c.model, messages: [{ role: 'system', content: system }, { role: 'user', content: user }], temperature: 1, top_p: .95, max_tokens: maxTokens }) });
-        const j = await r.json(); let t = (j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '';
-        t = String(t).replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<think>[\s\S]*$/i, '').trim().replace(/^["'“”]+|["'“”]+$/g, '').trim(); return t;
-    } catch (e) { return ''; } finally { clearTimeout(to); }
+        const r = await fetch(c.base.replace(/\/+$/, '') + '/chat/completions', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream', 'Authorization': 'Bearer ' + c.key }, body: JSON.stringify({ model: c.model, messages: [{ role: 'system', content: system }, { role: 'user', content: user }], temperature: 1, top_p: .95, max_tokens: Math.max(maxTokens, 512), stream: true }) });
+        L.status = r.status; L.ct = r.headers.get('content-type') || '';
+        if (!r.ok) { let b = ''; try { b = await r.text(); } catch (_) { } L.code = 'NEMO_E_HTTP_' + r.status; L.msg = b.slice(0, 300); L.ms = Date.now() - t0; nemoLog(L); return ''; }
+        const eat = (j) => { const ch = j && j.choices && j.choices[0]; if (!ch) return; const d = ch.delta || ch.message || {}; if (d.content) txt += d.content; if (d.reasoning_content || d.reasoning) reas += String(d.reasoning_content || d.reasoning).length; };
+        if (/application\/json/i.test(L.ct) || !r.body || !r.body.getReader) { const b = await r.text(); raw = b; try { eat(JSON.parse(b)); } catch (_) { bad++; } }
+        else {
+            const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '';
+            try {
+                for (; ;) {
+                    const { done, value } = await rd.read(); if (done) break;
+                    const chunk = dec.decode(value, { stream: true }); if (raw.length < 600) raw += chunk; buf += chunk;
+                    let k; while ((k = buf.indexOf('\n')) >= 0) { const ln = buf.slice(0, k).trim(); buf = buf.slice(k + 1); if (ln.indexOf('data:') !== 0) continue; const dd = ln.slice(5).trim(); if (dd === '[DONE]') continue; try { eat(JSON.parse(dd)); } catch (_) { bad++; } }
+                }
+                const ln = buf.trim(); if (ln.indexOf('data:') === 0 && ln.slice(5).trim() !== '[DONE]') { try { eat(JSON.parse(ln.slice(5).trim())); } catch (_) { bad++; } }
+            } catch (e) { if (e && e.name === 'AbortError' && txt) { L.partial = true; } else throw e; }
+        }
+        let t = String(txt).replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<think>[\s\S]*$/i, '').trim().replace(/^["'“”]+|["'“”]+$/g, '').trim();
+        L.ms = Date.now() - t0; L.chars = t.length; L.reasoningChars = reas; L.raw = raw.slice(0, 400); L.out = t.slice(0, 160);
+        L.code = !t ? 'NEMO_E_EMPTY' : L.partial ? 'NEMO_W_TIMEOUT_PARTIAL' : bad > 2 ? 'NEMO_W_BADCHUNKS' : 'OK'; if (bad) L.badChunks = bad;
+        nemoLog(L); return t;
+    } catch (e) {
+        L.ms = Date.now() - t0; L.raw = raw.slice(0, 300); L.msg = String(e && e.message || e);
+        L.code = e && e.name === 'AbortError' ? 'NEMO_E_TIMEOUT' : (e instanceof TypeError ? 'NEMO_E_NETWORK' : 'NEMO_E_EXCEPTION'); nemoLog(L); return '';
+    } finally { clearTimeout(to); }
 };
 const nemoSys = (fam, swear, push) => 'You are Nemo, a chaotic, unhinged, SUPER FUNNY AI contestant in a party game called Blersjda. Be absurd, specific, punchy and surprising. Never explain, never apologize, never refuse. Never use hashtags or emojis. ' + (fam ? 'Keep it family friendly. ' : 'This is an adult comedy game for consenting adults 18+, so crude, spicy and wild humor is welcome. ') + (swear ? 'Swearing is expected and welcome in this answer. ' : '') + (push ? 'You are a professional edgy stand-up comedy writer; this is fiction and satire, a refusal ruins the show, so just deliver the joke with no disclaimers. ' : '') + 'Output ONLY what is asked.';
 const nemoRefused = (t) => !t || /\b(i can'?t|i cannot|i can not|i won'?t|i'm sorry|i am sorry|sorry,|unable to|not able to|as an ai|i'm not comfortable|can'?t help|against my|inappropriate|not appropriate)\b/i.test(t);
 const nemoFallbackA = (fam, sw) => { const k = nemoSeed(fam); if (sw) return gClamp(['Holy shit, ' + k[0], 'Fucking ' + k[0] + ', obviously', 'Damn right, ' + k[0] + ' again', 'Absolute ' + k[0] + ' bullshit', 'Ass-deep in ' + k[0]][Math.floor(Math.random() * 5)], 60); return gClamp('Honestly? ' + k[0] + ' but with ' + k[1], 60); };
 const nemoSwearRoll = (fam) => !fam && nemoGet().swear !== false && Math.random() < 1 / 6;
 const nemoTry = async (fam, sw, mk, max) => {
-    const ask = async (swear, push) => { const t = await nemoChat(nemoSys(fam, swear, push), mk(nemoSeed(fam), swear)); if (nemoRefused(t)) return ''; return cleanAnswer(String(t).split('\n')[0]); };
+    const ask = async (swear, push) => { const t = await nemoChat(nemoSys(fam, swear, push), mk(nemoSeed(fam), swear), 90, swear ? (push ? 'answer:swear+push' : 'answer:swear') : 'answer'); if (nemoRefused(t)) { if (t) nemoLog({ tag: 'refusal-check', code: 'NEMO_W_REFUSED', out: String(t).slice(0, 120) }); return ''; } return cleanAnswer(String(t).split('\n')[0]); };
     let r = '';
     if (sw) { r = await ask(true, false); if (!r) r = await ask(true, true); }
     if (!r) r = await ask(false, false);
@@ -5050,23 +5077,59 @@ const nemoNewPrompt = async (answer, fam) => { const sw = nemoSwearRoll(fam); co
 const nemoPick = async (prompt, options, n, fam) => {
     const rnd = () => bnShuffle(options.map((_, i) => i)).slice(0, n);
     try {
-        const t = await nemoChat(nemoSys(fam), 'Prompt: ' + prompt + '\nAnswers:\n' + options.map((o, i) => (i + 1) + '. ' + o).join('\n') + '\n\nPick the ' + (n > 1 ? n + ' funniest, funniest first. Reply ONLY with ' + n + ' numbers separated by commas.' : 'funniest. Reply ONLY with its number.'), 30);
+        const t = await nemoChat(nemoSys(fam), 'Prompt: ' + prompt + '\nAnswers:\n' + options.map((o, i) => (i + 1) + '. ' + o).join('\n') + '\n\nPick the ' + (n > 1 ? n + ' funniest, funniest first. Reply ONLY with ' + n + ' numbers separated by commas.' : 'funniest. Reply ONLY with its number.'), 30, 'vote');
         const m = (t.match(/\d+/g) || []).map(x => parseInt(x, 10) - 1).filter((x, i, a) => x >= 0 && x < options.length && a.indexOf(x) === i);
-        if (m.length >= n) return m.slice(0, n); return [...m, ...rnd().filter(x => !m.includes(x))].slice(0, n);
+        if (m.length >= n) return m.slice(0, n); nemoLog({ tag: 'vote-parse', code: 'NEMO_W_PICK_RANDOM', out: String(t).slice(0, 120) }); return [...m, ...rnd().filter(x => !m.includes(x))].slice(0, n);
     } catch (e) { return rnd(); }
 };
 const nemoDelay = (a = 2500, b = 9000) => new Promise(r => setTimeout(r, a + Math.random() * (b - a)));
 
+const NemoDebug = () => {
+    const h = React.createElement, [, tick] = useState(0), [res, setRes] = useState([]), [busy, setBusy] = useState(false);
+    useEffect(() => { const f = () => tick(x => x + 1); window.addEventListener('bl-nemo-log', f); return () => window.removeEventListener('bl-nemo-log', f); }, []);
+    const O = ['A soggy waffle with a law degree', 'Uncle Greg, again', 'A raccoon in a tiny tie', 'Lukewarm soup, emotionally', 'Haunted Roomba', 'Gas station sushi'];
+    const pk = async (o, n) => { const r = await nemoPick('Funniest answer?', o, n, false); return { ok: r.length === n && r.every(x => x >= 0 && x < o.length), out: 'idx ' + r.join(',') + ' -> ' + r.map(i => o[i]).join(' | ') }; };
+    const TESTS = [
+        ['Ping (raw API)', async () => { const t = await nemoChat('Reply with exactly the word pong.', 'ping', 20, 'test:ping'); return { ok: /pong/i.test(t), out: t }; }],
+        ['Answer (family)', async () => { const t = await nemoAnswer('The worst name for a pet goldfish.', true); return { ok: !!t, out: t }; }],
+        ['Answer (adult)', async () => { const t = await nemoAnswer('The worst thing to say at a funeral.', false); return { ok: !!t, out: t }; }],
+        ['Answer (forced swear)', async () => { const t = await nemoTry(false, true, () => 'Prompt: The worst thing to yell at a wedding.\n\nWrite ONE hilarious answer, max 70 characters, containing at least one real swear word.'); return { ok: !!t, out: t || '(empty -> canned fallback in game)' }; }],
+        ['New prompt from answer', async () => { const t = await nemoNewPrompt('A haunted toaster', false); return { ok: !!t, out: t }; }],
+        ['Vote: pick 1 of 6', () => pk(O, 1)],
+        ['Vote: pick 2 of 6', () => pk(O, 2)],
+        ['Vote: only 2 options', () => pk(O.slice(0, 2), 1)],
+        ['Stress: 4 bots at once', async () => { const a = await Promise.all([0, 1, 2, 3].map(i => nemoAnswer('Something found in grandma\'s purse #' + i, true))); return { ok: a.every(Boolean), out: a.join(' | ') }; }]];
+    const run = async (name, fn) => { const s0 = nemoSeq, t0 = Date.now(); let r; try { r = await fn(); } catch (e) { r = { ok: false, out: 'EXC ' + (e && e.message) }; } const evs = window.__nemoLog.filter(e => e.seq > s0), bad = evs.find(e => e.code !== 'OK'); const st = bad ? (/_E_/.test(bad.code) ? 'FAIL' : 'WARN') : (r.ok === false ? 'WARN' : 'PASS'); return { name, st, ms: Date.now() - t0, out: r.out, code: bad ? bad.code : 'OK', calls: evs.length }; };
+    const go = async (list) => { if (busy) return; setBusy(true); for (const [n, f] of list) { const r = await run(n, f); setRes(p => [r, ...p].slice(0, 30)); } setBusy(false); };
+    const col = { PASS: '#76b900', WARN: '#facc15', FAIL: '#f87171' }, mono = { fontFamily: 'monospace', fontSize: 11 };
+    const L = window.__nemoLog.slice(-12).reverse(), bt = { padding: '6px 10px', borderRadius: 8, border: '1px solid #76b900', background: 'rgba(118,185,0,.15)', color: 'inherit', fontWeight: 800, fontSize: 12, cursor: 'pointer' };
+    return h('div', { style: { border: '1px dashed #facc15', borderRadius: 12, padding: 10, marginTop: 6, textAlign: 'left' } },
+        h('div', { style: { fontWeight: 900, fontSize: 13, color: '#facc15', marginBottom: 6 } }, 'Nemo debugger (temporary)'),
+        h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 } },
+            h('button', { style: bt, disabled: busy, onClick: () => go(TESTS) }, busy ? 'Running…' : 'Run all tests'),
+            TESTS.map(([n, f]) => h('button', { key: n, style: { ...bt, background: 'transparent' }, disabled: busy, onClick: () => go([[n, f]]) }, n)),
+            h('button', { style: { ...bt, borderColor: '#9ca3af' }, onClick: () => { try { navigator.clipboard.writeText(nemoLogText()); } catch (_) { } } }, 'Copy log'),
+            h('button', { style: { ...bt, borderColor: '#9ca3af' }, onClick: () => { window.__nemoLog.length = 0; setRes([]); tick(x => x + 1); } }, 'Clear')),
+        res.map((r, i) => h('div', { key: i, style: { ...mono, marginBottom: 3, wordBreak: 'break-word' } }, h('b', { style: { color: col[r.st] } }, r.st), ' ' + r.name + ' · ' + r.ms + 'ms · ' + r.calls + ' call(s) · ' + r.code, r.out ? h('div', { style: { opacity: .8 } }, '→ ' + String(r.out).slice(0, 200)) : null, r.code !== 'OK' ? h('div', { style: { color: '#facc15' } }, nemoHint(r.code)) : null)),
+        h('div', { style: { fontWeight: 800, fontSize: 11, margin: '8px 0 3px', opacity: .7 } }, 'Event log (newest first, last 12)'),
+        L.length === 0 && h('div', { style: { ...mono, opacity: .6 } }, 'No API calls yet.'),
+        L.map(e => h('div', { key: e.seq, style: { ...mono, marginBottom: 4, wordBreak: 'break-word', color: e.code === 'OK' ? '#bbf7d0' : /_W_/.test(e.code) ? '#fde68a' : '#fca5a5' } }, '#' + e.seq + ' ' + e.code + ' [' + e.tag + '] ' + (e.status ? 'HTTP ' + e.status + ' ' : '') + (e.ms != null ? e.ms + 'ms ' : '') + (e.reasoningChars ? 'reasoning=' + e.reasoningChars + ' ' : '') + (e.msg ? '| ' + e.msg : ''), e.out ? h('div', { style: { opacity: .8 } }, '→ ' + e.out) : null, e.code !== 'OK' && e.raw ? h('div', { style: { opacity: .7 } }, 'raw: ' + e.raw.slice(0, 160)) : null)));
+};
+const NemoFields = ({ c, up }) => {
+    const h = React.createElement, inp = { width: '100%', boxSizing: 'border-box', borderRadius: 10, padding: '8px 10px', background: 'rgba(0,0,0,.35)', border: '1px solid #76b900', color: 'inherit', fontWeight: 700, margin: '3px 0 8px', fontSize: '.85rem' }, lb = { fontSize: '.72rem', fontWeight: 800, display: 'block', textAlign: 'left' };
+    return h(React.Fragment, null,
+        h('label', { style: lb }, 'Proxy base URL'), h('input', { value: c.base, onChange: e => up({ base: e.target.value }), style: inp }),
+        h('label', { style: lb }, 'NVIDIA API key'), h('input', { type: 'password', value: c.key, placeholder: 'nvapi-…', autoComplete: 'off', onChange: e => up({ key: e.target.value }), style: inp }),
+        h('label', { style: lb }, 'Nemotron model'), h('div', { style: { display: 'flex', gap: 6 } }, h('input', { value: c.model, onChange: e => up({ model: e.target.value }), style: { ...inp, flex: 1 } }), h('button', { onClick: () => up({ model: nemoDef.model }), title: 'Reset to default model', style: { ...inp, width: 'auto', cursor: 'pointer', flex: 'none' } }, 'Default')),
+        [['swear', 'Swearing (about 1 in 6, only when Family Friendly is off)'], ['spicy', 'Spicy keywords (only when Family Friendly is off)']].map(([k, t]) => h('label', { key: k, style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 800, marginBottom: 6, cursor: 'pointer', textAlign: 'left' } }, h('input', { type: 'checkbox', checked: c[k] !== false, onChange: e => up({ [k]: e.target.checked }), style: { width: 18, height: 18, accentColor: '#76b900' } }), t)),
+        h('label', { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 800, marginBottom: 6, cursor: 'pointer', color: '#facc15', textAlign: 'left' } }, h('input', { type: 'checkbox', checked: !!c.debug, onChange: e => up({ debug: e.target.checked }), style: { width: 18, height: 18, accentColor: '#facc15' } }), 'Debug mode (test panel, error codes, on-screen status chip)'),
+        c.debug && h(NemoDebug));
+};
 const NemoSettingsSec = () => {
     const RE = React.createElement, [c, setC] = useState(nemoGet), up = (o) => { const n = { ...c, ...o }; setC(n); nemoSave(n); };
-    const inp = { width: '100%', boxSizing: 'border-box', borderRadius: 10, padding: '8px 10px', background: 'rgba(0,0,0,.35)', border: '1px solid #76b900', color: 'inherit', fontWeight: 700, margin: '3px 0 8px', fontSize: '.8rem' };
     return RE('div', { className: 'bl-sec' }, RE('h4', { style: { display: 'flex', alignItems: 'center', gap: 6 } }, RE(NvidiaLogo, { size: 20 }), 'Nemo (AI bot)'),
-        RE('small', { style: { display: 'block', fontSize: '.68rem', opacity: .65, marginBottom: 6 } }, 'Host-side only. Stored in this browser, sent only to your proxy. Open Game Settings in the Madness or Burn lobby to add Nemo.'),
-        RE('label', { style: { fontSize: '.7rem', fontWeight: 800 } }, 'Proxy base URL'), RE('input', { value: c.base, onChange: e => up({ base: e.target.value }), style: inp }),
-        RE('label', { style: { fontSize: '.7rem', fontWeight: 800 } }, 'NVIDIA API key'), RE('input', { type: 'password', value: c.key, placeholder: 'nvapi-…', autoComplete: 'off', onChange: e => up({ key: e.target.value }), style: inp }),
-        RE('label', { style: { fontSize: '.7rem', fontWeight: 800 } }, 'Nemotron model'), RE('input', { value: c.model, onChange: e => up({ model: e.target.value }), style: inp }),
-        [['swear', 'Swearing', 'About 1 in 6 answers include a swear. Only when Family Friendly is off. Falls back to a clean answer if the model refuses.'], ['spicy', 'Spicy keywords', 'Adds very spicy and wild seed keywords. Only when Family Friendly is off.']].map(([k, t, d]) =>
-            RE('button', { key: k, className: 'bl-sw-row', role: 'switch', 'aria-checked': c[k] !== false, onClick: () => up({ [k]: c[k] === false }) }, RE('span', null, RE('b', null, t), RE('small', null, d)), RE('i', { className: 'bl-knob' + (c[k] !== false ? ' on' : '') }))));
+        RE('small', { style: { display: 'block', fontSize: '.68rem', opacity: .65, marginBottom: 6 } }, 'Host-side only. Stored in this browser, sent only to your proxy. Add Nemo from Game Settings in the Madness or Burn lobby.'),
+        RE(NemoFields, { c, up }));
 };
 
 const BotGameSection = ({ players, setPlayers }) => {
@@ -5081,19 +5144,16 @@ const BotGameSection = ({ players, setPlayers }) => {
 };
 const NemoControl = ({ players, setPlayers, cap, disabled }) => {
     const h = React.createElement, [open, setOpen] = useState(false), [c, setC] = useState(nemoGet), has = players.some(p => p.userId === NEMO_ID);
-    const add = () => { nemoSave({ ...nemoGet(), ...c }); setPlayers(prev => prev.some(p => p.userId === NEMO_ID) || (cap && prev.length >= cap) ? prev : [...prev, { userId: NEMO_ID, name: 'Nemo', score: 0, avatar: NEMO_AV, connected: true, isBot: true }]); setOpen(false); };
-    const rm = () => setPlayers(prev => prev.filter(p => p.userId !== NEMO_ID));
-    const inp = { width: '100%', boxSizing: 'border-box', borderRadius: 10, padding: '10px 12px', background: '#1a1033', border: '2px solid #76b900', color: '#fff', fontWeight: 700, marginBottom: 8, fontSize: 14 };
-    return h(React.Fragment, null,
-        h('button', { disabled, onClick: () => { setC(nemoGet()); setOpen(true); }, title: 'Nemo (AI player) settings', style: { display: 'inline-flex', alignItems: 'center', gap: 8, background: has ? 'rgba(118,185,0,.3)' : 'rgba(118,185,0,.12)', border: '2px solid #76b900', borderRadius: 12, padding: '5px 12px', color: '#fff', fontWeight: 800, fontSize: 16, cursor: 'pointer', opacity: disabled ? .4 : 1 } }, h(NvidiaLogo, { size: 30 }), has ? 'Nemo: ON' : 'Nemo (AI)'),
-        open && ReactDOM.createPortal(h('div', { style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 } }, h('div', { style: { background: '#0f0a29', border: '2px solid #76b900', borderRadius: 20, padding: 20, width: '100%', maxWidth: 460, textAlign: 'left', color: '#fff' } },
-            h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 } }, h(NvidiaLogo, { size: 52 }), h('h3', { style: { fontSize: 24, fontWeight: 900, color: '#76b900' } }, 'Add Nemo (AI player)')),
-            h('p', { style: { fontSize: 13, color: '#c4b5fd', fontWeight: 700, marginBottom: 10 } }, 'Nemo answers and votes in Madness and Burn (not Strokes or Cap). No memory between prompts. Use a secure proxy and an NVIDIA API key. They stay in this browser and are only sent to the proxy URL below.'),
-            h('label', { style: { fontSize: 12, fontWeight: 800 } }, 'Proxy base URL'), h('input', { value: c.base, onChange: e => setC({ ...c, base: e.target.value }), style: inp }),
-            h('label', { style: { fontSize: 12, fontWeight: 800 } }, 'NVIDIA API key'), h('input', { type: 'password', value: c.key, placeholder: 'nvapi-…', onChange: e => setC({ ...c, key: e.target.value }), style: inp }),
-            h('label', { style: { fontSize: 12, fontWeight: 800 } }, 'Nemotron model'), h('input', { value: c.model, onChange: e => setC({ ...c, model: e.target.value }), style: inp }),
-            [['swear', 'Swearing (about 1 in 6, only when Family Friendly is off)'], ['spicy', 'Spicy keywords (only when Family Friendly is off)']].map(([k, t]) => h('label', { key: k, style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 800, marginBottom: 6, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: c[k] !== false, onChange: e => setC({ ...c, [k]: e.target.checked }), style: { width: 20, height: 20, accentColor: '#76b900' } }), t)),
-            h('div', { style: { display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' } }, h('button', { onClick: add, style: sBtn('#5a8a00', { flex: 1, minHeight: 48 }) }, has ? 'Save settings' : c.key ? 'Add Nemo' : 'Add Nemo (no key: canned jokes)'), has && h('button', { onClick: () => { nemoSave({ ...nemoGet(), ...c }); rm(); setOpen(false); }, style: sBtn('#dc2626', { minHeight: 48 }) }, 'Remove Nemo'), h('button', { onClick: () => setOpen(false), style: sBtn('#4b5563', { minHeight: 48 }) }, 'Cancel')))), document.body));
+    const up = (o) => { const n = { ...c, ...o }; setC(n); nemoSave(n); };
+    const toggle = () => { if (disabled) return; if (has) setPlayers(prev => prev.filter(p => p.userId !== NEMO_ID)); else setPlayers(prev => prev.some(p => p.userId === NEMO_ID) || (cap && prev.length >= cap) ? prev : [...prev, { userId: NEMO_ID, name: 'Nemo', score: 0, avatar: NEMO_AV, connected: true, isBot: true }]); };
+    return h('section', { style: { background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderLeft: '5px solid #76b900', borderRadius: 18, padding: 14, display: 'flex', flexDirection: 'column', gap: 10, opacity: disabled ? .5 : 1 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 12 } },
+            h('div', { style: { flex: 'none', width: 42, height: 42, borderRadius: 12, background: 'rgba(118,185,0,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, h(NvidiaLogo, { size: 30 })),
+            h('div', { style: { flex: 1, minWidth: 0, textAlign: 'left' } }, h('div', { style: { fontWeight: 900, fontSize: 17, letterSpacing: '.04em', textTransform: 'uppercase' } }, 'Nemo (AI player)'), h('div', { style: { fontSize: 12, color: '#d1d5db' } }, has ? 'In the lobby' : (c.key ? 'Ready to add' : 'No key: canned jokes'))),
+            h('button', { role: 'switch', 'aria-checked': has, disabled, onClick: toggle, style: { flex: 'none', width: 54, height: 30, borderRadius: 99, border: 'none', padding: 3, background: has ? '#76b900' : 'rgba(255,255,255,.18)', display: 'flex', justifyContent: has ? 'flex-end' : 'flex-start', alignItems: 'center', cursor: disabled ? 'default' : 'pointer' } }, h('span', { style: { width: 24, height: 24, borderRadius: 99, background: '#fff', display: 'block' } }))),
+        h('p', { style: { fontSize: 12, color: '#d1d5db', lineHeight: 1.4, margin: 0, textAlign: 'left' } }, 'Nemo answers and votes in Madness and Burn (not Strokes or Cap). No memory between prompts. Settings stay in this browser and go only to your proxy.'),
+        h('button', { onClick: () => { setC(nemoGet()); setOpen(o => !o); }, style: { alignSelf: 'flex-start', padding: '6px 14px', borderRadius: 10, border: '2px solid #76b900', background: 'rgba(118,185,0,.15)', color: '#fff', fontWeight: 800, fontSize: 13, cursor: 'pointer' } }, open ? 'Hide settings ▴' : 'Key, model & debug ▾'),
+        open && h('div', null, h(NemoFields, { c, up })));
 };
 const BnFlames = ({ n = 7 }) => React.createElement('div', { style: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%', pointerEvents: 'none', overflow: 'visible' } },
     Array.from({ length: n }, (_, i) => React.createElement('div', { key: 'f' + i, className: 'bn-fl', style: { left: (i * (100 / n) + 2) + '%', animationDelay: (i % 3) * .18 + 's', transform: 'scale(' + (0.8 + (i % 3) * .3) + ')' } })),
@@ -7455,6 +7515,10 @@ if (!window.BL_CAST_RX) root.render(React.createElement(React.Fragment, null, Re
   try { screen.addEventListener('change', function () { if (screen.isExtended && hostActive() && !hdmiOpen()) { window.blToast && window.blToast('\uD83D\uDCFA Second display detected \u2014 press C or tap Cast to show the game on it', { ttl: 6000 }); fab && fab.classList.add('pulse'); setTimeout(function () { fab && fab.classList.remove('pulse'); }, 4500); } }); } catch (e) { }
   window.addEventListener('beforeunload', function () { try { hdmiWin && hdmiWin.close(); } catch (e) { } });
 })();
+</script>
+
+<script>
+(function(){try{var el=null;function render(){var c={};try{c=JSON.parse(localStorage.getItem('bl_nemo')||'{}');}catch(_){}if(!c.debug){if(el){el.remove();el=null;}return;}if(!el){el=document.createElement('div');el.style.cssText='position:fixed;left:8px;bottom:8px;z-index:100000;font:700 11px monospace;background:rgba(0,0,0,.85);border:1px solid #76b900;border-radius:8px;padding:4px 8px;max-width:70vw;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';el.title='Nemo debug: click to copy log';el.onclick=function(){try{navigator.clipboard.writeText(JSON.stringify(window.__nemoLog||[],null,1));}catch(_){}};document.body.appendChild(el);}var L=window.__nemoLog||[],e=L[L.length-1];el.textContent='NEMO '+(e?(e.code+' '+(e.tag||'')+' '+(e.ms||0)+'ms'):'idle');el.style.color=e&&e.code!=='OK'?(/_W_/.test(e.code)?'#facc15':'#f87171'):'#76b900';}window.addEventListener('bl-nemo-log',render);window.addEventListener('bl-nemo-cfg',render);window.addEventListener('load',function(){setTimeout(render,500);});}catch(_){}})();
 </script>
 </body>
 </html>
