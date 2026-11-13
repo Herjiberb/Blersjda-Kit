@@ -347,5 +347,11 @@
       "form_factor": "wide",
       "label": "Big-screen hosting"
     }
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://YOUR-DOMAIN/manifest.webmanifest"
+    }
   ]
 }
