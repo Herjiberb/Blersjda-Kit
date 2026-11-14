@@ -589,8 +589,9 @@ const { useState, useEffect, useRef, useMemo, useCallback } = React;
     const els = new Set(), raw = new WeakMap();
     const d = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume');
     const eff = (el, v) => {
-        const m = el.loop ? st.music : st.sfx;
-        return m === 'shrink' ? v * .5 : m === 'boost' ? (el.loop ? Math.min(1, v * 2) : 1) : v;
+        if (!el.loop) return v; /* only music is an <audio> element; answer sounds (.blersjsound) go through BLVOL.sfxGain */
+        const m = st.music;
+        return m === 'shrink' ? v * .5 : m === 'boost' ? Math.min(1, v * 2) : v;
     };
     const apply = (el) => { try { d.set.call(el, Math.max(0, Math.min(1, eff(el, raw.has(el) ? raw.get(el) : 1)))); } catch (e) { } };
     if (d && d.set) Object.defineProperty(HTMLMediaElement.prototype, 'volume', {
@@ -605,25 +606,43 @@ const { useState, useEffect, useRef, useMemo, useCallback } = React;
     const build = () => {
         if (document.getElementById('bl-vol-btn')) return;
         const css = document.createElement('style');
-        css.textContent = `#bl-vol-btn{position:fixed;left:14px;bottom:14px;z-index:9999;width:48px;height:48px;border-radius:50%;border:2px solid #ec4899;background:rgba(46,16,101,.92);color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.5);transition:transform .15s}#bl-vol-btn:hover{transform:scale(1.1)}
-#bl-vol-panel{position:fixed;left:14px;bottom:72px;z-index:9999;width:min(300px,calc(100vw - 28px));padding:16px;border-radius:18px;background:rgba(30,12,70,.96);border:1px solid rgba(236,72,153,.5);backdrop-filter:blur(12px);box-shadow:0 12px 40px rgba(0,0,0,.6);color:#fff;font-family:inherit;display:none}#bl-vol-panel.open{display:block;animation:fadeIn .2s ease-out}
-#bl-vol-panel h4{margin:0 0 12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;font-size:15px;color:#f9a8d4}
-#bl-vol-panel .r{margin-bottom:12px}#bl-vol-panel .r:last-child{margin-bottom:0}#bl-vol-panel .l{font-size:13px;font-weight:700;color:#a5f3fc;margin-bottom:6px}
-#bl-vol-panel .seg{display:flex;gap:6px}#bl-vol-panel button{flex:1;min-height:40px;border-radius:10px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-weight:800;font-size:13px;cursor:pointer}#bl-vol-panel button.on{background:linear-gradient(135deg,#ec4899,#8b5cf6);border-color:#f9a8d4}`;
+        css.textContent = `#bl-vol-btn{position:fixed;left:14px;bottom:14px;z-index:9999;width:52px;height:52px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;border:2px solid #ec4899;background:radial-gradient(circle at 30% 30%,#6d28d9,#2e1065);color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.5);transition:transform .15s}#bl-vol-btn:hover{transform:scale(1.1)}
+#bl-vol-panel{position:fixed;left:14px;bottom:78px;z-index:9999;width:min(360px,calc(100vw - 28px));padding:18px;border-radius:24px;background:linear-gradient(160deg,rgba(76,29,149,.96),rgba(20,8,50,.97));border:2px solid rgba(236,72,153,.7);box-shadow:0 0 0 1px rgba(103,232,249,.25),0 0 40px rgba(236,72,153,.35),0 20px 50px rgba(0,0,0,.65);backdrop-filter:blur(14px);color:#fff;display:none;transform-origin:bottom left}
+#bl-vol-panel.open{display:block;animation:blpop .22s cubic-bezier(.175,.885,.32,1.275)}@keyframes blpop{from{opacity:0;transform:scale(.8) translateY(14px)}to{opacity:1;transform:none}}
+#bl-vol-panel .hd{display:flex;align-items:center;justify-content:center;gap:10px;position:relative;margin-bottom:16px}
+#bl-vol-panel h4{margin:0;font-weight:900;letter-spacing:.14em;text-transform:uppercase;font-size:18px;background:linear-gradient(90deg,#f9a8d4,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent}
+#bl-vol-panel .x{position:absolute;right:-6px;top:-8px;width:36px;height:36px;min-height:0;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}#bl-vol-panel .x:hover{background:#ef4444}
+#bl-vol-panel .r{padding:12px;margin-bottom:12px;border-radius:18px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.1)}#bl-vol-panel .r:last-child{margin-bottom:0}
+#bl-vol-panel .l{display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#a5f3fc;margin-bottom:10px}
+#bl-vol-panel .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+#bl-vol-panel .seg button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:76px;padding:8px 4px;border-radius:16px;border:2px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#e9d5ff;font-weight:900;font-size:13px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:transform .12s,background .15s,box-shadow .15s}
+#bl-vol-panel .seg button:hover{transform:translateY(-2px);background:rgba(255,255,255,.14)}#bl-vol-panel .seg button:active{transform:scale(.95)}
+#bl-vol-panel .seg button.on{color:#fff;background:linear-gradient(135deg,#ec4899,#8b5cf6);border-color:#fbcfe8;box-shadow:0 0 22px rgba(236,72,153,.7),inset 0 0 12px rgba(255,255,255,.25)}
+#bl-vol-panel svg{display:block;margin:0 auto;flex:none}#bl-vol-panel .seg svg{width:30px;height:30px}`;
         document.head.appendChild(css);
-        const btn = document.createElement('button'); btn.id = 'bl-vol-btn'; btn.type = 'button'; btn.title = 'Volume'; btn.textContent = '\u{1F50A}';
+        const btn = document.createElement('button'); btn.id = 'bl-vol-btn'; btn.type = 'button'; btn.title = 'Volume'; btn.innerHTML = '<svg viewBox="0 0 48 48" width="30" height="30" aria-hidden="true"><defs><linearGradient id="blvg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f9a8d4"/><stop offset="1" stop-color="#67e8f9"/></linearGradient></defs><path d="M8 18h8l10-8v28l-10-8H8z" fill="url(#blvg)"/><path d="M32 17c3 4 3 10 0 14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M37 11c6 8 6 18 0 26" fill="none" stroke="#f9a8d4" stroke-width="3" stroke-linecap="round"/></svg>';
         const pan = document.createElement('div'); pan.id = 'bl-vol-panel';
-        const labels = { shrink: '\u{1F509} Shrink', normal: 'Normal', boost: '\u{1F4E3} Boost' };
+        const sp = '<path d="M4 15h6l8-7v32l-8-7H4z" fill="currentColor"/>';
+        const wv = (n) => ['<path d="M25 18c3 4 3 8 0 12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>', '<path d="M31 12c6 7 6 17 0 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>', '<path d="M37 6c9 10 9 26 0 36" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>'].slice(0, n).join('');
+        const ic = (inner, z) => '<svg viewBox="0 0 48 48" width="' + (z || 18) + '" height="' + (z || 18) + '" aria-hidden="true">' + inner + '</svg>';
+        const icons = {
+            shrink: ic(sp + wv(1)), normal: ic(sp + wv(2)), boost: ic(sp + wv(3)),
+            music: ic('<path d="M18 36V10l20-4v26" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><circle cx="12" cy="36" r="6" fill="currentColor"/><circle cx="32" cy="32" r="6" fill="currentColor"/>', 20),
+            sfx: ic('<path d="M24 6a14 14 0 0 1 14 14v10l4 6H6l4-6V20A14 14 0 0 1 24 6z" fill="currentColor"/><circle cx="24" cy="41" r="4" fill="currentColor"/>', 20),
+            head: ic(sp + wv(2), 22)
+        };
+        const labels = { shrink: 'Shrink', normal: 'Normal', boost: 'Boost' };
         const render = () => {
-            pan.innerHTML = '<h4>Volume</h4>' + [['music', 'Music'], ['sfx', 'Answer sounds']].map(([k, n]) => '<div class="r"><div class="l">' + n + '</div><div class="seg">' + M.map(m => '<button type="button" data-k="' + k + '" data-m="' + m + '" class="' + (st[k] === m ? 'on' : '') + '">' + labels[m] + '</button>').join('') + '</div></div>').join('');
+            pan.innerHTML = '<div class="hd">' + icons.head + '<h4>Volume</h4><button type="button" class="x" data-x="1" aria-label="Close">\u00d7</button></div>' + [['music', 'Music'], ['sfx', 'Answer sounds']].map(([k, n]) => '<div class="r"><div class="l">' + icons[k] + '<span>' + n + '</span></div><div class="seg">' + M.map(m => '<button type="button" data-k="' + k + '" data-m="' + m + '" class="' + (st[k] === m ? 'on' : '') + '">' + icons[m] + '<span>' + labels[m] + '</span></button>').join('') + '</div></div>').join('');
         };
         pan.addEventListener('click', (e) => {
-            const b = e.target.closest('button[data-k]'); if (!b) return;
+            if (e.target.closest('[data-x]')) { pan.classList.remove('open'); return; } const b = e.target.closest('button[data-k]'); if (!b) return;
             st[b.dataset.k] = b.dataset.m; try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (er) { }
             render(); refresh();
-            if (b.dataset.k === 'sfx') { try { const t = new Audio('gong.wav'); t.play().catch(() => { }); } catch (er) { } }
+            if (b.dataset.k === 'sfx') { try { BLSND.play(); } catch (er) { } }
         });
         btn.onclick = () => pan.classList.toggle('open');
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') pan.classList.remove('open'); });
         document.addEventListener('pointerdown', (e) => { if (!pan.contains(e.target) && e.target !== btn) pan.classList.remove('open'); });
         render(); document.body.append(pan, btn);
     };
