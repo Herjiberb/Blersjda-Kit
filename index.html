@@ -581,6 +581,54 @@ html.pwa-standalone{overscroll-behavior-y:contain}
 <script>"use strict";
 const { useState, useEffect, useRef, useMemo, useCallback } = React;
 (() => { const A = window.Audio; if (!A) return; window.__blAudios = []; window.Audio = function (...a) { const x = new A(...a); window.__blAudios.push(x); if (window.__blAudios.length > 40) window.__blAudios.shift(); return x; }; window.Audio.prototype = A.prototype; })();
+/* ===== Volume menu: music + answer sounds, each Shrink (half) / Normal / Boost (max, no clipping) ===== */
+(() => {
+    const KEY = 'bl_volume_v1', M = ['shrink', 'normal', 'boost'];
+    let st = { music: 'normal', sfx: 'normal' };
+    try { const j = JSON.parse(localStorage.getItem(KEY) || '{}'); if (M.includes(j.music)) st.music = j.music; if (M.includes(j.sfx)) st.sfx = j.sfx; } catch (e) { }
+    const els = new Set(), raw = new WeakMap();
+    const d = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'volume');
+    const eff = (el, v) => {
+        const m = el.loop ? st.music : st.sfx;
+        return m === 'shrink' ? v * .5 : m === 'boost' ? (el.loop ? Math.min(1, v * 2) : 1) : v;
+    };
+    const apply = (el) => { try { d.set.call(el, Math.max(0, Math.min(1, eff(el, raw.has(el) ? raw.get(el) : 1)))); } catch (e) { } };
+    if (d && d.set) Object.defineProperty(HTMLMediaElement.prototype, 'volume', {
+        configurable: true, enumerable: d.enumerable,
+        get() { return raw.has(this) ? raw.get(this) : d.get.call(this); },
+        set(v) { v = Math.max(0, Math.min(1, +v || 0)); raw.set(this, v); els.add(this); apply(this); }
+    });
+    const A = window.Audio;
+    window.Audio = function (...a) { const x = new A(...a); els.add(x); apply(x); return x; }; window.Audio.prototype = A.prototype;
+    window.BLVOL = { sfxGain: (pk) => st.sfx === 'shrink' ? 1.1 : st.sfx === 'boost' ? Math.max(2.2, .98 / (pk || 1)) : 2.2 };
+    const refresh = () => { els.forEach(e => { if (e.isConnected === false && e.paused) { } apply(e); }); };
+    const build = () => {
+        if (document.getElementById('bl-vol-btn')) return;
+        const css = document.createElement('style');
+        css.textContent = `#bl-vol-btn{position:fixed;left:14px;bottom:14px;z-index:9999;width:48px;height:48px;border-radius:50%;border:2px solid #ec4899;background:rgba(46,16,101,.92);color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.5);transition:transform .15s}#bl-vol-btn:hover{transform:scale(1.1)}
+#bl-vol-panel{position:fixed;left:14px;bottom:72px;z-index:9999;width:min(300px,calc(100vw - 28px));padding:16px;border-radius:18px;background:rgba(30,12,70,.96);border:1px solid rgba(236,72,153,.5);backdrop-filter:blur(12px);box-shadow:0 12px 40px rgba(0,0,0,.6);color:#fff;font-family:inherit;display:none}#bl-vol-panel.open{display:block;animation:fadeIn .2s ease-out}
+#bl-vol-panel h4{margin:0 0 12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;font-size:15px;color:#f9a8d4}
+#bl-vol-panel .r{margin-bottom:12px}#bl-vol-panel .r:last-child{margin-bottom:0}#bl-vol-panel .l{font-size:13px;font-weight:700;color:#a5f3fc;margin-bottom:6px}
+#bl-vol-panel .seg{display:flex;gap:6px}#bl-vol-panel button{flex:1;min-height:40px;border-radius:10px;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-weight:800;font-size:13px;cursor:pointer}#bl-vol-panel button.on{background:linear-gradient(135deg,#ec4899,#8b5cf6);border-color:#f9a8d4}`;
+        document.head.appendChild(css);
+        const btn = document.createElement('button'); btn.id = 'bl-vol-btn'; btn.type = 'button'; btn.title = 'Volume'; btn.textContent = '\u{1F50A}';
+        const pan = document.createElement('div'); pan.id = 'bl-vol-panel';
+        const labels = { shrink: '\u{1F509} Shrink', normal: 'Normal', boost: '\u{1F4E3} Boost' };
+        const render = () => {
+            pan.innerHTML = '<h4>Volume</h4>' + [['music', 'Music'], ['sfx', 'Answer sounds']].map(([k, n]) => '<div class="r"><div class="l">' + n + '</div><div class="seg">' + M.map(m => '<button type="button" data-k="' + k + '" data-m="' + m + '" class="' + (st[k] === m ? 'on' : '') + '">' + labels[m] + '</button>').join('') + '</div></div>').join('');
+        };
+        pan.addEventListener('click', (e) => {
+            const b = e.target.closest('button[data-k]'); if (!b) return;
+            st[b.dataset.k] = b.dataset.m; try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (er) { }
+            render(); refresh();
+            if (b.dataset.k === 'sfx') { try { const t = new Audio('gong.wav'); t.play().catch(() => { }); } catch (er) { } }
+        });
+        btn.onclick = () => pan.classList.toggle('open');
+        document.addEventListener('pointerdown', (e) => { if (!pan.contains(e.target) && e.target !== btn) pan.classList.remove('open'); });
+        render(); document.body.append(pan, btn);
+    };
+    if (document.body) build(); else document.addEventListener('DOMContentLoaded', build);
+})();
 /* ===== Submit sounds: optional sound.blersjsound pack (JSON of base64 audio). Missing file = silently disabled. Host screens only. ===== */
 const BLSND = (() => {
     let bufs = [], ctx = null, out = null, started = false, last = -1;
@@ -593,14 +641,14 @@ const BLSND = (() => {
         try {
             const r = await fetch('sound.blersjsound', { cache: 'no-cache' }); if (!r || !r.ok) return;
             const j = await r.json(), c = getCtx(); if (!c || !j || !Array.isArray(j.sounds)) return;
-            for (const x of j.sounds) { try { bufs.push(await new Promise((res, rej) => { const p = c.decodeAudioData(b64(x.data), res, rej); if (p && p.catch) p.catch(rej); })); } catch (e) { } }
+            for (const x of j.sounds) { try { const bf = await new Promise((res, rej) => { const p = c.decodeAudioData(b64(x.data), res, rej); if (p && p.catch) p.catch(rej); }); let pk = 0; for (let ch = 0; ch < bf.numberOfChannels; ch++) { const d = bf.getChannelData(ch); for (let k = 0; k < d.length; k++) { const v = d[k] < 0 ? -d[k] : d[k]; if (v > pk) pk = v; } } bf.__peak = pk || 1; bufs.push(bf); } catch (e) { } }
         } catch (e) { }
     };
     const play = () => {
         try {
             if (!started) preload(); if (!bufs.length) return; const c = getCtx(); if (!c) return; if (c.state === 'suspended') c.resume().catch(() => { });
             let i = Math.floor(Math.random() * bufs.length); if (bufs.length > 1 && i === last) i = (i + 1 + Math.floor(Math.random() * (bufs.length - 1))) % bufs.length; last = i;
-            const src = c.createBufferSource(), g = c.createGain(); src.buffer = bufs[i]; g.gain.value = 2.2; src.connect(g); g.connect(out || c.destination); src.start();
+            const src = c.createBufferSource(), g = c.createGain(); src.buffer = bufs[i]; g.gain.value = (window.BLVOL ? window.BLVOL.sfxGain(bufs[i].__peak) : 2.2); src.connect(g); g.connect(out || c.destination); src.start();
         } catch (e) { }
     };
     return { play, preload };
