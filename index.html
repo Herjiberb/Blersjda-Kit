@@ -818,6 +818,7 @@ const NET = (() => {
     };
     return {
         enc: (payload) => {
+            try { if (payload && typeof payload === 'object' && ['LOBBY_JOINED', 'STATE_ANSWERING', 'B_WRITE', 'B_NEW', 'S_QUOTE', 'S_MEME', 'S_DRAW'].indexOf(payload.type) >= 0) payload = { ...payload, cen: blCenGet() }; } catch (e) { }
             const j = JSON.stringify(walk(payload, K, true));
             if (j.length < 220)
                 return j;
@@ -827,7 +828,9 @@ const NET = (() => {
         dec: (msg) => {
             const u = msg instanceof Uint8Array ? msg : te.encode(String(msg));
             const txt = u[0] === 1 ? td.decode(unlzw(u)) : td.decode(u);
-            return walk(JSON.parse(txt), KR, false);
+            const o = walk(JSON.parse(txt), KR, false);
+            try { if (o && o.cen && typeof o.cen === 'object') window.__blCen = o.cen; } catch (e) { }
+            return o;
         }
     };
 })();
@@ -2420,6 +2423,7 @@ const blCenGet = () => { try { const c = JSON.parse(localStorage.getItem(BL_CEN_
 const blCenSet = (c) => { try { localStorage.setItem(BL_CEN_KEY, JSON.stringify(c)); } catch (e) { } };
 const blCenReady = () => typeof window.processTextDirect === 'function';
 const blCensor = (text) => { const c = blCenGet(); if (!c.on || !blCenReady() || !text) return text; try { const r = window.processTextDirect(String(text), c.level, c.style); return (r && typeof r.cleanedText === 'string') ? r.cleanedText : text; } catch (e) { return text; } };
+window.blWouldCensor = (text) => { const c = window.__blCen; if (!c || !c.on || !blCenReady() || !text) return false; try { const t = String(text), r = window.processTextDirect(t, c.level, c.style); return !!(r && typeof r.cleanedText === 'string' && r.cleanedText.trim() !== t.trim()); } catch (e) { return false; } };
 (() => { if (blCenReady()) return; try { const sc = document.createElement('script'); sc.src = 'censor.js'; sc.async = true; sc.onload = () => window.dispatchEvent(new Event('bl-censor-ready')); sc.onerror = () => { sc.remove(); }; document.head.appendChild(sc); } catch (e) { } })();
 /* ---------- Arachnid scare (host-controlled, shown on client devices) ---------- */
 const BL_SP_KEY = 'bl_spider';
@@ -3595,7 +3599,7 @@ const SQuoteEditor = ({ tid, theme, dl, total, onAdd, onDone }) => {
         h('div', { style: { fontSize: 14, color: '#fde68a', textAlign: 'center' } }, 'Write funny shirt slogans. As many as you can!'),
         h('div', { style: { display: 'flex', gap: 8, alignItems: 'center', background: 'rgba(255,255,255,.08)', borderRadius: 12, padding: '6px 12px' } }, h('span', { style: { fontSize: 13, color: '#a5f3fc' } }, 'Need an idea? Try: ', h('b', null, th)), h('button', { onClick: () => setTh(SK.rnd(SK_THEMES)), style: { border: 'none', background: 'none', fontSize: 22 } }, Ic('dice', 26))),
         !over ? h('div', { style: { width: '100%', maxWidth: 480, display: 'flex', gap: 8 } },
-            h('input', { type: 'text', value: txt, maxLength: 60, autoFocus: true, placeholder: 'Type a slogan, then Submit quip', onChange: e => setTxt(e.target.value), onKeyDown: e => { if (e.key === 'Enter') add(); }, style: { flex: 1, minWidth: 0, padding: '14px 12px', borderRadius: 12, border: '3px solid #ec4899', background: '#1a1033', color: '#fff', fontSize: 16, fontWeight: 700 } }),
+            h('input', { type: 'text', value: txt, maxLength: 60, autoFocus: true, placeholder: 'Type a slogan, then Submit quip', onChange: e => setTxt(e.target.value), onKeyDown: e => { if (e.key === 'Enter') add(); }, style: { flex: 1, minWidth: 0, padding: '14px 12px', borderRadius: 12, border: '3px solid ' + (window.blWouldCensor(txt) ? '#ef4444' : '#ec4899'), boxShadow: window.blWouldCensor(txt) ? '0 0 0 3px rgba(239,68,68,.45)' : 'none', background: '#1a1033', color: '#fff', fontSize: 16, fontWeight: 700 } }),
             h('button', { onClick: add, disabled: !txt.trim() || list.length >= 15, style: sBtn('#ec4899', { opacity: !txt.trim() ? .5 : 1 }) }, 'Submit quip'))
             : h('div', { style: { color: '#86efac', fontWeight: 900, fontSize: 18 } }, 'Locked in! Waiting for others…'),
         h('div', { style: { fontSize: 12, color: '#c4b5fd', fontWeight: 800 } }, list.length + ' / 15 quips submitted (each is sent the moment you hit Submit)'),
@@ -3665,7 +3669,7 @@ const StrokesClient = () => {
     let body = null;
     if (s.m === 'draw') {
         let sentD = ''; try { sentD = localStorage.getItem('bls_s_' + s.tid) || ''; } catch (e) { }
-        body = sentD ? h('div', { style: { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 20, textAlign: 'center' } }, h(SArt, { d: sentD, size: Math.min(280, window.innerWidth - 40), style: { borderRadius: 14, border: '3px solid #fff' } }), h('h2', { style: { ...sFont, fontSize: 28, color: '#4ade80' } }, 'DESIGN SUBMITTED!'), h('p', { style: { color: '#c4b5fd', fontWeight: 700 } }, 'Waiting for everyone else…'))
+        body = sentD ? h('div', { style: { minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 20, textAlign: 'center' } }, h(SArt, { d: sentD, size: Math.min(280, window.innerWidth - 40), style: { borderRadius: 14, border: '3px solid #fff' } }), h('h2', { style: { ...sFont, fontSize: 28, color: '#4ade80' } }, 'DESIGN SUBMITTED!'), h('p', { style: { color: '#c4b5fd', fontWeight: 700 } }, 'Waiting for everyone else…'), Date.now() < s.dl && h('button', { onClick: () => { try { localStorage.removeItem('bls_s_' + s.tid); } catch (e) { } setS({ ...s }); }, style: { fontSize: 11, padding: '3px 10px', borderRadius: 99, background: 'rgba(0,0,0,.45)', color: '#c4b5fd', border: '1px solid #fff3', opacity: .8 } }, React.createElement(BlEditIcon, null), ' edit'))
             : h(SDrawEditor, { key: s.tid, tid: s.tid, prompt: s.p, dl: s.dl, total: s.tot, label: 'DRAW ' + s.n + '/' + s.of, onDone: (d) => { try { localStorage.setItem('bls_s_' + s.tid, d); } catch (e) { } send({ k: 'd', tid: s.tid, d }); setS({ ...s }); } });
     } else if (s.m === 'quote') body = h(SQuoteEditor, { key: s.tid, tid: s.tid, theme: s.th, dl: s.dl, total: s.tot, onAdd: (x) => send({ k: 'q', tid: s.tid, x }), onDone: () => send({ k: 'qd', tid: s.tid }) });
     else if (s.m === 'meme' && s.ds && s.ds.length && s.qs && s.qs.length) body = h(SMemeEditor, { key: s.tid, tid: s.tid, ds: s.ds, qs: s.qs, dl: s.dl, total: s.tot, onLock: (di, qi, st) => send({ k: 'm', tid: s.tid, di, qi, st }) });
@@ -3764,7 +3768,7 @@ const StrokesHost = ({ goBack, onGames }) => {
             conns.current[userId] = conn;
             const ex = st.players.find(p => p.userId === userId);
             if (ex) { setPlayers(prev => prev.map(p => p.userId === userId ? { ...p, name, connected: true } : p)); conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar: ex.avatar, resync: !!data.rejoin }); if (st.phase !== 'LOBBY') setTimeout(() => resend(userId, false), 700); return; }
-            if (st.phase === 'LOBBY' && !(st.cap && st.players.length >= st.cap)) {
+            if (st.phase === 'LOBBY' && !data.aud && !(st.cap && st.players.length >= st.cap)) {
                 const avatar = generateAvatar(st.players.map(p => p.avatar)); let fn = name; if (st.players.some(p => p.name.toLowerCase() === name.toLowerCase())) fn = name + ' ' + Math.floor(Math.random() * 100);
                 conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar }); setPlayers(prev => prev.some(p => p.userId === userId) ? prev : [...prev, { userId, name: fn, score: 0, avatar, connected: true }]); return;
             }
@@ -3790,7 +3794,7 @@ const StrokesHost = ({ goBack, onGames }) => {
     /* ---- flow helpers ---- */
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     const chk = () => { if (!alive.current) throw new Error('closed'); };
-    const countdown = (secs, isDone) => new Promise(res => { let t = secs; setTimer(t); const w = createWorkerInterval(() => { if (!alive.current) { w.clearInterval(); return res(false); } t--; setTimer(t); setTick(x => x + 1); if (isDone()) { w.clearInterval(); return res(true); } if (t <= 0) { w.clearInterval(); res(false); } }, 1000); });
+    const countdown = (secs, isDone) => new Promise(res => { let t = secs; setTimer(t); const w = createWorkerInterval(() => { if (!alive.current) { w.clearInterval(); return res(false); } t--; setTimer(t); setTick(x => x + 1); if (isDone()) { if (!w._as) w._as = Date.now(); if (t <= 0 || Date.now() - w._as >= 1800) { w.clearInterval(); return res(true); } } else w._as = 0; if (t <= 0) { w.clearInterval(); res(false); } }, 1000); });
     const card = async (title, sub, ms, say) => { chk(); setPhase('CARD'); setInfo({ title, sub }); speak(say || title); await sleep(ms); chk(); };
     const stat = (u) => { const st = S.current; return st.stat[u] || (st.stat[u] = { mk: 0, ds: 0, qt: 0, votes: 0, wins: 0, sweeps: 0 }); };
     const nm = (u) => { const p = S.current.players.find(x => x.userId === u); return p ? p.name : null; };
@@ -4312,7 +4316,7 @@ const CapHost = ({ goBack, onGames }) => {
                     existingPlayer.connected = true;
                     return [...prevPlayers];
                 }
-                if (stateRef.current.gameState === 'LOBBY' && !(stateRef.current.settings.cap && prevPlayers.length >= stateRef.current.settings.cap)) {
+                if (stateRef.current.gameState === 'LOBBY' && !data.aud && !(stateRef.current.settings.cap && prevPlayers.length >= stateRef.current.settings.cap)) {
                     let finalName = name;
                     if (prevPlayers.some(p => p.name.toLowerCase() === name.toLowerCase())) {
                         finalName = name + ` ${Math.floor(Math.random() * 100)}`;
@@ -4348,7 +4352,7 @@ const CapHost = ({ goBack, onGames }) => {
             setAudience(prev => prev.map(a => a.userId === data.userId ? { ...a, avatar: data.avatar } : a));
             sendToClient(data.userId, 'AVATAR_UPDATED', { avatar: data.avatar });
         }
-        if (data.type === 'SUBMIT_ANSWER') {
+        if (data.type === 'SUBMIT_ANSWER' && stateRef.current.gameState === 'ANSWERING') {
             BLSND.play();
             setClashes(prev => {
                 const next = [...prev];
@@ -4464,7 +4468,9 @@ const CapHost = ({ goBack, onGames }) => {
             setTimer(timeLeft);
             if (timeLeft % 5 === 0 || timeLeft <= 5)
                 broadcast('TIMER_SYNC', { timeLeft });
-            const allAnswered = stateRef.current.clashes.every(c => c.players.every(p => c.answers[p.userId]));
+            const allDone0 = stateRef.current.clashes.every(c => c.players.every(p => c.answers[p.userId]));
+            if (!allDone0) workerTimer._as = 0; else if (!workerTimer._as) workerTimer._as = Date.now();
+            const allAnswered = allDone0 && (Date.now() - workerTimer._as >= 1800);
             if (timeLeft <= 0 || allAnswered) {
                 workerTimer.clearInterval();
                 setClashes(prev => {
@@ -5401,7 +5407,7 @@ const BurnClient = () => {
     if (s.m === 'wait') body = wait(s.msg, s.bt);
     else if (s.m === 'write') body = h(BnWrite, { key: s.tid, s, send, wait, Timer, box, head });
     else if (s.m === 'burn') { const d = fin['b' + s.tid]; body = d ? wait('Burn locked in. Waiting for the others…', false) : h(BnBurn, { key: s.tid, s, send, done: () => setFin(x => ({ ...x, ['b' + s.tid]: 1 })), Timer, box, head }); }
-    else if (s.m === 'newp') { const d = fin['n' + s.tid]; body = d ? wait('Prompt submitted! Waiting…', false) : h(BnNew, { key: s.tid, s, send, done: () => setFin(x => ({ ...x, ['n' + s.tid]: 1 })), Timer, box, head }); }
+    else if (s.m === 'newp') { const d = fin['n' + s.tid]; body = d ? h(React.Fragment, null, wait('Prompt submitted! Waiting…', false), Date.now() < s.dl && h('button', { onClick: () => setFin(x => ({ ...x, ['n' + s.tid]: 0 })), style: { position: 'fixed', left: 12, bottom: 'calc(10px + env(safe-area-inset-bottom, 0px))', zIndex: 70, fontSize: 11, padding: '3px 10px', borderRadius: 99, background: 'rgba(0,0,0,.45)', color: '#c4b5fd', border: '1px solid #fff3', opacity: .8 } }, React.createElement(BlEditIcon, null), ' edit prompt')) : h(BnNew, { key: s.tid, s, send, done: () => setFin(x => ({ ...x, ['n' + s.tid]: 1 })), Timer, box, head }); }
     else if (s.m === 'vote') { const d = fin['v' + s.tid]; body = d ? wait('Votes in!', false) : h(BnVote, { key: s.tid, s, send, done: () => setFin(x => ({ ...x, ['v' + s.tid]: 1 })), Timer, box, head }); }
     else if (s.m === 'rev') body = h('div', { style: box }, h('div', { style: { fontWeight: 900, letterSpacing: '.15em', color: '#fb923c', fontSize: 18 } }, 'BURN ' + s.i + '/' + s.n),
         h('div', { key: s.i, className: 'scale-in', style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontWeight: 900, fontSize: 18, flexWrap: 'wrap' } }, h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6 } }, h(MonsterAvatar, { attributes: s.byAv, size: 48 }), s.by + (s.you === 'by' ? ' (YOU)' : '')), h('span', { style: { color: '#f97316', ...sFont } }, 'BURNS'), h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6 } }, h(MonsterAvatar, { attributes: s.auAv, size: 48 }), s.au + (s.you === 'au' ? ' (YOU)' : ''))),
@@ -5421,12 +5427,12 @@ const BurnClient = () => {
 };
 const BnBoard = ({ all, me, stats }) => { const h = React.createElement; return h('div', { style: { width: '100%', display: 'flex', flexDirection: 'column', gap: 6 } }, (all || []).map((p, i) => h('div', { key: p.userId, style: { display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 12, background: p.userId === me ? 'rgba(236,72,153,.35)' : 'rgba(255,255,255,.07)', border: i === 0 ? '2px solid #facc15' : '1px solid #fff2', fontWeight: 800 } }, h('span', { style: { width: 24, color: i === 0 ? '#facc15' : '#c084fc' } }, i + 1), h(MonsterAvatar, { attributes: p.avatar, size: 34 }), h('span', { style: { flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, p.name), p.delta ? h('span', { style: { fontSize: 12, color: p.delta > 0 ? '#4ade80' : '#f87171' } }, (p.delta > 0 ? '+' : '') + p.delta) : null, h('span', { style: { color: '#67e8f9' } }, p.score)))); };
 const BnWrite = ({ s, send, wait, Timer, box, head }) => {
-    const h = React.createElement, [i, setI] = useState(0), [t, setT] = useState(''), [done, setDone] = useState(false);
-    if (done) return wait('Answers submitted!', true);
-    const go = () => { const x = cleanAnswer(t); if (!x) return; send({ k: 'a', tid: s.tid, i, x }); if (i === 0) { setI(1); setT(''); } else setDone(true); };
+    const h = React.createElement, [i, setI] = useState(0), [t, setT] = useState(''), [done, setDone] = useState(false), [sv] = useState(() => ({}));
+    if (done) return h(React.Fragment, null, wait('Answers submitted!', true), Date.now() < s.dl && h('button', { onClick: () => { setT(sv[0] || ''); setI(0); setDone(false); }, style: { position: 'fixed', left: 12, bottom: 'calc(10px + env(safe-area-inset-bottom, 0px))', zIndex: 70, fontSize: 11, padding: '3px 10px', borderRadius: 99, background: 'rgba(0,0,0,.45)', color: '#c4b5fd', border: '1px solid #fff3', opacity: .8 } }, React.createElement(BlEditIcon, null), ' edit answers'));
+    const go = () => { const x = cleanAnswer(t); if (!x) return; sv[i] = x; send({ k: 'a', tid: s.tid, i, x }); if (i === 0) { setI(1); setT(sv[1] || ''); } else setDone(true); };
     return h('div', { style: box }, h(Timer, { dl: s.dl, tot: s.tot }), head('ROUND ' + s.n + (s.mult > 1 ? ' · x' + s.mult : ''), '#22d3ee'), h('div', { style: { fontSize: 12, fontWeight: 900, letterSpacing: '.1em', color: '#fda4af' } }, 'PROMPT ' + (i + 1) + ' OF 2 · BE WITTY'),
         h('div', { className: 'bn-card', style: { width: '100%', background: 'rgba(255,255,255,.08)', borderRadius: 12, padding: '10px 14px', fontWeight: 800, fontSize: 20, color: '#fde68a', lineHeight: 1.25 } }, s.prompts[i]),
-        h('textarea', { key: 'ta' + i, autoFocus: true, value: t, maxLength: 300, rows: 3, placeholder: 'Your wittiest answer…', onChange: e => setT(gClamp(e.target.value, 100)), onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); go(); } }, style: { width: '100%', borderRadius: 12, padding: '14px 12px', background: '#1a1033', border: '3px solid #ec4899', boxSizing: 'border-box', color: '#fff', fontSize: 18, fontWeight: 700 } }),
+        h('textarea', { key: 'ta' + i, autoFocus: true, value: t, maxLength: 300, rows: 3, placeholder: 'Your wittiest answer…', onChange: e => setT(gClamp(e.target.value, 100)), onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); go(); } }, style: { width: '100%', borderRadius: 12, padding: '14px 12px', background: '#1a1033', border: '3px solid ' + (window.blWouldCensor(t) ? '#ef4444' : '#ec4899'), boxShadow: window.blWouldCensor(t) ? '0 0 0 3px rgba(239,68,68,.45)' : 'none', boxSizing: 'border-box', color: '#fff', fontSize: 18, fontWeight: 700 } }),
         h('div', { style: { fontFamily: 'monospace', fontWeight: 800, color: gLen(t) >= 90 ? '#f87171' : '#a78bfa' } }, gLen(t) + '/100'), h('button', { onClick: go, disabled: !cleanAnswer(t), style: sBtn('#ec4899', { width: '100%', minHeight: 56, fontSize: 20, opacity: cleanAnswer(t) ? 1 : .5 }) }, 'Submit answer'));
 };
 const BnBurn = ({ s, send, done, Timer, box, head }) => {
@@ -5437,11 +5443,11 @@ const BnBurn = ({ s, send, done, Timer, box, head }) => {
         h('button', { onClick: go, disabled: !b, style: sBtn('#ea580c', { width: '100%', minHeight: 58, fontSize: 20, opacity: b ? 1 : .5 }) }, b ? 'Burn it!' : 'Pick one to burn'));
 };
 const BnNew = ({ s, send, done, Timer, box, head }) => {
-    const h = React.createElement, [t, setT] = useState('');
-    const go = () => { const x = cleanAnswer(t); if (!x) return; send({ k: 'p', tid: s.tid, x }); done(); };
+    const h = React.createElement, [t, setT] = useState(() => (window.__blLN && window.__blLN.tid === s.tid) ? window.__blLN.x : '');
+    const go = () => { const x = cleanAnswer(t); if (!x) return; window.__blLN = { tid: s.tid, x }; send({ k: 'p', tid: s.tid, x }); done(); };
     return h('div', { style: box }, h(Timer, { dl: s.dl, tot: s.tot }), head('NEW PROMPT!', '#4ade80'), h('p', { style: { fontWeight: 800, color: '#fde68a' } }, 'Write a new prompt that this answer would be a hilarious reply to:'),
         h('div', { className: 'bn-card', style: { width: '100%', background: '#14532d', border: '3px solid #4ade80', borderRadius: 18, padding: 18, fontWeight: 900, fontSize: 24 } }, '"' + s.x + '"'),
-        h('textarea', { autoFocus: true, value: t, maxLength: 300, rows: 3, placeholder: 'e.g. "The reason I wake up in the mornings."', onChange: e => setT(gClamp(e.target.value, 100)), onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); go(); } }, style: { width: '100%', borderRadius: 12, padding: '14px 12px', background: '#1a1033', border: '3px solid #ec4899', boxSizing: 'border-box', color: '#fff', fontSize: 18, fontWeight: 700 } }),
+        h('textarea', { autoFocus: true, value: t, maxLength: 300, rows: 3, placeholder: 'e.g. "The reason I wake up in the mornings."', onChange: e => setT(gClamp(e.target.value, 100)), onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); go(); } }, style: { width: '100%', borderRadius: 12, padding: '14px 12px', background: '#1a1033', border: '3px solid ' + (window.blWouldCensor(t) ? '#ef4444' : '#ec4899'), boxShadow: window.blWouldCensor(t) ? '0 0 0 3px rgba(239,68,68,.45)' : 'none', boxSizing: 'border-box', color: '#fff', fontSize: 18, fontWeight: 700 } }),
         h('div', { style: { fontFamily: 'monospace', fontWeight: 800, color: '#a78bfa' } }, gLen(t) + '/100'), h('button', { onClick: go, disabled: !cleanAnswer(t), style: sBtn('#16a34a', { width: '100%', minHeight: 56, fontSize: 20, opacity: cleanAnswer(t) ? 1 : .5 }) }, 'Submit prompt'));
 };
 const BnVote = ({ s, send, done, Timer, box, head }) => {
@@ -5503,9 +5509,9 @@ const BurnHost = ({ goBack, onGames }) => {
     const onSub = (data) => {
         const st = S.current, c = st.cur, u = data.userId; if (!c || data.tid !== c.tid) return;
         const isP = st.players.some(p => p.userId === u), isA = st.audience.some(a => a.userId === u);
-        if (data.k === 'a' && isP && c.type === 'B_WRITE') { const x = blCensor(cleanAnswer(data.x)); const i = data.i === 1 ? 1 : 0; if (x && st.ans[u] && !st.ans[u][i]) { st.ans[u][i] = x; BLSND.play(); } }
+        if (data.k === 'a' && isP && c.type === 'B_WRITE') { const x = blCensor(cleanAnswer(data.x)); const i = data.i === 1 ? 1 : 0; if (x && st.ans[u]) { if (!st.ans[u][i]) BLSND.play(); st.ans[u][i] = x; } }
         else if (data.k === 'b' && isP && c.type === 'B_BURN') { const d = st.dealt[u]; if (d && d.some(x => x.id === data.id) && !st.burn[u]) { st.burn[u] = data.id; BLSND.play(); } }
-        else if (data.k === 'p' && isP && c.type === 'B_NEW') { const x = blCensor(cleanAnswer(data.x)); if (x && !st.np[u]) { st.np[u] = x; BLSND.play(); } }
+        else if (data.k === 'p' && isP && c.type === 'B_NEW') { const x = blCensor(cleanAnswer(data.x)); if (x) { if (!st.np[u]) BLSND.play(); st.np[u] = x; } }
         else if (data.k === 'v' && c.type === 'B_VOTE' && (isP || isA)) {
             const ents = st.entries, ok = ents.filter(e => !isP || e.cr !== u), fe = ents.find(e => e.id === data.f), se = ents.find(e => e.id === data.s);
             const need = Math.min(2, ok.length); if (need === 0) { st.votes[u] = { f: null, s: null }; }
@@ -5523,7 +5529,7 @@ if (window.__blBotGame) { try { conn.send({ type: 'KICKED', msg: 'This is a bot-
             conns.current[userId] = conn;
             const ex = st.players.find(p => p.userId === userId);
             if (ex) { setPlayers(prev => prev.map(p => p.userId === userId ? { ...p, name, connected: true } : p)); conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar: ex.avatar, resync: !!data.rejoin }); if (st.phase !== 'LOBBY') setTimeout(() => resend(userId, false), 700); return; }
-            if (st.phase === 'LOBBY' && !(st.cap && st.players.length >= st.cap)) {
+            if (st.phase === 'LOBBY' && !data.aud && !(st.cap && st.players.length >= st.cap)) {
                 const avatar = generateAvatar(st.players.map(p => p.avatar)); let fn = name; if (st.players.some(p => p.name.toLowerCase() === name.toLowerCase())) fn = name + ' ' + Math.floor(Math.random() * 100);
                 conn.send({ type: 'LOBBY_JOINED', isAudience: false, avatar }); setPlayers(prev => prev.some(p => p.userId === userId) ? prev : [...prev, { userId, name: fn, score: 0, avatar, connected: true }]); return;
             }
@@ -5548,7 +5554,7 @@ if (window.__blBotGame) { try { conn.send({ type: 'KICKED', msg: 'This is a bot-
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     const chk = () => { if (!alive.current) throw new Error('closed'); };
     const nap = async (ms) => { S.current.skip = false; const t0 = Date.now(); while (Date.now() - t0 < ms) { await sleep(100); chk(); if (S.current.skip) break; } S.current.skip = false; };
-    const countdown = (secs, isDone) => new Promise(res => { let t = secs; setTimer(t); const w = createWorkerInterval(() => { if (!alive.current) { w.clearInterval(); return res(false); } t--; setTimer(t); setTick(x => x + 1); if (isDone()) { w.clearInterval(); return res(true); } if (t <= 0) { w.clearInterval(); res(false); } }, 1000); });
+    const countdown = (secs, isDone) => new Promise(res => { let t = secs; setTimer(t); const w = createWorkerInterval(() => { if (!alive.current) { w.clearInterval(); return res(false); } t--; setTimer(t); setTick(x => x + 1); if (isDone()) { if (!w._as) w._as = Date.now(); if (t <= 0 || Date.now() - w._as >= 1800) { w.clearInterval(); return res(true); } } else w._as = 0; if (t <= 0) { w.clearInterval(); res(false); } }, 1000); });
     const card = async (title, sub, ms, say) => { chk(); setPhase('CARD'); setInfo({ title, sub }); speak(say || title); await nap(ms); chk(); };
     const pickPrompts = (n) => { const st = S.current; let pool = BURN_PROMPTS.filter(p => (!st.fam || p.family) && !(st.usedP || []).includes(p.text)); if (pool.length < n) { st.usedP = []; pool = BURN_PROMPTS.filter(p => !st.fam || p.family); } const sorted = bnShuffle(pool).sort((a, b) => (b.family ? 1 : 0) - (a.family ? 1 : 0) + (Math.random() - .5) * 1.6); const out = sorted.slice(0, n).map(p => p.text); st.usedP = [...(st.usedP || []), ...out]; return out; };
     const dealCards = (cards, ps) => {
@@ -6255,7 +6261,7 @@ if (window.__blBotGame) { try { conn.send({ type: 'KICKED', msg: 'This is a bot-
                     existingPlayer.connected = true;
                     return [...prevPlayers];
                 }
-                if (stateRef.current.gameState === 'LOBBY' && !(stateRef.current.settings.cap && prevPlayers.length >= stateRef.current.settings.cap)) {
+                if (stateRef.current.gameState === 'LOBBY' && !data.aud && !(stateRef.current.settings.cap && prevPlayers.length >= stateRef.current.settings.cap)) {
                     let finalName = name;
                     if (prevPlayers.some(p => p.name.toLowerCase() === name.toLowerCase())) {
                         finalName = name + ` ${Math.floor(Math.random() * 100)}`;
@@ -6291,7 +6297,7 @@ if (window.__blBotGame) { try { conn.send({ type: 'KICKED', msg: 'This is a bot-
             setAudience(prev => prev.map(a => a.userId === data.userId ? { ...a, avatar: data.avatar } : a));
             sendToClient(data.userId, 'AVATAR_UPDATED', { avatar: data.avatar });
         }
-        if (data.type === 'SUBMIT_ANSWER') {
+        if (data.type === 'SUBMIT_ANSWER' && stateRef.current.gameState === 'ANSWERING') {
             BLSND.play();
             setClashes(prev => {
                 const next = [...prev];
@@ -6412,7 +6418,9 @@ if (window.__blBotGame) { try { conn.send({ type: 'KICKED', msg: 'This is a bot-
             setTimer(timeLeft);
             if (timeLeft % 5 === 0 || timeLeft <= 5)
                 broadcast('TIMER_SYNC', { timeLeft });
-            const allAnswered = stateRef.current.clashes.every(c => c.players.every(p => c.answers[p.userId]));
+            const allDone0 = stateRef.current.clashes.every(c => c.players.every(p => c.answers[p.userId]));
+            if (!allDone0) workerTimer._as = 0; else if (!workerTimer._as) workerTimer._as = Date.now();
+            const allAnswered = allDone0 && (Date.now() - workerTimer._as >= 1800);
             if (timeLeft <= 0 || allAnswered) {
                 workerTimer.clearInterval();
                 setClashes(prev => {
@@ -6822,6 +6830,23 @@ const ClientWinAnimation = ({ avatar }) => {
             React.createElement("div", { className: "goo-drop", style: { background: avatar.color, left: '50%', animationDelay: '0.4s' } }),
             React.createElement("div", { className: "goo-drop", style: { background: avatar.color, left: '80%', animationDelay: '0.8s' } }))));
 };
+/* Custom edit icon (pencil + spark) */
+const BlEditIcon = ({ size = 14 }) => React.createElement('svg', { viewBox: '0 0 24 24', width: size, height: size, 'aria-hidden': 'true', style: { display: 'inline-block', verticalAlign: '-2px', marginRight: 4, flex: 'none' } },
+    React.createElement('path', { d: 'M3 21l1.2-4.6L16.6 4a2 2 0 012.8 0l1.6 1.6a2 2 0 010 2.8L8.6 20.8z', fill: '#f9a8d4', stroke: '#fff', strokeWidth: 1.4, strokeLinejoin: 'round' }),
+    React.createElement('path', { d: 'M14.5 6.2l3.3 3.3', stroke: '#be185d', strokeWidth: 1.6, strokeLinecap: 'round' }),
+    React.createElement('path', { d: 'M3 21l1.2-4.6 3.4 3.4z', fill: '#fde68a', stroke: '#fff', strokeWidth: 1, strokeLinejoin: 'round' }),
+    React.createElement('path', { d: 'M20.5 14l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z', fill: '#67e8f9' }));
+/* Post-game "Join new game" button for joined client devices (not the phone that hosts) */
+const BlJoinNew = ({ auto }) => {
+    const [over, setOver] = useState(false);
+    useEffect(() => {
+        const f = (e) => { const d = e.detail || {}, t = d.type || ''; if (!t || t === 'TIMER_SYNC' || t === 'CAP_PRELOAD' || t === 'AVATAR_UPDATED' || t === 'FX_SPIDER') return; setOver((t === 'STATE_LEADERBOARD' && !!d.isFinal) || t === 'S_END' || t === 'B_END' || (t === 'S_RANK' && d.title === 'Game Over')); };
+        window.addEventListener('bl-host-msg', f); return () => window.removeEventListener('bl-host-msg', f);
+    }, []);
+    if (!over || auto) return null;
+    const go = () => { try { localStorage.removeItem('blersjda_session'); localStorage.removeItem('blersjda_code'); } catch (e) { } location.href = location.pathname + '?mode=join'; };
+    return ReactDOM.createPortal(React.createElement('button', { onClick: go, style: { position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', zIndex: 9999, padding: '14px 28px', borderRadius: 999, border: '3px solid #fff3', background: 'linear-gradient(135deg,#ec4899,#3b82f6)', color: '#fff', fontWeight: 900, fontSize: 18, letterSpacing: '.05em', boxShadow: '0 6px 24px rgba(0,0,0,.5)' } }, 'Join new game'), document.body);
+};
 const OnlineClient = ({ goBack, auto }) => {
     const [isEditingAvatar, setIsEditingAvatar] = useState(false);
     const [myAvatar, setMyAvatar] = useState(null);
@@ -6834,6 +6859,7 @@ const OnlineClient = ({ goBack, auto }) => {
     const [promptsToAnswer, setPromptsToAnswer] = useState([]);
     const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
     const [answerInput, setAnswerInput] = useState('');
+    const myAnsRef = useRef({});
     const [clientTimeLeft, setClientTimeLeft] = useState(0);
     useEffect(() => {
         const id = setInterval(() => setClientTimeLeft(t => (t > 0 ? t - 1 : 0)), 1000);
@@ -6842,6 +6868,7 @@ const OnlineClient = ({ goBack, auto }) => {
     const [voteData, setVoteData] = useState(null);
     const [joinStatus, setJoinStatus] = useState('idle');
     const [joinErr, setJoinErr] = useState('');
+    const [asAud, setAsAud] = useState(false), asAudRef = useRef(false);
     const mqttRef = useRef(null), joinTimer = useRef(null), joinedRef = useRef(false), attemptRef = useRef(0), autoRef = useRef(false);
     useEffect(() => () => { clearTimeout(joinTimer.current); try { localStorage.removeItem('blersjda_session'); } catch (e) { } try { mqttRef.current && mqttRef.current.end(true); } catch (e) { } window.blToast && window.__blDismiss && window.__blDismiss('join'); }, []);
     const voteKey = voteData && voteData.answers ? (voteData.prompt || '') + '|' + voteData.answers.map(a => a.id).join(',') : '';
@@ -6937,7 +6964,7 @@ const OnlineClient = ({ goBack, auto }) => {
                 window.blToast(`Joining room ${roomCode}…`, { type: 'loading', id: 'join', ttl: 0 });
                 clearTimeout(joinTimer.current);
                 joinTimer.current = setTimeout(() => failJoin(`Room ${roomCode} didn't answer. Double-check the code, and make sure the host's lobby is open.`, att), 10000);
-                mockConnection.send({ type: 'JOIN', userId, name: cleanName(jn) });
+                mockConnection.send({ type: 'JOIN', userId, name: cleanName(jn), aud: asAudRef.current || undefined });
             });
         });
         mqttClient.on('error', (e) => { if (!joinedRef.current) failJoin('Connection error: ' + ((e && e.message) || 'unknown'), att); });
@@ -7002,7 +7029,7 @@ const OnlineClient = ({ goBack, auto }) => {
         }
         if (data.type === 'STATE_ANSWERING') {
             if (csRef.current.clientState === 'ANSWERING' && JSON.stringify(csRef.current.prompts) === JSON.stringify(data.prompts)) return;
-            window.__capImgs = data.imgs || null; setPromptsToAnswer(data.prompts);
+            window.__capImgs = data.imgs || null; myAnsRef.current = {}; setPromptsToAnswer(data.prompts);
             setCurrentPromptIndex(0);
             setAnswerInput('');
             setClientState('ANSWERING');
@@ -7036,10 +7063,11 @@ const OnlineClient = ({ goBack, auto }) => {
             answer: cleanAnswer(answerInput),
             prompt: promptsToAnswer[currentPromptIndex]
         });
+        myAnsRef.current[promptsToAnswer[currentPromptIndex]] = cleanAnswer(answerInput);
         window.blToast('Answer locked in ' + (currentPromptIndex + 1) + '/' + promptsToAnswer.length, { type: 'success', ttl: 1600 });
         if (currentPromptIndex < promptsToAnswer.length - 1) {
+            setAnswerInput(myAnsRef.current[promptsToAnswer[currentPromptIndex + 1]] || '');
             setCurrentPromptIndex(prev => prev + 1);
-            setAnswerInput('');
         }
         else {
             setClientState('WAITING_BATTLE');
@@ -7076,6 +7104,7 @@ const OnlineClient = ({ goBack, auto }) => {
     return (React.createElement("div", { id: "online-client-wrapper", className: "w-full max-w-md flex flex-col items-center scale-in text-center px-4 relative z-10 h-full" },
         React.createElement(StrokesClient, null),
         React.createElement(BurnClient, null),
+        React.createElement(BlJoinNew, { auto }),
         'documentPictureInPicture' in window && (React.createElement("button", { onClick: enablePiP, className: "absolute top-2 right-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-50 transition-colors" }, React.createElement(React.Fragment, null, React.createElement(Ico, { n: "tv", size: 20 }), " Pop-out"))),
         clientState === 'VOTING' && (voteData === null || voteData === void 0 ? void 0 : voteData.waterfallType) && (React.createElement(WaterfallEffect, { type: voteData.waterfallType })),
         clientState === 'REVEAL' && voteData && (((voteData.p1Votes > voteData.p2Votes && (userId === voteData.p1.userId || myVotedFor === voteData.p1.userId)) ||
@@ -7094,6 +7123,7 @@ const OnlineClient = ({ goBack, auto }) => {
             React.createElement("div", { className: "text-left mb-10" },
                 React.createElement("label", { className: "block text-sm font-bold text-purple-300 mb-2 uppercase tracking-widest ml-2" }, "Your Name"),
                 React.createElement("input", { type: "text", placeholder: "Nickname", maxLength: 60, value: name, onChange: e => setName(e.nativeEvent && e.nativeEvent.isComposing ? e.target.value : gClamp(e.target.value, 12)), onKeyDown: e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && cleanName(name) && code.length === 4) joinGame(); }, className: "w-full p-5 rounded-2xl bg-purple-950/80 border-2 border-cyan-500/50 text-center font-bold text-3xl outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/20 transition-all shadow-inner" })),
+            React.createElement("label", { className: "flex items-center gap-3 justify-center mb-6 -mt-4 text-sm font-bold text-cyan-300 uppercase tracking-widest cursor-pointer" }, React.createElement("input", { type: "checkbox", checked: asAud, onChange: e => { asAudRef.current = e.target.checked; setAsAud(e.target.checked); }, style: { width: 20, height: 20 } }), "Join as audience (watch & vote)"),
             React.createElement("p", { className: "text-xs text-gray-400 mb-4 flex items-center gap-2 justify-center" }, React.createElement(Ico, { n: "lock", size: 16 }), "Your connection is end-to-end encrypted to the host for stats."),
             joinErr && joinStatus === 'failed' && React.createElement("div", { className: "bl-join-err", role: "alert" }, "\u26A0\uFE0F ", joinErr),
             (joinStatus === 'connecting' || joinStatus === 'joining') && React.createElement("div", { className: "bl-join-busy" }, React.createElement("span", { className: "bl-spin" }), joinStatus === 'connecting' ? "Connecting to the server\u2026" : "Asking the host to let you in\u2026"),
@@ -7139,7 +7169,7 @@ const OnlineClient = ({ goBack, auto }) => {
                 clientTimeLeft,
                 "s"),
             React.createElement("div", { className: "relative mb-4" },
-                React.createElement("textarea", { key: "ans" + currentPromptIndex, autoFocus: true, onKeyDown: e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); submitAnswer(); } }, value: answerInput, maxLength: 500, "data-glimit": 100, onChange: e => setAnswerInput(e.nativeEvent && e.nativeEvent.isComposing ? e.target.value : gClamp(e.target.value, 100)), placeholder: "Type your brilliant answer...", className: `w-full p-5 rounded-2xl bg-purple-950 border-2 text-2xl font-bold outline-none focus:ring-2 focus:ring-cyan-500/50 h-40 resize-none shadow-inner transition-colors ${gLen(answerInput) >= 90 ? 'border-red-500' : 'border-pink-500 focus:border-cyan-400'}` }),
+                React.createElement("textarea", { key: "ans" + currentPromptIndex, autoFocus: true, onKeyDown: e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); submitAnswer(); } }, value: answerInput, maxLength: 500, "data-glimit": 100, onChange: e => setAnswerInput(e.nativeEvent && e.nativeEvent.isComposing ? e.target.value : gClamp(e.target.value, 100)), placeholder: "Type your brilliant answer...", style: window.blWouldCensor(answerInput) ? { borderColor: '#ef4444', boxShadow: '0 0 0 3px rgba(239,68,68,.45)' } : undefined, className: `w-full p-5 rounded-2xl bg-purple-950 border-2 text-2xl font-bold outline-none focus:ring-2 focus:ring-cyan-500/50 h-40 resize-none shadow-inner transition-colors ${(gLen(answerInput) >= 90 || window.blWouldCensor(answerInput)) ? 'border-red-500' : 'border-pink-500 focus:border-cyan-400'}` }),
                 React.createElement("span", { className: `absolute bottom-4 right-4 font-mono font-bold text-sm px-2 py-1 rounded bg-black/50 ${gLen(answerInput) >= 90 ? 'text-red-400 animate-pulse' : 'text-purple-400'}` },
                     gLen(answerInput),
                     "/100")),
@@ -7147,7 +7177,8 @@ const OnlineClient = ({ goBack, auto }) => {
         clientState === 'WAITING_BATTLE' && (React.createElement("div", { className: "w-full flex flex-col items-center mt-10 p-8 glass-panel rounded-3xl scale-in" },
             React.createElement("h2", { className: "text-3xl font-black text-red-500 mb-2 uppercase tracking-widest animate-pulse" }, "Answers In!"),
             React.createElement("p", { className: "text-lg text-purple-200 font-bold mb-6 text-center" }, "Prepare for absolute carnage..."),
-            React.createElement("div", { className: "w-full h-48 relative overflow-hidden rounded-xl border-4 border-red-700 bg-black/50" }, battleAvatars && React.createElement(BattleView, { avatars: battleAvatars })))),
+            React.createElement("div", { className: "w-full h-48 relative overflow-hidden rounded-xl border-4 border-red-700 bg-black/50" }, battleAvatars && React.createElement(BattleView, { avatars: battleAvatars })),
+            clientTimeLeft > 0 && React.createElement('button', { onClick: () => { setCurrentPromptIndex(0); setAnswerInput(myAnsRef.current[promptsToAnswer[0]] || ''); setClientState('ANSWERING'); }, style: { position: 'fixed', left: 12, bottom: 'calc(10px + env(safe-area-inset-bottom, 0px))', zIndex: 70, fontSize: 11, padding: '3px 10px', borderRadius: 99, background: 'rgba(0,0,0,.45)', color: '#c4b5fd', border: '1px solid #fff3', opacity: .8 } }, React.createElement(BlEditIcon, null), ' edit answers'))),
         clientState === 'VOTING' && voteData && voteData.answers && (React.createElement("div", { className: "w-full text-center mt-4 p-4 glass-panel rounded-3xl border-t-8 border-cyan-500" },
             React.createElement("p", { className: "text-cyan-400 font-black mb-6 uppercase tracking-widest text-lg animate-pulse" }, voteData.readOnly ? "Watch The Battle!" : "Vote Now"),
             capPrompt(voteData.prompt, voteData.img, 'v', "text-2xl font-bold mb-8 text-purple-200 leading-snug"),
