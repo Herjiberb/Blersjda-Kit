@@ -7567,8 +7567,12 @@ if (!window.BL_CAST_RX) root.render(React.createElement(React.Fragment, null, Re
     var g = sheetEl.querySelector('.go'); if (g) g.onclick = function () { closeSheet(); onGo && onGo(); };
   }
   var BENEFITS = '<ul><li>\u26A1 Opens full-screen, like a real app</li><li>\uD83D\uDCF4 Loads fast, even on bad Wi-Fi</li><li>\uD83C\uDFE0 One-tap Host / Join shortcuts (long-press the icon)</li><li>\uD83D\uDD0B Screen stays awake while you host</li></ul>';
-  window.blCanInstall = function () { return !standalone && ls('bl_installed') !== '1' && (!!deferred || isIOS); };
+  window.blCanInstall = function () { return !standalone && ls('bl_installed') !== '1' && (!!deferred || isIOS || typeof navigator.install === 'function'); };
   window.blInstall = function () {
+    if (!deferred && !standalone && typeof navigator.install === 'function') {
+      navigator.install().then(function () { ls('bl_installed', '1'); }).catch(function () {}).finally(function () { window.dispatchEvent(new Event('bl-installable')); });
+      return;
+    }
     if (deferred) { var d = deferred; deferred = null; d.prompt(); d.userChoice.then(function (c) { if (c && c.outcome !== 'accepted') snoozedUntilRefresh = true; }).finally(function () { window.dispatchEvent(new Event('bl-installable')); }); }
     else if (isIOS) sheet('Add to Home Screen', 'Takes 5 seconds', '<ol><li>Tap the <b>Share</b> button (\u2B06\uFE0F) in Safari</li><li>Scroll and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b></li></ol>', '', null);
     else if (isAndroid) sheet('Install from the menu', 'Chrome hasn\u2019t offered it yet', '<ol><li>Tap the <b>\u22EE</b> menu (top right)</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b></li></ol>', 'Run install check', window.blPwaCheck);

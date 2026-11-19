@@ -331,27 +331,14 @@
       "sizes": "540x960",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Host from your phone"
-    },
-    {
-      "src": "screenshots/phone-host.png",
-      "sizes": "540x960",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Lobby with join code"
+      "label": "Blersjda Kit main menu on a phone"
     },
     {
       "src": "screenshots/wide-menu.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Big-screen hosting"
-    }
-  ],
-  "related_applications": [
-    {
-      "platform": "webapp",
-      "url": "https://YOUR-DOMAIN/manifest.webmanifest"
+      "label": "Blersjda Kit main menu on a big screen"
     }
   ]
 }
